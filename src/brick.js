@@ -1,5 +1,6 @@
 KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Event, UA, IO) {
     var $ = Node.all;
+    var noop = S.noop;
     var Brick = RichBase.extend({
         initializer: function() {
             var self = this;
@@ -33,9 +34,16 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             });
             d.resolve(1);
         },
-        bindUI:function(){
-
+        bindUI: function() {
+            var self = this;
+            self._bx_bindEvent();
         },
+        /**
+         * 同步属性与用户界面
+         * @protected
+         * @method
+         */
+        syncUI: noop,
         /**
          * 获取模板
          */
@@ -78,7 +86,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             if (data) {
                 return true;
             }
-            //开发者获取模板后，调用next方法
+            //开发者获取数据后，调用next方法
             //fn 留作扩展使用
             var fn = self.fire('getData', {
                 next: function(data) {
@@ -298,7 +306,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                      * doc:事件代理在document上
                      * 其他:事件代理在el上
                      */
-                    switch(selector){
+                    switch (selector) {
                         case 'el':
                             Event.on(el, type, callback, this);
                             break;
@@ -360,7 +368,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                      * doc:事件代理在document上
                      * 其他:事件代理在el上
                      */
-                    switch(selector){
+                    switch (selector) {
                         case 'el':
                             Event.detach(el, type, callback, this);
                             break;
@@ -380,18 +388,58 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 }
             }
         },
+        /**
+         * 销毁子组件
+         * @private
+         */
+        _bx_destroyBrick: function() {
+            o.set('destroyed', true);
+            if (o.brick) {
+                o.brick.destroy && o.brick.destroy();
+                o.brick = null;
+            }
+        },
+        /**
+         * 析构函数，销毁资源
+         * @return {[type]} [description]
+         */
+        destructor: function() {
+            var self = this;
+            //需要销毁子组件
+            var bricks = self.get('bricks');
+            S.each(bricks, function(o, i) {
+                self._bx_destroyBrick(o);
+            });
+            bricks = null;
+            self.set('bricks',bricks);
+            if (self.get('rendered')) {
+                self._bx_detachEvent();
+                var action = self.get('destroyAction');
+                var el = self.get('el');
+                switch (action) {
+                    case 'remove':
+                        el.remove();
+                        break;
+                    case 'empty':
+                        el.empty();
+                        break;
+                }
+                el = null;
+            }
+            self.set('destroyed', true);
+        }
     }, {
         ATTRS: {
             /**
              * 模板
-             * @type {Object}
+             * @cfg {Object}
              */
             tmpl: {
                 value: false
             },
             /**
              * 数据
-             * @type {Object}
+             * @cfg {Object}
              */
             data: {
                 value: false
@@ -407,8 +455,8 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
              * 是否已经添加行为
              * @type {Object}
              */
-            addBehaviored:{
-                value:false
+            addBehaviored: {
+                value: false
             },
             /**
              * 容器节点
@@ -425,7 +473,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             },
             /**
              * 组件根节点
-             * @type {Node}
+             * @cfg {Node}
              */
             el: {
                 getter: function(s) {
@@ -472,10 +520,17 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             },
             /**
              * 模板引擎,默认xTemplate
-             * @type {Object}
+             * @cfg {Object}
              */
             templateEngine: {
                 value: XTemplate
+            },
+            /**
+             * 是否已经销毁
+             * @type {Object}
+             */
+            destroyed: {
+                value: false
             },
             /**
              * 销毁操作时候的动作，默认remove。
@@ -489,8 +544,15 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
              * 后期事件代理
              * @type {Object}
              */
-            events:{
+            events: {
 
+            },
+            /**
+             * 存储所有子组件
+             * @type {Array}
+             */
+            bricks: {
+                value: []
             }
         }
     }, 'Brick');
