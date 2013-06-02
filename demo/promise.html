@@ -8,30 +8,150 @@
 </head>
 <body>
     <button>执行</button>
-    <div id="container"></div>
+    <div id="container">
+        
+    </div>
     <script type="text/javascript">
+        KISSY.config({
+            packages:[
+                {
+                    name:"components",
+                    tag:"20110323", 
+                    path:"./"
+                },
+                {
+                    name:"brix",
+                    tag:"20110323", 
+                    path:"http://a.tbcdn.cn/apps/e/"
+                }
+            ],
+            map: [
+                [/(.+brix\/)(gallery\/)(.+?)(\/.+?(?:-min)?\.(?:js|css))(\?[^?]+)?$/, function($0, $1, $2, $3, $4, $5) {
+                    var str = $1 + '2.0/' + $2 + $3;
+                    str += $4 + ($5 ? $5 : '');
+                    return str;
+                }],
+                [/(.+brix\/)(core.+?)((?:-min)?\.js)(\?[^?]+)?$/, function($0, $1, $2, $3, $4) {
+                    var str = $1 + '2.0/';
+                    str += $2 + $3 + ($4 ? $4 : '');
+                    return str;
+                }]
+            ]
+        });
         KISSY.use('brix/core/brick,node',function(S,Brick){
             KISSY.all("button").on("click", function () {
-                var brick = new Brick({
-                    container:'#container',
+                window.brick = new Brick({
+                    el:'#container',
                     listeners:{
                         getTemplate:function(e){
                             S.later(function(){
-                                var tmpl = '{{haha}}';
+                                var tmpl = S.one('#tmpl').html();
                                 e.next(tmpl)   
-                            },2000);
+                            },500);
+                            return true;
                         },
                         getData:function(e){
                             var d = e.defer;
                             S.later(function(){
-                                var data = {haha:'测试数据'};
+                                var data = {
+                                    a: 'a',
+                                    b: 'b',
+                                    c: 'c',
+                                    d: [{
+                                        a:'4',
+                                        d1: '1'
+                                    }, {
+                                        d1: '2'
+                                    }, {
+                                        d1: '3'
+                                    }, {
+                                        d1: function() {
+                                            return '4';
+                                        }
+                                    }],
+                                    e: true, 
+                                    f: function() {
+                                        return 'xx';
+                                    },
+                                    g:[5,6,7],
+                                    startDay:'haha'
+                                };
                                 e.next(data)   
-                            },2000);
+                            },500);
+                            return true;
                         }
                     }
                 });
+                brick.ready(function(){
+                    brick.setChunkData({a: 'aaaa' + S.guid()});
+                });
             });
+               
+            
         });
+    </script>
+    <script type="text/tmpl" id="tmpl">
+        <div id="xx" bx-tmpl="tmpl_a" class="hahah" bx-datakey="a" name="xx">
+                {{#a}}
+                <span>{{a}}</span>
+                {{/a}}
+            </div>
+        <div id="brixtest" bx-name="components/brixtest/">
+            <input id = "input8" type="text">
+            <input id="input1" type="button" class="btn btn-red btn-size25" value="局部刷新a,c">
+            <input id="input2" type="button" class="btn btn-red btn-size25" value="局部刷新b-prepend">
+            <input id="input3" type="button" class="btn btn-red btn-size25" value="局部刷新c-append">
+            <input id="input4" type="button" class="btn btn-red btn-size25" value="局部刷新d">
+            <input id="input5" type="button" class="btn btn-red btn-size25" value="局部刷新e">
+            <input id="input6" type="button" class="btn btn-red btn-size25" value="自杀">
+            <input id="input7" type="button" class="btn btn-red btn-size25" value="startData">
+
+            <div style="border:2px solid #000" id="brixtest2" bx-name="components/brixtest2/">
+            </div>
+            <div id="xx" bx-tmpl="tmpl_a" class="hahah" bx-datakey="a" name="xx">
+                {{#a}}
+                <span>{{a}}</span>
+                {{/a}}
+            </div>
+            <div bx-tmpl="tmpl_b" bx-datakey="b">
+                <span>{{b}}</span>
+                <div bx-name="brix/gallery/pagination/" class="pagination">
+    </div>
+            </div>
+            <div bx-tmpl="tmpl_c" bx-datakey='a,  c' class="xx">
+                <span>{{a}}-{{c}}</span>
+            </div>
+            <div bx-tmpl="tmpl_d" bx-datakey="a,d">
+                <table>
+                    <tbody>
+                    {{#d}}
+                        <tr>
+                            <td>{{d1}}--{{a}}<td>
+                        </tr>
+                    {{/d}}
+                    </tbody>
+                </table>
+            </div>
+            <div bx-tmpl="tmpl_e" bx-datakey="e" >
+            {{^e}}
+            <input type="text" value="{{e}}" />
+            {{/e}}
+            </div>
+            <h3 class="h3">function：</h3>
+            <p>{{f}}</p>
+            <h3 class="h3">mustache Array “.”测试</h3>
+            <table>
+                <tbody>
+                {{#g}}
+                    <tr>
+                        <td>{{.}}<td>
+                    </tr>
+                {{/g}}
+                </tbody>
+            </table>
+        </div>
+        <div id="brixtest4" bx-name="components/brixtest3/">
+             </div>
     </script>
 </body>
 </html>
