@@ -80,7 +80,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             var tmpl = self.get('tmpl');
             if (tmpl) {
                 //用来处理模板不同的模板类型
-                if(tmpl.charAt(0) === '#'){
+                if (tmpl.charAt(0) === '#') {
                     self.set('tmpl', $(tmpl).html());
                 }
                 return true;
@@ -280,6 +280,11 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
 
                 self._bx_render();
 
+                //初始化子组件
+                var bricks = self._bx_findChildren(self.get('el'), []);
+                self.set('bricks', bricks);
+                self._bx_initChildren(bricks);
+
                 /**
                  * @event afterRenderUI
                  * fired after root node is rendered into dom
@@ -447,17 +452,29 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
         _bx_findChildren: function(node, bricks) {
             var self = this;
             var children = node.children();
+            var oldBricks = self.get('bricks');
             children.each(function(c) {
                 if (c.hasAttr('bx-name')) {
                     var id = _stamp(c);
-                    var name = c.attr('bx-name');
-                    var tag = c.attr('bx-tag');
-                    bricks.push({
-                        id: id,
-                        tag: tag,
-                        name: name,
-                        config: evalJSON(c.attr('bx-config'))
-                    });
+                    var flg = false; //是否已经存在bricks中
+                    for (var i = 0; i < oldBricks.length; i++) {
+                        var brick = oldBricks[i];
+                        if (brick.id == id) {
+                            flg = true;
+                            break;
+                        }
+                    };
+                    if (!flg) {
+                        var name = c.attr('bx-name');
+                        var tag = c.attr('bx-tag');
+                        bricks.push({
+                            id: id,
+                            tag: tag,
+                            name: name,
+                            config: evalJSON(c.attr('bx-config'))
+                        });
+                    }
+
                 } else {
                     return self._bx_findChildren(c, bricks);
                 }
@@ -469,6 +486,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          */
         addBehavior: function() {
             var self = this;
+            S.log('addBehaviored')
             if (self.get('rendered') && !self.get('addBehaviored')) {
                 self.set('addBehaviored', true);
                 //绑定事件
@@ -486,31 +504,25 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 self.on('afterRefreshTmpl', function(e) {
                     var newBricks = self._bx_findChildren(e.node, []);
                     if (newBricks.length > 0) {
-                        self._bx_addBehavior(newBricks);
+                        self._bx_initChildren(newBricks);
                         var bricks = self.get('bricks').concat(newBricks);
                         self.set('bricks', bricks);
                     }
                     newBricks = null;
                 });
-
-                var bricks = self._bx_findChildren(self.get('el'), []);
-                self.set('bricks', bricks);
-                self._bx_addBehavior(bricks);
             }
-            return true;
         },
         /**
          * 构造子组件
          * @param {Array} bricks 组件集合
          * @private
          */
-        _bx_addBehavior: function(bricks) {
+        _bx_initChildren: function(bricks) {
             var self = this;
             self.set('isReady', false);
             if (bricks.length > 0) {
                 var useList = [];
                 S.each(bricks, function(o) {
-                    o.behavior = true;
                     var config = o.config;
                     //mix self&&parent的config
                     var parent = self;
@@ -525,60 +537,71 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     }
                 });
                 //实例化子组件
+                S.log('first##########################'+bricks.length);
                 S.use(useList.join(','), function(S) {
-                    if (self.get('destroyed')) {
-                        return;
-                    }
                     var useClassList = arguments;
-                    var brickTmpls = self.get('brickTmpls');
-                    S.each(bricks, function(o) {
-                        var config = S.merge({
-                            //是否要将子模板和存储模板作为参数带入？
-                            el: '#' + o.id,
-                            brickTmpl: o.tag ? brickTmpls[o.tag] : false,
-                            parent: self,
-                            listeners: {
-                                //监听ready事件
-                                'ready': function() {
+                    
+                    S.later(function() {
+
+                        if (self.get('destroyed')) {
+                            S.log('destroyed##########################'+bricks.length);
+                            return;
+                        }
+                        var brickTmpls = self.get('brickTmpls');
+                        S.log('second##########################'+bricks.length);
+                        S.each(bricks, function(o) {
+                            if(o.destroyed){
+                                S.log('##########################'+o.destroyed);
+                            }
+                            if (!o.destroyed) {
+                                var config = S.merge({
+                                    //是否要将子模板和存储模板作为参数带入？
+                                    el: '#' + o.id,
+                                    brickTmpl: o.tag ? brickTmpls[o.tag] : false,
+                                    parent: self,
+                                    listeners: {
+                                        //监听ready事件
+                                        'ready': function() {
+                                            self._bx_fireReady();
+                                        }
+
+                                    }
+                                }, o.config);
+
+                                var BrickClass = useClassList[S.indexOf(o.name, useList) + 1];
+                                var flg = false;
+                                var constt = BrickClass;
+                                var arr = [];
+                                while (constt) {
+                                    if (constt.MARK == 'Brix') {
+                                        flg = true;
+                                    }
+                                    var listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value;
+                                    //listeners 需要考虑如何构建
+                                    if (listeners) {
+                                        // for(var key in listeners){
+                                        //     config.listeners[key] = listeners[key];
+                                        // }
+                                        arr.push(listeners);
+                                    }
+
+                                    constt = constt.superclass && constt.superclass.constructor;
+                                }
+                                for (var i = arr.length - 1; i >= 0; i--) {
+                                    var listeners = arr[i];
+                                    for (var key in listeners) {
+                                        config.listeners[key] = listeners[key];
+                                    }
+                                }
+                                arr = null;
+                                o.brick = new BrickClass(config);
+                                //不是继承brix的组件，直接触发ready
+                                if (!flg) {
                                     self._bx_fireReady();
                                 }
-
                             }
-                        }, o.config);
-
-                        var BrickClass = useClassList[S.indexOf(o.name, useList) + 1];
-                        var flg = false;
-                        var constt = BrickClass;
-                        var arr = [];
-                        while (constt) {
-                            if (constt.MARK == 'Brix') {
-                                flg = true;
-                            }
-                            var listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value;
-                            //listeners 需要考虑如何构建
-                            if (listeners) {
-                                // for(var key in listeners){
-                                //     config.listeners[key] = listeners[key];
-                                // }
-                                arr.push(listeners);
-                            }
-
-                            constt = constt.superclass && constt.superclass.constructor;
-                        }
-                        for (var i = arr.length - 1; i >= 0; i--) {
-                            var listeners = arr[i];
-                            for (var key in listeners) {
-                                config.listeners[key] = listeners[key];
-                            }
-                        }
-                        arr = null;
-                        o.brick = new BrickClass(config);
-                        //不是继承brix的组件，直接触发ready
-                        if(!flg){
-                            self._bx_fireReady();
-                        }
-
-                    });
+                        });
+                    }, 3000);
                 });
             } else {
                 self._bx_fireReady();
@@ -713,9 +736,14 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @private
          */
         _bx_destroyBrick: function(o) {
+            o.destroyed = true;
             if (o.brick) {
                 o.brick.destroy && o.brick.destroy();
                 o.brick = null;
+            }
+            else{
+                //需要吗？
+                $('#'+o.id).empty();
             }
         },
         /**
@@ -905,10 +933,10 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 }
             }
         },
-        on:function(eventType,fn){
+        on: function(eventType, fn) {
             var self = this;
             //原有事件绑定做记录？？？
-            Brick.superclass.on.apply(this,arguments);
+            Brick.superclass.on.apply(this, arguments);
         }
     }, {
         ATTRS: {
