@@ -1,0 +1,63 @@
+/*jshint asi:true */
+KISSY.add('brix/app', function(S, appConfig, Brick) {
+
+    function BxApp() {
+        BxApp.superclass.constructor.call(this)
+    }
+
+    S.extend(BxApp, S.Base)
+
+    BxApp.ATTRS = {
+        prepared: false
+    }
+
+    S.augment(BxApp, appConfig, {
+        boot: function(el, data) {
+            this.prepareLoader()
+
+            if (S.isPlainObject(el)) {
+                data = el
+                el = '[bx-app]'
+            }
+            el = el || '[bx-app]'
+            el = S.isString(el) ? S.one(el) : el
+
+            if (el) {
+                var page = new Brick({
+                    el: el,
+                    data: data
+                })
+
+                page.bxLoad(el)
+
+                return page
+            }
+        },
+
+        bootStyle: function(fn) {
+            this.prepareLoader()
+
+            S.use(this.comboStyle().join(','), fn)
+        },
+
+        prepareLoader: function() {
+            if (!this.get('prepared')) {
+                this.mapImports()
+                this.mapComponents()
+                this.packageImports()
+                this.packageComponents()
+                this.set('prepared', true)
+            }
+        }
+    })
+
+    var app = new BxApp()
+
+    return app
+}, {
+    requires: [
+        'brix/app/config',
+        'brix/base',
+        'base'
+    ]
+})

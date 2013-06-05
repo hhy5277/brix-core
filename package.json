@@ -1,0 +1,32 @@
+{
+  "name": "brix-core",
+  "description": "Brix Core",
+  "version": "0.1.0",
+  "author": "THX <thx@alibaba-inc.com>",
+  "contributors": [{
+    "name": "李牧",
+    "email": "limu@taobao.com"
+  }, {
+    "name": "左莫",
+    "email": "zuomo.xb@taobao.com"
+  }, {
+    "name": "逸才",
+    "email": "yicai.cyj@taobao.com"
+  }, {
+    "name": "水鱼",
+    "email": "yaran.lyr@taobao.com"
+  }],
+  "devDependencies": {
+    "glob": "~3.1.21",
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.7",
+    "grunt-contrib-qunit": "~0.2.1",
+    "grunt-contrib-connect": "~0.3.0",
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-contrib-concat": "~0.2.0"
+  },
+  "scripts": {
+    "start": "grunt connect:server:keepalive",
+    "test": "grunt test --verbose"
+  }
+}

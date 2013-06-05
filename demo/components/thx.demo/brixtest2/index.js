@@ -1,4 +1,4 @@
-KISSY.add("components/brixtest2/index", function(S, Brick) {
+KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 	var module = this;
 	var BrixTest2 = Brick.extend({
 		constructor: function BrixTest() {
@@ -124,5 +124,5 @@ KISSY.add("components/brixtest2/index", function(S, Brick) {
 	S.augment(BrixTest2, BrixTest2.METHODS);
 	return BrixTest2;
 }, {
-	requires: ["brix/core/brick"]
+	requires: ["brix/base"]
 });

@@ -1,4 +1,4 @@
-KISSY.add("components/brixtest/index", function(S, Brick) {
+KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 	var BrixTest = Brick.extend({
 		constructor: function BrixTest() {
 			//可以重新定义构成函数，如果定义，必须显示调用父类的构造函数
@@ -120,5 +120,5 @@ KISSY.add("components/brixtest/index", function(S, Brick) {
 	S.augment(BrixTest, BrixTest.METHODS);
 	return BrixTest;
 }, {
-	requires: ["brix/core/brick"]
+	requires: ["brix/base"]
 });

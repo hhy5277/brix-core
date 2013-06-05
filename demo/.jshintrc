@@ -1,0 +1,9 @@
+{
+    "browser": true,
+    "undef": true,
+    "unused": true,
+
+    "predef": {
+        "KISSY": true
+    }
+}
