@@ -1,4 +1,4 @@
-KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Event, UA, IO, Uri) {
+KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA, IO, Uri) {
     var $ = Node.all;
     var noop = S.noop;
     var BRICKREGEXP = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+[^>]*?bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)';
@@ -39,16 +39,16 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             S.log('流程开始');
             promise.then(function(v) {
                 S.log('获取模板');
-                return self._bx_getTemplate(v);
+                return self.bxGetTemplate(v);
             }).then(function(v) {
                 S.log('编译模板');
-                return self._bx_buildTemplate(v);
+                return self.bxBuildTemplate(v);
             }).then(function(v) {
                 S.log('获取数据');
-                return self._bx_getData(v);
+                return self.bxGetData(v);
             }).then(function(v) {
                 S.log('编译数据');
-                return self._bx_buildData(v);
+                return self.bxBuildData(v);
             }).then(function(v) {
                 S.log('渲染页面');
                 if (self.get('autoRender')) {
@@ -74,7 +74,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
         /**
          * 获取模板
          */
-        _bx_getTemplate: function() {
+        bxGetTemplate: function() {
             var d = new Promise.Defer();
             var self = this;
             var tmpl = self.get('tmpl');
@@ -102,28 +102,28 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
         /**
          * 编译模板
          */
-        _bx_buildTemplate: function(tmpl) {
+        bxBuildTemplate: function(tmpl) {
             var self = this;
             var tmpl = self.get('tmpl')
             var level = self.get('level');
             if (tmpl) {
-                tmpl = self._bx_brickTag(tmpl);
-                tmpl = self._bx_tmplName(tmpl);
+                tmpl = self.bxBrickTag(tmpl);
+                tmpl = self.bxTmplName(tmpl);
 
                 self.set('tmpl', tmpl);
 
-                var tempTmpl = self._bx_buildBrickTmpl(tmpl);
+                var tempTmpl = self.bxBuildBrickTmpl(tmpl);
                 //存储模板暂时不做
-                //self._bx_buildStoreTmpls(tmpl);
-                self._bx_buildSubTmpls(tempTmpl, false, level);
+                //self.bxBuildStoreTmpls(tmpl);
+                self.bxBuildSubTmpls(tempTmpl, false, level);
 
                 //对模板的处理，比如子模板的提取，存储模板的提取
                 return true;
             } else {
                 var brickTmpl = self.get('brickTmpl');
                 if (brickTmpl) {
-                    var tempTmpl = self._bx_buildBrickTmpl(brickTmpl);
-                    self._bx_buildSubTmpls(tempTmpl, false, level);
+                    var tempTmpl = self.bxBuildBrickTmpl(brickTmpl);
+                    self.bxBuildSubTmpls(tempTmpl, false, level);
                 }
             }
             return false
@@ -133,7 +133,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {String} tmpl 需要解析的模板
          * @return {String}      解析后的模板
          */
-        _bx_buildStoreTmpls: function(tmpl) {
+        bxBuildStoreTmpls: function(tmpl) {
             var self = this;
             storeTmpls = self.get('storeTmpls');
             tmpl = tmpl.replace(STORETMPLREGEXP, function(g, id, html) {
@@ -147,7 +147,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {String} tmpl 模板
          * @return {String}      替换后的模板
          */
-        _bx_brickTag: function(tmpl) {
+        bxBrickTag: function(tmpl) {
             return tmpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
                 .replace(/(bx-name=["'][^"']+["'])/ig, function($1) {
                 return $1 + ' bx-tag="brix_brick_tag_' + S.guid() + '"';
@@ -158,13 +158,13 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {String} tmpl 模板
          * @return {String}      替换后的模板
          */
-        _bx_tmplName: function(tmpl) {
+        bxTmplName: function(tmpl) {
             return tmpl.replace(/(bx-tmpl=["'][^"']+["'])/ig, '')
                 .replace(/(bx-datakey=["'][^"']+["'])/ig, function($1) {
                 return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + $1
             });
         },
-        _bx_buildBrickTmpl: function(tmpl) {
+        bxBuildBrickTmpl: function(tmpl) {
             var self = this;
             var r = BRICKREGEXP;
             var brickTmpls = self.get('brickTmpls');
@@ -190,7 +190,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param {Number} level  嵌套层级
          * @private
          */
-        _bx_buildSubTmpls: function(tmpl, r, level) {
+        bxBuildSubTmpls: function(tmpl, r, level) {
             var self = this;
             var subTmpls = self.get('subTmpls');
             var tempTmpls = self.get('tempTmpls');
@@ -211,13 +211,13 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                         return tempTmpls[$2];
                     })
                 });
-                //self._bx_buildSubTmpls(m[4], r);
+                //self.bxBuildSubTmpls(m[4], r);
             }
         },
         /**
          * 获取数据
          */
-        _bx_getData: function() {
+        bxGetData: function() {
             var d = new Promise.Defer();
             var self = this;
             var data = self.get('data')
@@ -241,7 +241,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * 编译数据
          * @param  {Objcet} data 数据
          */
-        _bx_buildData: function(data) {
+        bxBuildData: function(data) {
             var self = this;
             var data = self.get('data')
             if (data) {
@@ -265,7 +265,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 while (constt) {
                     var renderers = constt.RENDERERS;
                     if (renderers) {
-                        self._bx_setRenderer(renderers);
+                        self.bxSetRenderer(renderers);
                     }
                     constt = constt.superclass && constt.superclass.constructor;
                 }
@@ -285,7 +285,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
 
                 self.fire('beforeRenderUI');
 
-                self._bx_render();
+                self.bxRender();
 
 
                 /**
@@ -324,9 +324,9 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
 
 
                 //初始化子组件
-                var bricks = self._bx_findChildren(self.get('el'), []);
+                var bricks = self.bxFindChildren(self.get('el'), []);
                 self.set('bricks', bricks);
-                self._bx_initChildren(bricks, function() {
+                self.bxInitChildren(bricks, function() {
                     /**
                      * @event beforeSyncUI
                      * fired before component 's internal state is synchronized.
@@ -353,12 +353,12 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * 将模板渲染到页面
          * @private
          */
-        _bx_render: function() {
+        bxRender: function() {
             var self = this;
             var tmpl = self.get('tmpl');
             if (tmpl) {
                 var el = self.get('el');
-                var html = S.trim(self._bx_renderTemplate(tmpl, self.get('data')));
+                var html = S.trim(self.bxRenderTemplate(tmpl, self.get('data')));
                 el.html(html);
             }
             return true;
@@ -370,7 +370,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {String} renderType 渲染方式，目前支持html，append，prepend
          * @private
          */
-        _bx_refreshTmpl: function(keys, data, renderType) {
+        bxRefreshTmpl: function(keys, data, renderType) {
             var self = this;
 
             if (self.get('rendered')) {
@@ -423,7 +423,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                             //重新设置局部内容
 
 
-                            nodes[renderType](S.trim(self._bx_renderTemplate(o.tmpl, newData)));
+                            nodes[renderType](S.trim(self.bxRenderTemplate(o.tmpl, newData)));
 
                             /**
                              * @event afterRefreshTmpl
@@ -444,7 +444,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     //递归调用子组件的数据
                     var brick = o.brick;
                     if (brick && !brick.get('data')) {
-                        o.brick._bx_refreshTmpl(keys, data, renderType);
+                        o.brick.bxRefreshTmpl(keys, data, renderType);
                     }
                 });
             }
@@ -456,7 +456,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @return {String} html片段
          * @private
          */
-        _bx_renderTemplate: function(tmpl, data) {
+        bxRenderTemplate: function(tmpl, data) {
             var self = this;
             var templateEngine = self.get('templateEngine');
             //根据模板引擎，选择渲染方式
@@ -474,7 +474,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @return {Array}        数组集合
          * @private
          */
-        _bx_findChildren: function(node, bricks, exist) {
+        bxFindChildren: function(node, bricks, exist) {
             var self = this;
             var children = node.children();
             var oldBricks = self.get('bricks');
@@ -503,7 +503,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     }
 
                 } else {
-                    return self._bx_findChildren(c, bricks, exist);
+                    return self.bxFindChildren(c, bricks, exist);
                 }
             });
             return bricks;
@@ -517,12 +517,12 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             if (self.get('rendered') && !self.get('addBehaviored')) {
                 self.set('addBehaviored', true);
                 //绑定事件
-                self._bx_bindEvent();
+                self.bxBindEvent();
 
                 //局部刷新事件监听
                 self.on('beforeRefreshTmpl', function(e) {
                     if (e.renderType === 'html') {
-                        var bricks = self._bx_findChildren(e.node, []);
+                        var bricks = self.bxFindChildren(e.node, []);
                         S.each(bricks, function(b) {
                             self.destroyBrickById(b.id);
                         });
@@ -531,9 +531,9 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     }
                 });
                 self.on('afterRefreshTmpl', function(e) {
-                    var newBricks = self._bx_findChildren(e.node, [], true);
+                    var newBricks = self.bxFindChildren(e.node, [], true);
                     if (newBricks.length > 0) {
-                        self._bx_initChildren(newBricks);
+                        self.bxInitChildren(newBricks);
                         var bricks = self.get('bricks').concat(newBricks);
                         self.set('bricks', bricks);
                     }
@@ -547,7 +547,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param {Function} callback 子组件实例化完成后的回调
          * @private
          */
-        _bx_initChildren: function(bricks, callback) {
+        bxInitChildren: function(bricks, callback) {
             var self = this;
             self.set('isReady', false);
             if (bricks.length > 0) {
@@ -608,13 +608,13 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                             arr = null;
 
                             config.listeners['ready'] = function() {
-                                self._bx_fireReady(callback);
+                                self.bxFireReady(callback);
                             }
 
                             o.brick = new BrickClass(config);
                             //不是继承brix的组件，直接触发ready
                             if (!flg) {
-                                self._bx_fireReady(callback);
+                                self.bxFireReady(callback);
                             }
                         }
                     });
@@ -622,20 +622,20 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     //}, 3000);
                 });
             } else {
-                self._bx_fireReady(callback);
+                self.bxFireReady(callback);
             }
         },
         /**
          * 绑定事件
          * @private
          */
-        _bx_bindEvent: function() {
+        bxBindEvent: function() {
             var self = this;
             var constt = self.constructor;
             while (constt) {
                 var defaultEvents = constt.EVENTS;
                 if (defaultEvents) {
-                    this._bx_addEvents(defaultEvents);
+                    this.bxAddEvents(defaultEvents);
                 }
                 constt = constt.superclass && constt.superclass.constructor;
             }
@@ -644,7 +644,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             //用户使用组件中的自定义事件代理
             var events = self.get("events");
             if (events) {
-                this._bx_addEvents(events);
+                this.bxAddEvents(events);
             }
         },
         /**
@@ -652,7 +652,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {Object} events 事件对象，参见EVENTS
          * @private
          */
-        _bx_addEvents: function(events) {
+        bxAddEvents: function(events) {
             var self = this;
             var el = self.get('el');
             for (var selector in events) {
@@ -691,13 +691,13 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * 移除事件
          * @private
          */
-        _bx_detachEvent: function() {
+        bxDetachEvent: function() {
             var self = this;
             var constt = self.constructor;
             while (constt) {
                 var defaultEvents = constt.EVENTS;
                 if (defaultEvents) {
-                    this._bx_removeEvents(defaultEvents);
+                    this.bxRemoveEvents(defaultEvents);
                 }
                 constt = constt.superclass && constt.superclass.constructor;
             }
@@ -706,7 +706,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             //用户使用组件中的自定义事件代理
             var events = self.get("events");
             if (events) {
-                this._bx_removeEvents(events);
+                this.bxRemoveEvents(events);
             }
         },
         /**
@@ -714,7 +714,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param  {Object} events 事件对象，参见EVENTS和DOCEVENTS属性
          * @private
          */
-        _bx_removeEvents: function(events) {
+        bxRemoveEvents: function(events) {
             var self = this;
             var el = self.get('el');
             for (var selector in events) {
@@ -753,7 +753,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * 销毁子组件
          * @private
          */
-        _bx_destroyBrick: function(o) {
+        bxDestroyBrick: function(o) {
             o.destroyed = true;
             if (o.brick) {
                 o.brick.destroy && o.brick.destroy();
@@ -773,7 +773,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             for (var i = 0; i < bricks.length; i++) {
                 var o = bricks[i];
                 if (id === o.id) {
-                    self._bx_destroyBrick(o);
+                    self.bxDestroyBrick(o);
                     bricks.splice(i, 1);
                     o = null;
                     return;
@@ -791,13 +791,13 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             var bricks = self.get('bricks');
             // S.each(bricks, function(o, i) {
             //     S.log(bricks);
-            //     self._bx_destroyBrick(o);
+            //     self.bxDestroyBrick(o);
             // });
             //需要解决如何从父组件数组中移除自己
             var length = bricks.length;
             for (var i = 0; i < bricks.length; i++) {
                 var o = bricks[i];
-                self._bx_destroyBrick(o);
+                self.bxDestroyBrick(o);
                 if (length > bricks.length) {
                     length = bricks.length;
                     i--;
@@ -822,7 +822,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             }
 
             if (self.get('rendered')) {
-                self._bx_detachEvent();
+                self.bxDetachEvent();
                 var action = self.get('destroyAction');
                 switch (action) {
                     case 'remove':
@@ -882,7 +882,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 }
             }
 
-            self._bx_refreshTmpl(keys, newData, renderType);
+            self.bxRefreshTmpl(keys, newData, renderType);
         },
         /**
          * 渲染完成后需要执行的函数
@@ -900,7 +900,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param {Function} callback 回调
          * @private
          */
-        _bx_fireReady: function(callback) {
+        bxFireReady: function(callback) {
             var self = this;
 
             if (self.get('isReady')) {
@@ -931,7 +931,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
          * @param {Object} renderer 扩展方法对象
          * @param {String} prefix   前缀
          */
-        _bx_setRenderer: function(renderer, prefix) {
+        bxSetRenderer: function(renderer, prefix) {
             var self = this,
                 data = self.get('data'),
                 type, wrapperName;
