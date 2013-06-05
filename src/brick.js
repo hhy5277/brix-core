@@ -477,16 +477,18 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                         S.each(bricks, function(b) {
                             self.destroyBrickById(b.id);
                         });
+                        bricks = null;
                         self.set('counter', self.get('bricks').length);
                     }
                 });
                 self.on('afterRefreshTmpl', function(e) {
                     var newBricks = self._bx_findChildren(e.node, []);
                     if (newBricks.length > 0) {
+                        self._bx_addBehavior(newBricks);
                         var bricks = self.get('bricks').concat(newBricks);
                         self.set('bricks', bricks);
-                        self._bx_addBehavior(bricks);
                     }
+                    newBricks = null;
                 });
 
                 var bricks = self._bx_findChildren(self.get('el'), []);
@@ -897,6 +899,11 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                     }
                 }
             }
+        },
+        on:function(eventType,fn){
+            var self = this;
+            //原有事件绑定做记录？？？
+            Brick.superclass.on.apply(this,arguments);
         }
     }, {
         ATTRS: {
