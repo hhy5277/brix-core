@@ -80,7 +80,9 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             var tmpl = self.get('tmpl');
             if (tmpl) {
                 //用来处理模板不同的模板类型
-
+                if(tmpl.charAt(0) === '#'){
+                    self.set('tmpl', $(tmpl).html());
+                }
                 return true;
             }
             //开发者获取模板后，调用next方法
@@ -299,7 +301,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                 self.callMethodByHierarchy("bindUI", "__bindUI");
 
                 //兼容老的brix render后的初始化函数
-                //self.callMethodByHierarchy("initialize", "constructor");
+                self.callMethodByHierarchy("initialize", "constructor");
 
                 /**
                  * @event afterBindUI
@@ -549,7 +551,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                         var constt = BrickClass;
                         var arr = [];
                         while (constt) {
-                            if (constt.NAME == 'Brick') {
+                            if (constt.MARK == 'Brix') {
                                 flg = true;
                             }
                             var listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value;
@@ -570,8 +572,11 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
                             }
                         }
                         arr = null;
-
                         o.brick = new BrickClass(config);
+                        //不是继承brix的组件，直接触发ready
+                        if(!flg){
+                            self._bx_fireReady();
+                        }
 
                     });
                 });
@@ -1096,7 +1101,7 @@ KISSY.add("brix/core/brick", function(S, Promise, RichBase, XTemplate, Node, Eve
             }
         });
     }
-
+    Brick.MARK = 'Brix';
     return Brick;
 }, {
     requires: ['promise', 'rich-base', 'xtemplate', 'node', 'event', 'ua', 'ajax', 'uri', 'sizzle']
