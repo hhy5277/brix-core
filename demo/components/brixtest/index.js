@@ -35,7 +35,7 @@ KISSY.add("components/brixtest/index", function(S, Brick) {
 			'#input2': {
 				click: function(e) {
 					var self = this;
-					self.setChunkData('b', 'bbb' + S.guid(), {
+					self.get('parent').setChunkData('b', 'bbb' + S.guid(), {
 						renderType: 'prepend'
 					});
 				}
