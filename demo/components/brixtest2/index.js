@@ -14,7 +14,6 @@ KISSY.add("components/brixtest2/index", function(S, Brick) {
 			S.log('bindUI2');
 		},
 		syncUI:function(){
-			debugger
 			this.get('el').one('#brixtest3').one('span').css('color','red');
 		},
 		destructor: function() {
@@ -31,6 +30,11 @@ KISSY.add("components/brixtest2/index", function(S, Brick) {
 						Brick.getTemplate(module,'index.html',e);
 						return true;
 					}
+				}
+			},
+			data:{
+				value:{
+					g:1234
 				}
 			}
 		},

@@ -45,10 +45,16 @@
                     el:'#container',
                     tmpl:'#tmpl',
                     config:{
+                        brixtest2:{
+                            data:{
+                                a:'aa',
+                                b:'bb',
+                                c:'cc'
+                            }
+                        },
                         brixtest4:{
                             listeners:{
                                 getTemplate:function(e){
-                                    debugger
                                     var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>'
                                     e.next(tmpl);
                                 }
