@@ -13,6 +13,10 @@ KISSY.add("components/brixtest2/index", function(S, Brick) {
 			//和老版本的initialize作用相同
 			S.log('bindUI2');
 		},
+		syncUI:function(){
+			debugger
+			this.get('el').one('#brixtest3').one('span').css('color','red');
+		},
 		destructor: function() {
 			S.log('destructor2');
 		}
