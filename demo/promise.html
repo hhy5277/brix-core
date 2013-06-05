@@ -44,6 +44,17 @@
                 window.brick = new Brick({
                     el:'#container',
                     tmpl:'#tmpl',
+                    config:{
+                        brixtest4:{
+                            listeners:{
+                                getTemplate:function(e){
+                                    debugger
+                                    var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>'
+                                    e.next(tmpl);
+                                }
+                            }
+                        }
+                    },
                     listeners:{
                         getData:function(e){
                             var d = e.defer;
