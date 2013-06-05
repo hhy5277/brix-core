@@ -5,9 +5,10 @@
     <title>Promise测试</title>
     <script type="text/javascript" src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
     <script src="../src/brick.js"></script>
+    <link type="text/css" rel="stylesheet" href="http://a.tbcdn.cn/apps/e/brix/2.0/brix-min.css" charset="utf-8">
 </head>
 <body>
-    <button>执行</button>
+    <button class="btn btn-red btn-size25">执行</button>
     <div id="container">
         
     </div>
@@ -38,18 +39,12 @@
                 }]
             ]
         });
-        KISSY.use('brix/core/brick,node',function(S,Brick){
+        KISSY.use('brix/core/brick,brix/gallery/pagination/index.css',function(S,Brick){
             KISSY.all("button").on("click", function () {
                 window.brick = new Brick({
                     el:'#container',
+                    tmpl:'#tmpl',
                     listeners:{
-                        getTemplate:function(e){
-                            S.later(function(){
-                                var tmpl = S.one('#tmpl').html();
-                                e.next(tmpl)   
-                            },500);
-                            return true;
-                        },
                         getData:function(e){
                             var d = e.defer;
                             S.later(function(){
@@ -116,6 +111,8 @@
             </div>
             <div bx-tmpl="tmpl_b" bx-datakey="b">
                 <span>{{b}}</span>
+                <div bx-name="brix/gallery/pagination/" class="pagination"></div>
+
             </div>
             <div bx-tmpl="tmpl_c" bx-datakey='a,  c' class="xx">
                 <span>{{a}}-{{c}}</span>
