@@ -120,5 +120,5 @@ KISSY.add("components/brixtest/index", function(S, Brick) {
 	S.augment(BrixTest, BrixTest.METHODS);
 	return BrixTest;
 }, {
-	requires: ["brix/core/brick","brix/gallery/pagination/index.css"]
+	requires: ["brix/core/brick"]
 });

@@ -83,6 +83,7 @@
                     }
                 });
                 brick.ready(function(){
+                    S.log('ready');
                     brick.setChunkData({a: 'aaaa' + S.guid()});
                 });
             });
@@ -115,8 +116,6 @@
             </div>
             <div bx-tmpl="tmpl_b" bx-datakey="b">
                 <span>{{b}}</span>
-                <div bx-name="brix/gallery/pagination/" class="pagination">
-    </div>
             </div>
             <div bx-tmpl="tmpl_c" bx-datakey='a,  c' class="xx">
                 <span>{{a}}-{{c}}</span>

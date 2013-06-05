@@ -4,17 +4,17 @@ KISSY.add("components/brixtest3/index", function(S, Brick) {
 		constructor: function BrixTest() {
 			//可以重新定义构成函数，如果定义，必须显示调用父类的构造函数
 			BrixTest.superclass.constructor.apply(this, arguments);
-			S.log('constructor');
+			S.log('constructor3');
 		},
 		initializer: function() {
-			S.log('initializer');
+			S.log('initializer3');
 		},
 		bindUI: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI');
+			S.log('bindUI3');
 		},
 		destructor: function() {
-			S.log('destructor');
+			S.log('destructor3');
 		}
 	}, {
 		ATTRS: {
