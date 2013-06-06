@@ -1,4 +1,4 @@
-KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA, IO, Uri) {
+KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bxTemplate)  {
     var $ = Node.all;
     var noop = S.noop;
 
@@ -17,20 +17,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             el.attr('id', id);
         }
         return el.attr('id');
-    }
-    /**
-     * 将字符串格式化成对象
-     * @param  {String} s 字符串
-     * @return {Objcet}   对象
-     * @ignore
-     */
-
-    function evalJSON(s) {
-        if (s) {
-            return (new Function('return ' + s))();
-        } else {
-            return {};
-        }
     }
 
     var Brick = RichBase.extend({
@@ -74,25 +60,28 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxGetTemplate: function() {
             var d = new Promise.Defer();
             var self = this;
-            var tmpl = self.get('tmpl');
-            if (tmpl) {
-                //用来处理模板不同的模板类型
-                if (tmpl.charAt(0) === '#') {
-                    self.set('tmpl', $(tmpl).html());
-                }
-                return true;
-            }
-            //开发者获取模板后，调用next方法
-            //fn 留作扩展使用
-            var fn = self.fire('getTemplate', {
-                next: function(tmpl) {
-                    self.set('tmpl', tmpl);
-                    d.resolve(true);
-                }
-            });
-            if (!fn) {
-                d.resolve(false);
-            }
+
+            d.promise
+                .then(function() {
+                    self.bxHandleTemplate(function() {
+                        d.resolve(true)
+                    })
+                })
+                .then(function() {
+                    //开发者获取模板后，调用next方法
+                    //fn 留作扩展使用
+                    var fn = self.fire('getTemplate', {
+                        next: function(tmpl) {
+                            self.set('tmpl', tmpl);
+                            d.resolve(true);
+                        }
+                    });
+                    if (!fn) {
+                        d.resolve(!!self.get('tmpl'));
+                    }
+                })
+
+            d.resolve(true)
 
             return d.promise;
         },
@@ -101,7 +90,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
          */
         bxBuildTemplate: function() {
             var self = this;
-            var tmpl = self.get('tmpl')
+            var tmpl = self.get('tmpl');
             var level = self.get('level');
             if (tmpl) {
                 tmpl = self.bxBrickTag(tmpl);
@@ -155,7 +144,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxTmplName: function(tmpl) {
             return tmpl.replace(/(bx-tmpl=["'][^"']+["'])/ig, '')
                 .replace(/(bx-datakey=["'][^"']+["'])/ig, function($1) {
-                return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + $1
+                return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + $1;
             });
         },
         bxBuildBrickTmpl: function(tmpl) {
@@ -202,7 +191,8 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     name: m[3],
                     datakey: m[4],
                     tmpl: m[5].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, function(all, bx) {
-                        var o = brickTmpls[bx]
+                        var o = brickTmpls[bx];
+
                         return o.start + o.middle + o.end;
                     })
                 });
@@ -432,7 +422,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     var o = bricks[i];
                     while (!o && i >= 0) {
                         o = bricks[i];
-                        i--
+                        i--;
                     }
                     if (!o.refresh) {
                         o.refresh = true;
@@ -497,7 +487,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                             id: id,
                             tag: tag,
                             name: name,
-                            config: evalJSON(c.attr('bx-config'))
+                            config: S.globalEval(c.attr('bx-config')) || {}
                         });
                     }
 
@@ -801,7 +791,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     length = bricks.length;
                     i--;
                 }
-            };
+            }
             bricks = null;
             self.set('bricks', bricks);
 
@@ -1127,28 +1117,23 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         }
     }, 'Brick');
 
+    S.augment(Brick, bxTemplate)
+
     /**
      * 静态方法集合
      */
 
-    /**
-     * 获取内置模板文件
-     * @param  {Object} module 模块的this
-     * @param  {[type]} path   相对路径
-     * @param  {CustomEventObject} e      事件对象
-     */
-    Brick.getTemplate = function(module, path, e) {
-        var url = new Uri(module.getFullPath()).resolve(path).toString();
-        IO({
-            url: url,
-            dataType: 'html',
-            success: function(d) {
-                e.next(d);
-            }
-        });
-    };
     Brick.MARK = 'Brix';
+
     return Brick;
 }, {
-    requires: ['promise', 'rich-base', 'xtemplate', 'node', 'event', 'ua', 'ajax', 'uri', 'sizzle']
+    requires: [
+        'promise',
+        'rich-base',
+        'xtemplate',
+        'node',
+        'event',
+        'brix/core/bx-template',
+        'sizzle'
+    ]
 });

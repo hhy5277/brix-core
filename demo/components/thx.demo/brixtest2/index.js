@@ -24,14 +24,6 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 			b: {
 				value: 4
 			},
-			listeners: {
-				value: {
-					getTemplate: function(e) {
-						Brick.getTemplate(module,'index.html',e);
-						return true;
-					}
-				}
-			},
 			data:{
 				value:{
 					g:1234
