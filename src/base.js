@@ -49,7 +49,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }).then(function() {
                 return self.bxGetData();
             }).then(function() {
-                return self.bxBuildData(v);
+                return self.bxBuildData();
             }).then(function() {
                 if (self.get('autoRender')) {
                     self.render();
@@ -548,7 +548,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxInitChildren: function(bricks, callback) {
             var self = this;
             self.set('isReady', false);
-            
+
             if (bricks.length === 0) {
                 self.bxFireReady(callback);
                 return;
