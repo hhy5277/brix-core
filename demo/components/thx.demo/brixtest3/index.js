@@ -1,5 +1,5 @@
 KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
-	var module = this;
+
 	var BrixTest3 = Brick.extend({
 		constructor: function BrixTest() {
 			//可以重新定义构成函数，如果定义，必须显示调用父类的构造函数
@@ -24,14 +24,6 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 			data:{
 				value:{
 					text:'我是test3'
-				}
-			},
-			listeners: {
-				value: {
-					getTemplate: function(e) {
-						Brick.getTemplate(module,'index.html',e);
-						return true;
-					}
 				}
 			}
 		},
