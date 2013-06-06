@@ -1,23 +1,14 @@
 KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA, IO, Uri) {
-
     var $ = Node.all;
     var noop = S.noop;
 
-    var BRICKREGEXP = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+[^>]*?bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)';
-
-    //子模板主正则
-    var SUBTMPLREGEXP = '<([\\w]+)\\s+[^>]*?bx-tmpl=["\']([^"\']+)["\']\\s+[^>]*?bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>(@brix@)</\\1>';
-
-    //不解析模板存储正则
-    var STORETMPLREGEXP = /\{\{#bx\-tmpl\-([^\}]*)?\}\}([\s\S]*?)\{\{\/bx\-tmpl\}\}/ig;
-
     /**
      * 用以给brick打上id的标记,brick有id则返回
-     * @method _stamp
      * @param el
      * @return {string}
      * @ignore
      */
+
     function _stamp(el) {
         if (!el.attr('id')) {
             var id;
@@ -27,6 +18,12 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         }
         return el.attr('id');
     }
+    /**
+     * 将字符串格式化成对象
+     * @param  {String} s 字符串
+     * @return {Objcet}   对象
+     * @ignore
+     */
 
     function evalJSON(s) {
         if (s) {
@@ -41,44 +38,36 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             var self = this;
             var d = new Promise.Defer();
             var promise = d.promise;
-            S.log('流程开始');
-            promise.then(function(v) {
-                S.log('获取模板');
-                return self.bxGetTemplate(v);
-            }).then(function(v) {
-                S.log('编译模板');
-                return self.bxBuildTemplate(v);
-            }).then(function(v) {
-                S.log('获取数据');
-                return self.bxGetData(v);
-            }).then(function(v) {
-                S.log('编译数据');
+            promise.then(function() {
+                self.on('ready', function() {
+                    //需要在自己完成后调用什么方法呢？
+                });
+            }).then(function() {
+                return self.bxGetTemplate();
+            }).then(function() {
+                return self.bxBuildTemplate();
+            }).then(function() {
+                return self.bxGetData();
+            }).then(function() {
                 return self.bxBuildData(v);
             }).then(function() {
-                S.log('渲染页面');
                 if (self.get('autoRender')) {
                     self.render();
                 }
             }).then(function() {
-                S.log('附加行为');
                 if (self.get('autoBehavior')) {
                     return self.addBehavior();
                 }
-            }).then(function() {
-                S.log('流程结束');
             });
-            d.resolve(1);
+            d.resolve(true);
         },
-
         bindUI: noop,
-
         /**
          * 同步属性与用户界面
          * @protected
          * @method
          */
         syncUI: noop,
-
         /**
          * 获取模板
          */
@@ -107,37 +96,30 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
 
             return d.promise;
         },
-
         /**
          * 编译模板
          */
         bxBuildTemplate: function() {
             var self = this;
-            var tmpl = self.get('tmpl');
+            var tmpl = self.get('tmpl')
             var level = self.get('level');
-            var tempTmpl;
-
             if (tmpl) {
                 tmpl = self.bxBrickTag(tmpl);
                 tmpl = self.bxTmplName(tmpl);
-
-                self.set('tmpl', tmpl);
-
-                tempTmpl = self.bxBuildBrickTmpl(tmpl);
                 //存储模板暂时不做
                 //self.bxBuildStoreTmpls(tmpl);
-                self.bxBuildSubTmpls(tempTmpl, false, level);
+                self.set('tmpl', tmpl);
+
+                self.bxBuildSubTmpls(self.bxBuildBrickTmpl(tmpl), false, level);
 
                 //对模板的处理，比如子模板的提取，存储模板的提取
                 return true;
             } else {
                 var brickTmpl = self.get('brickTmpl');
                 if (brickTmpl) {
-                    tempTmpl = self.bxBuildBrickTmpl(brickTmpl);
-                    self.bxBuildSubTmpls(tempTmpl, false, level);
+                    self.bxBuildSubTmpls(self.bxBuildBrickTmpl(brickTmpl), false, level);
                 }
             }
-
             return false;
         },
         /**
@@ -148,7 +130,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxBuildStoreTmpls: function(tmpl) {
             var self = this;
             var storeTmpls = self.get('storeTmpls');
-
             tmpl = tmpl.replace(STORETMPLREGEXP, function(g, id, html) {
                 storeTmpls[id] = html;
                 return '';
@@ -162,7 +143,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
          */
         bxBrickTag: function(tmpl) {
             return tmpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
-                    .replace(/(bx-name=["'][^"']+["'])/ig, function($1) {
+                .replace(/(bx-name=["'][^"']+["'])/ig, function($1) {
                 return $1 + ' bx-tag="brix_brick_tag_' + S.guid() + '"';
             });
         },
@@ -173,65 +154,62 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
          */
         bxTmplName: function(tmpl) {
             return tmpl.replace(/(bx-tmpl=["'][^"']+["'])/ig, '')
-                    .replace(/(bx-datakey=["'][^"']+["'])/ig, function($1) {
-                return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + $1;
+                .replace(/(bx-datakey=["'][^"']+["'])/ig, function($1) {
+                return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + $1
             });
         },
-
         bxBuildBrickTmpl: function(tmpl) {
             var self = this;
-            var r = BRICKREGEXP;
+            var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)';
             var brickTmpls = self.get('brickTmpls');
-            var tempTmpls = self.get('tempTmpls');
             var level = self.get('level');
             while (level--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?');
             }
             r = r.replace('@brix@', '(?:[\\s\\S]*?)');
             var reg = new RegExp(r, "ig");
-            tmpl = tmpl.replace(reg, function($1, $2, $3, $4, $5, $6) {
-                brickTmpls[$5] = $6;
-                tempTmpls[$5] = $1;
+            tmpl = tmpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
+                brickTmpls[bx] = {
+                    start: start,
+                    middle: middle,
+                    end: end
+                };
                 //占位符
-                return '@brix@' + $5 + '@brix@';
+                return '@brix@' + bx + '@brix@';
             });
             return tmpl;
         },
-
         /**
          * 对节点中的bx-tmpl和bx-datakey解析，构建模板和数据配置
          * @param {String} tmpl  需要解析的模板
-         * @param {String} r 正则
-         * @param {Number} level  嵌套层级
          * @private
          */
-        bxBuildSubTmpls: function(tmpl, r, level) {
+        bxBuildSubTmpls: function(tmpl) {
             var self = this;
             var subTmpls = self.get('subTmpls');
-            var tempTmpls = self.get('tempTmpls');
-            if (!r) {
-                r = SUBTMPLREGEXP;
-                while (level--) {
-                    r = r.replace('@brix@', '(?:<\\1[^>]*>@brix@</\\1>|[\\s\\S])*?');
-                }
-                r = r.replace('@brix@', '(?:[\\s\\S]*?)');
+            var brickTmpls = self.get('brickTmpls');
+            var level = self.get('level');
+
+            var r = '(<([\\w]+)\\s+[^>]*?bx-tmpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>(@brix@)</\\2>)';
+            while (level--) {
+                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?');
             }
+            r = r.replace('@brix@', '(?:[\\s\\S]*?)');
             var reg = new RegExp(r, "ig");
             var m;
-            var restoreSubTemplate = function($1,$2){
-                return tempTmpls[$2];
-            };
-
             while ((m = reg.exec(tmpl)) !== null) {
                 subTmpls.push({
-                    name: m[2],
-                    datakey: m[3],
-                    tmpl: m[4].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, restoreSubTemplate)
+                    name: m[3],
+                    datakey: m[4],
+                    tmpl: m[5].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, function(all, bx) {
+                        var o = brickTmpls[bx]
+                        return o.start + o.middle + o.end;
+                    })
                 });
-                //self.bxBuildSubTmpls(m[4], r);
+                //递归编译子模板
+                self.bxBuildSubTmpls(m[5]);
             }
         },
-
         /**
          * 获取数据
          */
@@ -239,7 +217,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             var d = new Promise.Defer();
             var self = this;
             var data = self.get('data');
-
             if (data) {
                 return true;
             }
@@ -256,19 +233,16 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }
             return d.promise;
         },
-
         /**
          * 编译数据
          * @param  {Objcet} data 数据
          */
         bxBuildData: function() {
             var self = this;
-            var data = self.get('data');
-
+            var data = self.get('data')
             if (data) {
                 return true;
-            }
-            else {
+            } else {
                 //是否需要拷贝父亲的数据
                 // if (self.get('tmpl')) {
                 //     var parent = self;
@@ -293,7 +267,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 }
             }
         },
-
         /**
          * 将模板渲染到页面
          */
@@ -310,7 +283,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
 
                 self.bxRender();
 
-
                 /**
                  * @event afterRenderUI
                  * fired after root node is rendered into dom
@@ -318,38 +290,32 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                  */
                 self.fire('afterRenderUI');
 
-
                 self.setInternal("rendered", true);
-
-
-
-                /**
-                 * @event beforeBindUI
-                 * fired before component 's internal event is bind.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-
-                self.fire('beforeBindUI');
-                Brick.superclass.bindInternal.call(self);
-                self.callMethodByHierarchy("bindUI", "__bindUI");
-
-                //兼容老的brix render后的初始化函数
-                self.callMethodByHierarchy("initialize", "constructor");
-
-                /**
-                 * @event afterBindUI
-                 * fired when component 's internal event is bind.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-
-                self.fire('afterBindUI');
-
-
 
                 //初始化子组件
                 var bricks = self.bxFindChildren(self.get('el'), []);
                 self.set('bricks', bricks);
                 self.bxInitChildren(bricks, function() {
+                    /**
+                     * @event beforeBindUI
+                     * fired before component 's internal event is bind.
+                     * @param {KISSY.Event.CustomEventObject} e
+                     */
+
+                    self.fire('beforeBindUI');
+                    Brick.superclass.bindInternal.call(self);
+                    self.callMethodByHierarchy("bindUI", "__bindUI");
+
+                    //兼容老的brix render后的初始化函数
+                    self.callMethodByHierarchy("initialize", "constructor");
+
+                    /**
+                     * @event afterBindUI
+                     * fired when component 's internal event is bind.
+                     * @param {KISSY.Event.CustomEventObject} e
+                     */
+
+                    self.fire('afterBindUI');
                     /**
                      * @event beforeSyncUI
                      * fired before component 's internal state is synchronized.
@@ -372,7 +338,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }
             return self;
         },
-
         /**
          * 将模板渲染到页面
          * @private
@@ -387,7 +352,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }
             return true;
         },
-
         /**
          * 局部刷新
          * @param  {String} subTmplName 子模板名称或id，这个待定
@@ -397,7 +361,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
          */
         bxRefreshTmpl: function(keys, data, renderType) {
             var self = this;
-
             if (self.get('rendered')) {
                 var el = self.get('el');
                 var subTmpls = self.get('subTmpls');
@@ -446,8 +409,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                             });
 
                             //重新设置局部内容
-
-
                             nodes[renderType](S.trim(self.bxRenderTemplate(o.tmpl, newData)));
 
                             /**
@@ -465,16 +426,29 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
 
                 var bricks = self.get('bricks');
 
-                S.each(bricks, function(o) {
-                    //递归调用子组件的数据
-                    var brick = o.brick;
-                    if (brick && !brick.get('data')) {
-                        o.brick.bxRefreshTmpl(keys, data, renderType);
+                //为什么要这样做？
+                //因为bxRefreshTmpl有可能会更改bricks数组的长度
+                for (var i = 0; i < bricks.length; i++) {
+                    var o = bricks[i];
+                    while (!o && i >= 0) {
+                        o = bricks[i];
+                        i--
                     }
+                    if (!o.refresh) {
+                        o.refresh = true;
+                        var brick = o.brick;
+                        if (brick && !brick.get('data')) {
+                            o.brick.bxRefreshTmpl(keys, data, renderType);
+                            i = 0;
+                        }
+                    }
+                }
+                //更新refresh的状态为false
+                S.each(bricks, function(o) {
+                    o.refresh = false;
                 });
             }
         },
-
         /**
          * 模板和数据渲染成字符串
          * @param  {Object} data 数据
@@ -491,12 +465,11 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 return templateEngine.render(tmpl, data);
             }
         },
-
         /**
          * 获取指定节点下的所有bx-name
          * @param  {Node} node   指定节点
          * @param  {Array} bricks 存储节点数组
-         * @param {Boolean} exist 是否判断是否已经存在
+         * @param  {Boolean} exist 是否判断是否已经存在
          * @return {Array}        数组集合
          * @private
          */
@@ -532,17 +505,13 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     return self.bxFindChildren(c, bricks, exist);
                 }
             });
-
             return bricks;
         },
-
         /**
          * 给组件添加行为
          */
         addBehavior: function() {
             var self = this;
-
-            S.log('addBehaviored');
             if (self.get('rendered') && !self.get('addBehaviored')) {
                 self.set('addBehaviored', true);
                 //绑定事件
@@ -570,7 +539,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 });
             }
         },
-
         /**
          * 构造子组件
          * @param {Array} bricks 组件集合
@@ -580,13 +548,12 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxInitChildren: function(bricks, callback) {
             var self = this;
             self.set('isReady', false);
-
+            
             if (bricks.length === 0) {
                 self.bxFireReady(callback);
                 return;
             }
             var useList = [];
-
             S.each(bricks, function(o) {
                 var config = o.config;
                 //mix self&&parent的config
@@ -601,72 +568,62 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     useList.push(o.name);
                 }
             });
-
             //实例化子组件
             S.use(useList.join(','), function(S) {
                 var useClassList = arguments;
-
                 //S.later(function() {
                 if (self.get('destroyed')) {
                     return;
                 }
                 var brickTmpls = self.get('brickTmpls');
-
                 S.each(bricks, function(o) {
-                    if (o.destroyed) {
-                        return;
-                    }
-
-                    var config = S.merge({
-                        //是否要将子模板和存储模板作为参数带入？
-                        el: '#' + o.id,
-                        brickTmpl: o.tag ? brickTmpls[o.tag] : false,
-                        parent: self
-                    }, o.config);
-                    var BrickClass = useClassList[S.indexOf(o.name, useList) + 1];
-                    var flg = false;
-                    var constt = BrickClass;
-                    var arr = [];
-                    var listeners;
-
-                    arr.push(config.listeners || {});
-                    config.listeners = {};
-
-                    while (constt) {
-                        //标识
-                        if (constt.MARK == 'Brix') {
-                            flg = true;
+                    if (!o.destroyed) {
+                        var config = S.merge({
+                            //是否要将子模板和存储模板作为参数带入？
+                            el: '#' + o.id,
+                            brickTmpl: o.tag ? brickTmpls[o.tag].middle : false,
+                            parent: self
+                        }, o.config);
+                        var BrickClass = useClassList[S.indexOf(o.name, useList) + 1];
+                        var flg = false;
+                        var constt = BrickClass;
+                        var arr = [];
+                        arr.push(config.listeners || {});
+                        config.listeners = {};
+                        while (constt) {
+                            //标识
+                            if (constt.MARK == 'Brix') {
+                                flg = true;
+                            }
+                            var listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value;
+                            if (listeners) {
+                                arr.push(listeners);
+                            }
+                            constt = constt.superclass && constt.superclass.constructor;
                         }
-                        listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value;
-                        if (listeners) {
-                            arr.push(listeners);
+                        for (var i = arr.length - 1; i >= 0; i--) {
+                            var listeners = arr[i];
+                            for (var key in listeners) {
+                                config.listeners[key] = listeners[key];
+                            }
                         }
-                        constt = constt.superclass && constt.superclass.constructor;
-                    }
-                    for (var i = arr.length - 1; i >= 0; i--) {
-                        listeners = arr[i];
+                        arr = null;
 
-                        for (var key in listeners) {
-                            config.listeners[key] = listeners[key];
+                        config.listeners['ready'] = function() {
+                            self.bxFireReady(callback);
                         }
-                    }
-                    arr = null;
 
-                    config.listeners.ready = function() {
-                        self.bxFireReady(callback);
-                    };
-
-                    o.brick = new BrickClass(config);
-                    //不是继承brix的组件，直接触发ready
-                    if (!flg) {
-                        self.bxFireReady(callback);
+                        o.brick = new BrickClass(config);
+                        //不是继承brix的组件，直接触发ready
+                        if (!flg) {
+                            self.bxFireReady(callback);
+                        }
                     }
                 });
                 bricks = null;
                 //}, 3000);
             });
         },
-
         /**
          * 绑定事件
          * @private
@@ -689,7 +646,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 this.bxAddEvents(events);
             }
         },
-
         /**
          * 添加事件代理绑定
          * @param  {Object} events 事件对象，参见EVENTS
@@ -730,7 +686,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 }
             }
         },
-
         /**
          * 移除事件
          * @private
@@ -746,14 +701,12 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 constt = constt.superclass && constt.superclass.constructor;
             }
 
-
             //用户使用组件中的自定义事件代理
             var events = self.get("events");
             if (events) {
                 this.bxRemoveEvents(events);
             }
         },
-
         /**
          * 移除事件代理
          * @param  {Object} events 事件对象，参见EVENTS和DOCEVENTS属性
@@ -794,7 +747,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 }
             }
         },
-
         /**
          * 销毁子组件
          * @private
@@ -802,14 +754,13 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         bxDestroyBrick: function(o) {
             o.destroyed = true;
             if (o.brick) {
-                if (o.brick.destroy) o.brick.destroy();
+                o.brick.destroy && o.brick.destroy();
                 o.brick = null;
             } else {
                 //需要吗？
                 $('#' + o.id).empty();
             }
         },
-
         /**
          * 销毁组件
          * @param {String} id 组件id
@@ -827,7 +778,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 }
             }
         },
-
         /**
          * 析构函数，销毁资源
          * @return {[type]} [description]
@@ -844,7 +794,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             //需要解决如何从父组件数组中移除自己
             var length = bricks.length;
             var i;
-
             for (i = 0; i < bricks.length; i++) {
                 var o = bricks[i];
                 self.bxDestroyBrick(o);
@@ -852,11 +801,9 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                     length = bricks.length;
                     i--;
                 }
-            }
+            };
             bricks = null;
             self.set('bricks', bricks);
-
-
 
             var parent = self.get('parent');
             //如果存在父组件，则移除父组件bricks中的自己
@@ -882,12 +829,10 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                         el.empty();
                         break;
                 }
-                //el = null;
             }
             self.set('destroyed', true);
             el = null;
         },
-
         /**
          * 设置数据，并刷新模板数据
          * @param {String} datakey 需要更新的数据对象key
@@ -935,7 +880,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
 
             self.bxRefreshTmpl(keys, newData, renderType);
         },
-
         /**
          * 渲染完成后需要执行的函数
          * @param {Function} fn 执行的函数
@@ -943,12 +887,10 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
         ready: function(fn) {
             if (this.get('isReady')) {
                 fn.call(window, this);
-            }
-            else {
+            } else {
                 this.get('readyList').push(fn);
             }
         },
-
         /**
          * 触发ready添加的方法
          * @param {Function} callback 回调
@@ -962,12 +904,15 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }
             var bricks = self.get('bricks');
             var counter = self.get('counter');
-
             self.set('counter', ++counter);
             if (bricks.length === 0 || counter === bricks.length) {
-                if (callback) callback.call(self);
+                callback && callback.call(self);
+
                 //所有子组件渲染完成，触发本身的ready事件
                 self.fire('ready');
+                //ready只触发一次
+                self.detach('ready');
+
                 self.set('isReady', true);
                 //局部变量，保证所有注册方法只执行一次
                 var readyList = self.get('readyList');
@@ -981,7 +926,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 readyList = null;
             }
         },
-
         /**
          * 扩展数据，用于模板引擎渲染
          * @param {Object} renderer 扩展方法对象
@@ -1007,8 +951,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 }
             }
         },
-
-        on: function() {
+        on: function(eventType, fn) {
             var self = this;
             //原有事件绑定做记录？？？
             Brick.superclass.on.apply(self, arguments);
@@ -1162,7 +1105,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             },
             /**
              * 组件的分析模板，不进入渲染逻辑
-             * @type {Object}
+             * @type {String}
              */
             brickTmpl: {
                 value: false
@@ -1175,14 +1118,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
                 value: {}
             },
             /**
-             * 存储模板的临时对象
-             * @type {Object}
-             */
-            tempTmpls:{
-                value:{}
-            },
-            /**
-             * 计数器
+             * 已经完成渲染的子组件计数器
              * @type {Number}
              */
             counter: {
@@ -1203,7 +1139,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
      */
     Brick.getTemplate = function(module, path, e) {
         var url = new Uri(module.getFullPath()).resolve(path).toString();
-
         IO({
             url: url,
             dataType: 'html',
@@ -1212,7 +1147,6 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, UA
             }
         });
     };
-
     Brick.MARK = 'Brix';
     return Brick;
 }, {
