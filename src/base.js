@@ -35,21 +35,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                     return self.bxGetTemplate();
                 })
                 .then(function() {
-                    var d = new Promise.Defer();
-
-                    //开发者获取模板后，调用next方法
-                    //fn 留作扩展使用
-                    var fn = self.fire('getTemplate', {
-                        next: function(tmpl) {
-                            d.resolve(tmpl);
-                        }
-                    });
-
-                    if (!fn) {
-                        d.resolve(self.get('tmpl'));
-                    }
-
-                    return d.promise;
+                    return self.bxFireGetTemplate();
                 })
                 .then(function() {
                     return self.bxBuildTemplate();
@@ -71,15 +57,28 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                     }
                 });
 
-            d.resolve(true);
+            // 将初始化过程变成异步，从而允许这样的写法：
+            //
+            //     var brick = new Brick({ ... })
+            //
+            //     brick.on('ready', function() {
+            //         // 监听 ready 事件
+            //     })
+            //
+            setTimeout(function() {
+                d.resolve(true);
+            }, 0);
         },
+
         bindUI: noop,
+
         /**
          * 同步属性与用户界面
          * @protected
          * @method
          */
         syncUI: noop,
+
         /**
          * 获取模板
          */
@@ -94,6 +93,26 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
 
             return d.promise;
         },
+
+        bxFireGetTemplate: function() {
+            var self = this;
+            var d = new Promise.Defer();
+
+            //开发者获取模板后，调用next方法
+            //fn 留作扩展使用
+            var fn = self.fire('getTemplate', {
+                next: function(tmpl) {
+                    d.resolve(tmpl);
+                }
+            });
+
+            if (!fn) {
+                d.resolve(self.get('tmpl'));
+            }
+
+            return d.promise;
+        },
+
         /**
          * 编译模板
          */
@@ -122,6 +141,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
 
             return false;
         },
+
         /**
          * 构建{{#bx-tmpl-id}}……{{/bx-tmpl}}的存储
          * @param  {String} tmpl 需要解析的模板
@@ -837,6 +857,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             self.set('destroyed', true);
             el = null;
         },
+
         /**
          * 设置数据，并刷新模板数据
          * @param {String} datakey 需要更新的数据对象key
@@ -884,17 +905,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
 
             self.bxRefreshTmpl(keys, newData, renderType);
         },
-        /**
-         * 渲染完成后需要执行的函数
-         * @param {Function} fn 执行的函数
-         */
-        ready: function(fn) {
-            if (this.get('isReady')) {
-                fn.call(window, this);
-            } else {
-                this.get('readyList').push(fn);
-            }
-        },
+
         /**
          * 触发ready添加的方法
          * @param {Function} callback 回调
@@ -908,37 +919,31 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             }
             var bricks = self.get('bricks');
             var counter = self.get('counter');
+
             self.set('counter', ++counter);
             if (bricks.length === 0 || counter === bricks.length) {
                 callback && callback.call(self);
 
                 //所有子组件渲染完成，触发本身的ready事件
                 self.fire('ready');
+
                 //ready只触发一次
                 self.detach('ready');
 
                 self.set('isReady', true);
-                //局部变量，保证所有注册方法只执行一次
-                var readyList = self.get('readyList');
-                self.set('readyList', []);
-                if (readyList.length > 0) {
-                    var fn, i = 0;
-                    while (fn = readyList[i++]) {
-                        fn.call(self);
-                    }
-                }
-                readyList = null;
             }
         },
+
         /**
          * 扩展数据，用于模板引擎渲染
          * @param {Object} renderer 扩展方法对象
          * @param {String} prefix   前缀
          */
         bxSetRenderer: function(renderer, prefix) {
-            var self = this,
-                data = self.get('data'),
-                type, wrapperName;
+            var self = this;
+            var data = self.get('data');
+            var type, wrapperName;
+
             prefix = prefix ? prefix + '_' : '';
             if (renderer) {
                 var foo = function(type, wrapperName) {
@@ -955,7 +960,8 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                 }
             }
         },
-        on: function(eventType, fn) {
+
+        on: function() {
             var self = this;
             //原有事件绑定做记录？？？
             Brick.superclass.on.apply(self, arguments);
@@ -1100,13 +1106,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             isReady: {
                 value: false
             },
-            /**
-             * ready 需要执行的方法集合
-             * @type {Object}
-             */
-            readyList: {
-                value: []
-            },
+
             /**
              * 组件的分析模板，不进入渲染逻辑
              * @type {String}

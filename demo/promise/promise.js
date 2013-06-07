@@ -45,7 +45,7 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                                 var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>';
 
                                 e.next(tmpl);
-                            }, 1)
+                            }, 1);
                         }
                     }
                 }
@@ -84,7 +84,7 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
             }
         });
 
-        brick.ready(function(){
+        brick.on('ready', function(){
             S.log('ready');
             brick.setChunkData({a: 'aaaa' + S.guid()});
         });

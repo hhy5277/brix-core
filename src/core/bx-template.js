@@ -27,7 +27,6 @@ KISSY.add('brix/core/bx-template', function(S, app) {
                 var withinEach = false
                 var parent = el
 
-                /*jshint boss:true*/
                 while ((parent = parent.parent()) && parent !== el) {
                     if (parent.attr('bx-each')) {
                         withinEach = true
