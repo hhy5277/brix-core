@@ -1,0 +1,7 @@
+{
+    "asi": true,
+
+    "predef": {
+        "Mocha": true
+    }
+}
