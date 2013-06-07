@@ -35,6 +35,23 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                     return self.bxGetTemplate();
                 })
                 .then(function() {
+                    var d = new Promise.Defer();
+
+                    //开发者获取模板后，调用next方法
+                    //fn 留作扩展使用
+                    var fn = self.fire('getTemplate', {
+                        next: function(tmpl) {
+                            d.resolve(tmpl);
+                        }
+                    });
+
+                    if (!fn) {
+                        d.resolve(tmpl);
+                    }
+
+                    return d.promise;
+                })
+                .then(function() {
                     return self.bxBuildTemplate();
                 })
                 .then(function() {
@@ -70,30 +87,10 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             var d = new Promise.Defer();
             var self = this;
 
-
-            self.bxHandleTemplate(function(tmpl) {
+            self.bxHandleTemplate(function() {
+                self.set('tmpl', tmpl)
                 d.resolve(tmpl);
             });
-
-            d.promise
-                .then(function(tmpl) {
-                    var d = new Promise.Defer();
-
-                    //开发者获取模板后，调用next方法
-                    //fn 留作扩展使用
-                    var fn = self.fire('getTemplate', {
-                        next: function(tmpl) {
-                            d.resolve(tmpl);
-                        }
-                    });
-
-                    d.resolve(tmpl);
-
-                    return d.promise;
-                })
-                .then(function(tmpl) {
-                    self.set('tmpl', tmpl)
-                });
 
             return d.promise;
         },
