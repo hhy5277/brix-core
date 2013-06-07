@@ -41,9 +41,11 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                 brixtest4:{
                     listeners:{
                         getTemplate:function(e){
-                            var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>';
+                            setTimeout(function() {
+                                var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>';
 
-                            e.next(tmpl);
+                                e.next(tmpl);
+                            }, 1)
                         }
                     }
                 }
