@@ -24,27 +24,36 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             var self = this;
             var d = new Promise.Defer();
             var promise = d.promise;
-            promise.then(function() {
-                self.on('ready', function() {
-                    //需要在自己完成后调用什么方法呢？
+
+            promise
+                .then(function() {
+                    self.on('ready', function() {
+                        //需要在自己完成后调用什么方法呢？
+                    });
+                })
+                .then(function() {
+                    return self.bxGetTemplate();
+                })
+                .then(function() {
+                    return self.bxBuildTemplate();
+                })
+                .then(function() {
+                    return self.bxGetData();
+                })
+                .then(function() {
+                    return self.bxBuildData();
+                })
+                .then(function() {
+                    if (self.get('autoRender')) {
+                        self.render();
+                    }
+                })
+                .then(function() {
+                    if (self.get('autoBehavior')) {
+                        return self.addBehavior();
+                    }
                 });
-            }).then(function() {
-                return self.bxGetTemplate();
-            }).then(function() {
-                return self.bxBuildTemplate();
-            }).then(function() {
-                return self.bxGetData();
-            }).then(function() {
-                return self.bxBuildData();
-            }).then(function() {
-                if (self.get('autoRender')) {
-                    self.render();
-                }
-            }).then(function() {
-                if (self.get('autoBehavior')) {
-                    return self.addBehavior();
-                }
-            });
+
             d.resolve(true);
         },
         bindUI: noop,
@@ -61,27 +70,30 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             var d = new Promise.Defer();
             var self = this;
 
+
+            self.bxHandleTemplate(function(tmpl) {
+                d.resolve(tmpl);
+            });
+
             d.promise
-                .then(function() {
-                    self.bxHandleTemplate(function() {
-                        d.resolve(true)
-                    })
-                })
-                .then(function() {
+                .then(function(tmpl) {
+                    var d = new Promise.Defer();
+
                     //开发者获取模板后，调用next方法
                     //fn 留作扩展使用
                     var fn = self.fire('getTemplate', {
                         next: function(tmpl) {
-                            self.set('tmpl', tmpl);
-                            d.resolve(true);
+                            d.resolve(tmpl);
                         }
                     });
-                    if (!fn) {
-                        d.resolve(!!self.get('tmpl'));
-                    }
-                })
 
-            d.resolve(true)
+                    d.resolve(tmpl);
+
+                    return d.promise;
+                })
+                .then(function(tmpl) {
+                    self.set('tmpl', tmpl)
+                });
 
             return d.promise;
         },
@@ -92,6 +104,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             var self = this;
             var tmpl = self.get('tmpl');
             var level = self.get('level');
+
             if (tmpl) {
                 tmpl = self.bxBrickTag(tmpl);
                 tmpl = self.bxTmplName(tmpl);
@@ -109,6 +122,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                     self.bxBuildSubTmpls(self.bxBuildBrickTmpl(brickTmpl), false, level);
                 }
             }
+
             return false;
         },
         /**
