@@ -41,22 +41,20 @@ KISSY.add('brix/core/bx-template', function(S, app) {
                 }
                 var subTemplets = self.bxParent.bxCachedSubTemplets
 
-                self.set('tmpl', withinEach ? subTemplets[0] : subTemplets.shift())
+                callback(withinEach ? subTemplets[0] : subTemplets.shift())
             }
             else {
                 // 模板是直接传进来的，不需做处理
-                callback()
+                callback(source)
             }
         },
 
         bxScriptTemplate: function(selector, callback) {
-            this.set('tmpl', S.one(selector).html())
-            callback()
+            callback(S.one(selector).html())
         },
 
         bxHereTemplate: function(el, callback) {
-            this.set('tmpl', el.html())
-            callback()
+            callback(el.html())
         },
 
         bxRemoteTemplate: function(mod, callback) {
@@ -64,11 +62,8 @@ KISSY.add('brix/core/bx-template', function(S, app) {
                 this.bxXhrTemplate(mod, callback)
             }
             else {
-                var self = this
-
                 S.use(mod, function(S, template) {
-                    self.set('tmpl', template)
-                    callback()
+                    callback(template)
                 })
             }
         },
@@ -96,10 +91,8 @@ KISSY.add('brix/core/bx-template', function(S, app) {
             }
             parts.push(file + '.html')
 
-            var self = this
             S.IO.get(base + parts.join('/'), function(template) {
-                self.set('tmpl', template)
-                callback()
+                callback(template)
             })
         }
     }
