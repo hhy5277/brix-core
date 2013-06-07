@@ -10,11 +10,16 @@
   <script src="expect.js"></script>
   <script src="mocha.js"></script>
   <script>mocha.setup('bdd')</script>
-  <script src="test.base.js"></script>
+  <script src="test.app.js"></script>
   <script>
-    mocha.checkLeaks();
-    mocha.globals(['KISSY']);
+  mocha.checkLeaks();
+  mocha.globals(['KISSY']);
+
+  // https://github.com/kmiyashiro/grunt-mocha#task-config
+  // 执行 grunt mocha 时，让它自己调 mocha.run ，我们不做处理。
+  if (typeof PHANTOMJS === 'undefined') {
     mocha.run();
+  }
   </script>
 </body>
 </html>

@@ -39,12 +39,23 @@ module.exports = function(grunt) {
           hostname: '*'
         }
       }
+    },
+    mocha: {
+      all: {
+        src: ['test/**/test.*.html'],
+        options: {
+          // 是否捕捉浏览器中的 console.log 并输送至 Node.js 的 console
+          // log: true,
+          run: true
+        }
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-mocha');
 
   grunt.registerTask('test', ['jshint', 'connect', 'qunit']);
   grunt.registerTask('build', ['jshint', 'concat']);

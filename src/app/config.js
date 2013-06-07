@@ -7,7 +7,7 @@ KISSY.add('brix/app/config', function(S) {
 
             base: '.',
 
-            flavor: 'zuomo',
+            'interface': 'zuomo',
 
             imports: null,
 
@@ -23,16 +23,15 @@ KISSY.add('brix/app/config', function(S) {
                 S.mix(this.configData, prop)
             }
             else if (S.isString(prop)) {
-                if (typeof data === 'undefined') {
-                    return this.configData[prop]
-                }
-                else {
+                if (typeof data !== 'undefined') {
                     this.configData[prop] = data
                 }
+                else {
+                    return this.configData[prop]
+                }
             }
-            else {
-                return S.clone(this.configData)
-            }
+
+            return this
         },
 
         mapTimestamp: function() {
