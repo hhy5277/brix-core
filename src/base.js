@@ -46,7 +46,7 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
                     });
 
                     if (!fn) {
-                        d.resolve(tmpl);
+                        d.resolve(self.get('tmpl'));
                     }
 
                     return d.promise;
@@ -87,8 +87,8 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
             var d = new Promise.Defer();
             var self = this;
 
-            self.bxHandleTemplate(function() {
-                self.set('tmpl', tmpl)
+            self.bxHandleTemplate(function(tmpl) {
+                self.set('tmpl', tmpl);
                 d.resolve(tmpl);
             });
 
@@ -130,7 +130,9 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
         bxBuildStoreTmpls: function(tmpl) {
             var self = this;
             var storeTmpls = self.get('storeTmpls');
-            tmpl = tmpl.replace(STORETMPLREGEXP, function(g, id, html) {
+            var storeTmplRegexp = /\{\{#bx\-tmpl\-([^\}]*)?\}\}([\s\S]*?)\{\{\/bx\-tmpl\}\}/ig;
+
+            tmpl = tmpl.replace(storeTmplRegexp, function(g, id, html) {
                 storeTmpls[id] = html;
                 return '';
             });
@@ -240,7 +242,8 @@ KISSY.add("brix/base", function(S, Promise, RichBase, XTemplate, Node, Event, bx
          */
         bxBuildData: function() {
             var self = this;
-            var data = self.get('data')
+            var data = self.get('data');
+
             if (data) {
                 return true;
             } else {
