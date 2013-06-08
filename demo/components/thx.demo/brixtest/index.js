@@ -35,6 +35,7 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			'#input2': {
 				click: function(e) {
 					var self = this;
+
 					self.get('parent').setChunkData('b', 'bbb' + S.guid(), {
 						renderType: 'prepend'
 					});
@@ -87,25 +88,23 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 					S.log(e.currentTarget.value);
 				}
 			},
-			'img':{
-				load:function(e){
-					S.log('图片加载了')
+			'img': {
+				load: function(e){
+					S.log('图片加载了');
 				}
-			}
-		},
-		DOCEVENTS:{
-			'':{
-				click:function(){
+			},
+			document: {
+				click: function() {
 					S.log('点击了document');
 				}
-			}
-		},
-		WINEVENTS:{
-			scroll:function(){
-				S.log('scroll_'+S.guid());
 			},
-			resize:function(){
-				S.log('resize_'+S.guid());
+			window: {
+				scroll: function() {
+					// S.log(S.guid('scroll-'));
+				},
+				resize: function() {
+					// S.log(S.guid('resize-'));
+				}
 			}
 		},
 		FIRES:{
@@ -113,11 +112,13 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 		},
 		METHODS: {
 			testMethod: function() {
-				return 'test'
+				return 'test';
 			}
 		}
 	}, 'BrixTest');
+
 	S.augment(BrixTest, BrixTest.METHODS);
+
 	return BrixTest;
 }, {
 	requires: ["brix/base"]

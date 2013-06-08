@@ -1,3 +1,6 @@
+/**
+ *
+ */
 /*jshint asi:true */
 KISSY.add('brix/core/bx-template', function(S, app) {
 

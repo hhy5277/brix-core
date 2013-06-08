@@ -28,19 +28,19 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
 
     function bootstrap() {
         var brick = new Brick({
-            el:'#container',
-            tmpl:'#tmpl',
-            config:{
-                brixtest2:{
-                    data:{
-                        a:'aa',
-                        b:'bb',
-                        c:'cc'
+            el: '#container',
+            tmpl: '#tmpl',
+            config: {
+                brixtest2: {
+                    data: {
+                        a: 'aa',
+                        b: 'bb',
+                        c: 'cc'
                     }
                 },
-                brixtest4:{
-                    listeners:{
-                        getTemplate:function(e){
+                brixtest4: {
+                    listeners: {
+                        getTemplate: function(e) {
                             setTimeout(function() {
                                 var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>';
 
@@ -50,8 +50,8 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                     }
                 }
             },
-            listeners:{
-                getData:function(e){
+            listeners: {
+                getData: function(e) {
                     S.later(function(){
                         var data = {
                             a: 'a',
@@ -73,12 +73,12 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                             f: function() {
                                 return 'xx';
                             },
-                            g:[5,6,7],
-                            startDay:'haha'
+                            g: [5,6,7],
+                            startDay: 'haha'
                         };
                         e.next(data);
-                        //brick.destroyBrickById('brixtest');
-                    },500);
+                    }, 500);
+
                     return true;
                 }
             }
