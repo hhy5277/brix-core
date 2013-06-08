@@ -235,20 +235,19 @@ KISSY.add("brix/base",
             var d = new Promise.Defer();
             var self = this;
             var data = self.get('data');
-            if (data) {
-                return true;
-            }
+
             //开发者获取数据后，调用next方法
             //fn 留作扩展使用
             var fn = self.fire('getData', {
                 next: function(data) {
                     self.set('data', data);
-                    d.resolve(true);
+                    d.resolve();
                 }
             });
             if (!fn) {
-                d.resolve(false);
+                d.resolve();
             }
+
             return d.promise;
         },
 

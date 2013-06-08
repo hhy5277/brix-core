@@ -12,7 +12,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             function check() {
                 counter++
-                if (total === 0 || counter === total) {
+                if (counter === total) {
                     self.fire('rendered')
                     root = nodes = node = null
                 }
