@@ -1,7 +1,8 @@
+/*jshint asi:true */
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {
-        bxLoad: function(root) {
+        bxHandleName: function(root) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var total = nodes.length
@@ -12,14 +13,14 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             function check() {
                 counter++
                 if (total === 0 || counter === total) {
-                    self.fire('bx:ready')
+                    self.fire('rendered')
                     root = nodes = node = null
                 }
             }
 
             if (total === 0) {
                 setTimeout(function() {
-                    self.fire('bx:ready')
+                    self.fire('rendered')
                 }, 0)
             }
             else {
@@ -32,57 +33,54 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
         },
 
         bxInstantiate: function(el, fn) {
-            var self = this
+            var parent = this
 
-            S.use(el.attr('bx-name') + '/index', function(S, Brick) {
+            S.use(el.attr('bx-name').replace(/\/$/, '') + '/index', function(S, Brick) {
                 if (!S.isFunction(Brick)) {
                     // no need to initialize anything.
                     return
                 }
-                var opts = self.bxOptions(el, Brick)
+                var opts = parent.bxHandleConfig(el, Brick)
                 var inst
 
                 opts.el = el
 
-                inst = new Brick(opts)
-                inst.bxParent = self
-                inst.bxName = el.attr('bx-name')
+                var ancestor = parent
 
-                var children = self.bxChildren
+                while (ancestor) {
+                    var overrides = ancestor.get('config')
+
+                    if (overrides) {
+                        S.mix(opts, overrides[el.attr('id')])
+                        S.mix(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = S.isFunction(ancestor.get) && ancestor.get('parent')
+                }
+
+                inst = new Brick(opts)
+                inst.set('parent', parent)
+                inst.set('name', el.attr('bx-name'))
+                inst.set('id', el.attr('id'))
+
+                var children = parent.get('children')
 
                 if (!children) {
-                    children = self.bxChildren = []
+                    children = []
+                    parent.set('children', children)
                 }
                 children.push(inst)
 
                 if (S.isFunction(inst.initialize)) {
-                    inst.bxCacheSubTemplets(el)
-                    inst.bxWatch(el)
-                    inst.on('bx:ready', fn)
+                    // inst.bxCacheSubTemplets(el)
+                    inst.on('rendered', fn)
                     inst.callMethodByHierarchy('initialize', 'constructor')
-                    inst.bxDelegate(el)
                 }
                 else {
                     fn()
                 }
                 el = null
             })
-        },
-
-        bxCacheSubTemplets: function(el) {
-            var nodes = this.bxDirectChildren(el)
-            var subTemplets = this.bxCachedSubTemplets = []
-
-            for (var i = 0; i < nodes.length; i++) {
-                var node = nodes[i]
-                var template = node.attr('bx-template')
-
-                if (node.attr('bx-model') && (!template || template === '.')) {
-                    subTemplets.push(node.html())
-                    node.html('')
-                    node.attr('bx-template', 'cached')
-                }
-            }
         },
 
         /**
@@ -126,126 +124,6 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 if (children[i].bxName === name) {
                     return children[i]
                 }
-            }
-        },
-
-        bxDelegate: function(el) {
-            el = el || this.get('el')
-            var c = this.constructor
-
-            while (c) {
-                this.bxDelegateMap(c.EVENTS)
-                c = c.superclass ? c.superclass.constructor : null
-            }
-        },
-
-        bxDelegateMap: function(eventsMap) {
-            var el = this.get('el')
-            var Event = S.Event
-
-            for (var sel in eventsMap) {
-                var events = eventsMap[sel]
-
-                for (var type in events) {
-                    var fn = events[type]
-
-                    if (sel === 'self') {
-                        el.on(type, fn, this)
-                    }
-                    else if (sel === 'window') {
-                        Event.on(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.on('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.on(document, type, fn, this)
-                    }
-                    else {
-                        el.delegate(type, sel, fn, this)
-                    }
-                }
-            }
-        },
-
-        bxUndelegate: function(el) {
-            el = el || this.get('el')
-            var c = this.constructor
-
-            while (c) {
-                this.bxUndelegateMap(c.EVENTS)
-                c = c.superclass ? c.superclass.constructor : null
-            }
-        },
-
-        bxUndelegateMap: function(eventsMap) {
-            var el = this.get('el')
-            var Event = S.Event
-
-            for (var sel in eventsMap) {
-                var events = eventsMap[sel]
-
-                for (var type in events) {
-                    var fn = events[type]
-
-                    if (sel === 'self') {
-                        el.detach(type, fn, this)
-                    }
-                    else if (sel === 'window') {
-                        Event.detach(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.detach('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.detach(document, type, fn, this)
-                    }
-                    else {
-                        el.undelegate(type, sel, fn, this)
-                    }
-                }
-            }
-        },
-
-        /* use cases:
-         *
-         *     this.bxOptions(el)            // get options of current brick
-         *     this.bxOptions(el, MyBrick)   // get options of MyBrick
-         */
-        bxOptions: function(el, c) {
-            c = c || this.constructor
-            var optionList = []
-
-            while (c) {
-                if (S.isArray(c.OPTIONS)) {
-                    optionList = optionList.concat(c.OPTIONS)
-                }
-                c = c.superclass ? c.superclass.constructor : null
-            }
-
-            el = el || this.get('el')
-            var opts = {}
-
-            for (var i = 0; i < optionList.length; i++) {
-                var p = optionList[i]
-
-                opts[p] = this.bxCastString(el.attr('data-' + p))
-            }
-
-            return opts
-        },
-
-        bxCastString: function(str) {
-            str = S.trim(str)
-
-            if (/^(?:true|false)$/.test(str)) {
-                return str === 'true'
-            }
-            else if (/^\d+$/.test(str)) {
-                return parseInt(str, 10)
-            }
-            else {
-                return str
             }
         }
     }
