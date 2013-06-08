@@ -1,5 +1,5 @@
 KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
-	var module = this;
+
 	var BrixTest2 = Brick.extend({
 		constructor: function BrixTest() {
 			//可以重新定义构成函数，如果定义，必须显示调用父类的构造函数
@@ -87,21 +87,6 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 					//这个有问题啊。bx-tmpl应该唯一键值。可以考虑加上组件名称前缀
 					self.pagelet.setChunkData('startDay', 'startDay' + S.guid());
 				}
-			}
-		},
-		DOCEVENTS: {
-			'': {
-				click: function() {
-					S.log('点击了document');
-				}
-			}
-		},
-		WINEVENTS: {
-			scroll: function() {
-				S.log('scroll_' + S.guid());
-			},
-			resize: function() {
-				S.log('resize_' + S.guid());
 			}
 		},
 		FIRES: {
