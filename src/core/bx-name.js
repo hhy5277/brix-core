@@ -5,10 +5,22 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
         bxHandleName: function(root) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
-            var total = nodes.length
+            var children = this.get('children') || []
+            var i, j
+            var node
+
+            for (i = nodes.length - 1; i >= 0; i--) {
+                node = nodes[i]
+
+                for (j = 0; j < children.length; j++) {
+                    if (children[j].get('id') === node.attr('id')) {
+                        nodes.splice(i, 1)
+                    }
+                }
+            }
             var counter = 0
             var self = this
-            var node
+            var total = nodes.length
 
             function check() {
                 console.log('checking', self.get('name'), total, counter)
@@ -27,7 +39,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             else {
                 var klasses = []
 
-                for (var i = 0; i < total; i++) {
+                for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
                     klasses[i] = nodes[i].attr('bx-name').replace(/\/$/, '') + '/index'
                 }
@@ -121,7 +133,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
          */
         bxDirectChildren: function(root, selector) {
             var arr = []
-            var parentName = root.attr('bx-name')
+            var parentName = this.get('name')
 
             selector = selector || '[bx-name]'
             root.all(selector).each(function(ele) {
