@@ -7,7 +7,7 @@ KISSY.add('brix/app/config', function(S) {
 
             base: '.',
 
-            'interface': 'zuomo',
+            interface: 'zuomo',
 
             imports: null,
 

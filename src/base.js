@@ -1,6 +1,8 @@
 /*jshint asi:true */
 KISSY.add("brix/base",
-          function(S, bxTemplate, bxName, bxDelegate, bxConfig,
+          function(S, app,
+                      bxTemplate, bxName, bxDelegate, bxConfig,
+                      IZuomo,
                       Promise, RichBase, XTemplate) {
 
     var noop = S.noop
@@ -108,129 +110,7 @@ KISSY.add("brix/base",
         /**
          * 编译模板
          */
-        bxBuildTemplate: function() {
-            var self = this
-            var tmpl = self.get('tmpl')
-            var level = self.get('level')
-
-            if (tmpl) {
-                tmpl = self.bxBrickTag(tmpl)
-                tmpl = self.bxTmplName(tmpl)
-                //存储模板暂时不做
-                //self.bxBuildStoreTmpls(tmpl)
-                self.set('tmpl', tmpl)
-
-                self.bxBuildSubTmpls(self.bxBuildBrickTmpl(tmpl), false, level)
-
-                //对模板的处理，比如子模板的提取，存储模板的提取
-                return true
-            }
-            else {
-                var brickTmpl = self.get('brickTmpl')
-
-                if (brickTmpl) {
-                    self.bxBuildSubTmpls(self.bxBuildBrickTmpl(brickTmpl), false, level)
-                }
-            }
-
-            return false
-        },
-
-        /**
-         * 构建{{#bx-tmpl-id}}……{{/bx-tmpl}}的存储
-         * @param  {String} tmpl 需要解析的模板
-         * @return {String}      解析后的模板
-         */
-        bxBuildStoreTmpls: function(tmpl) {
-            var self = this
-            var storeTmpls = self.get('storeTmpls')
-            var storeTmplRegexp = /\{\{#bx\-tmpl\-([^\}]*)?\}\}([\s\S]*?)\{\{\/bx\-tmpl\}\}/ig
-
-            tmpl = tmpl.replace(storeTmplRegexp, function(g, id, html) {
-                storeTmpls[id] = html
-                return ''
-            })
-            return tmpl
-        },
-
-        /**
-         * 为模板中的组件打上tag标识
-         * @param  {String} tmpl 模板
-         * @return {String}      替换后的模板
-         */
-        bxBrickTag: function(tmpl) {
-            return tmpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
-                    .replace(/(bx-name=["'][^"']+["'])/ig, function(match) {
-                return match + ' bx-tag="brix_brick_tag_' + S.guid() + '"'
-            })
-        },
-
-        /**
-         * 为bx-datakey自动生成bx-tmpl
-         * @param  {String} tmpl 模板
-         * @return {String}      替换后的模板
-         */
-        bxTmplName: function(tmpl) {
-            return tmpl.replace(/(bx-tmpl=["'][^"']+["'])/ig, '')
-                    .replace(/(bx-datakey=["'][^"']+["'])/ig, function(match) {
-                return 'bx-tmpl="brix_tmpl_' + S.guid() + '" ' + match
-            })
-        },
-
-        bxBuildBrickTmpl: function(tmpl) {
-            var self = this
-            var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-            var brickTmpls = self.get('brickTmpls')
-            var level = self.get('level')
-            while (level--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-            var reg = new RegExp(r, "ig")
-            tmpl = tmpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-                brickTmpls[bx] = {
-                    start: start,
-                    middle: middle,
-                    end: end
-                }
-                //占位符
-                return '@brix@' + bx + '@brix@'
-            })
-            return tmpl
-        },
-
-        /**
-         * 对节点中的bx-tmpl和bx-datakey解析，构建模板和数据配置
-         * @param {String} tmpl  需要解析的模板
-         * @private
-         */
-        bxBuildSubTmpls: function(tmpl) {
-            var self = this
-            var subTmpls = self.get('subTmpls')
-            var brickTmpls = self.get('brickTmpls')
-            var level = self.get('level')
-
-            var r = '(<([\\w]+)\\s+[^>]*?bx-tmpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>(@brix@)</\\2>)'
-            while (level--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-            var reg = new RegExp(r, "ig")
-            var m
-            while ((m = reg.exec(tmpl)) !== null) {
-                subTmpls.push({
-                    name: m[3],
-                    datakey: m[4],
-                    tmpl: m[5].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, function(all, bx) {
-                        var o = brickTmpls[bx]
-
-                        return o.start + o.middle + o.end
-                    })
-                })
-                //递归编译子模板
-                self.bxBuildSubTmpls(m[5])
-            }
-        },
+        bxBuildTemplate: noop,
 
         /**
          * 获取数据
@@ -333,108 +213,6 @@ KISSY.add("brix/base",
             return d.promise
         },
 
-        /**
-         * 局部刷新
-         * @param  {String} subTmplName 子模板名称或id，这个待定
-         * @param  {Object} data 数据
-         * @param  {String} renderType 渲染方式，目前支持html，append，prepend
-         * @private
-         */
-        bxRefreshTmpl: function(keys, data, renderType) {
-            var self = this
-
-            if (!self.get('rendered')) {
-                return
-            }
-            var el = self.get('el')
-            var subTmpls = self.get('subTmpls')
-
-            S.each(subTmpls, function(o) {
-                var datakeys = S.map(o.datakey.split(','), function(str) {
-                    return S.trim(str); //修复编辑器格式化造成的问题
-                })
-                //是否包含的表示符
-                var flg = false
-
-                for (var i = 0; i < datakeys.length; i++) {
-                    for (var j = 0; j < keys.length; j++) {
-                        if (datakeys[i] == keys[j]) {
-                            flg = true
-                            break
-                        }
-                    }
-                }
-                if (flg) {
-                    var nodes = el.all('[bx-tmpl=' + o.name + ']')
-
-                    //如果el本身也是tmpl，则加上自己
-                    if (el.attr('bx-tmpl') == o.name) {
-                        nodes = el.add(nodes)
-                    }
-                    nodes.each(function(node) {
-                        self.fire('beforeRefreshTmpl', {
-                            node: node,
-                            renderType: renderType
-                        })
-                        var newData = {}
-                        S.each(datakeys, function(item) {
-                            var tempdata = data,
-                                temparr = item.split('.'),
-                                length = temparr.length,
-                                i = 0
-                            while (i !== length) {
-                                tempdata = tempdata[temparr[i]]
-                                i++
-                            }
-                            newData[temparr[length - 1]] = tempdata
-                            tempdata = null
-                        })
-                        S.each(data, function(d, k) {
-                            if (S.isFunction(d)) {
-                                newData[k] = d
-                            }
-                        })
-
-                        //重新设置局部内容
-                        nodes[renderType](S.trim(self.bxRenderTemplate(o.tmpl, newData)))
-
-                        /**
-                         * @event afterRefreshTmpl
-                         * 局部刷新后触发
-                         * @param {KISSY.Event.CustomEventObject} e
-                         */
-                        self.fire('afterRefreshTmpl', {
-                            node: node
-                        })
-                    })
-                }
-            })
-
-
-            var children = self.get('children')
-
-            // 为什么要这样做？
-            // 因为 bxRefreshTmpl 有可能会更改 children 数组的长度
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i]
-
-                while (!child && i >= 0) {
-                    child = children[i]
-                    i--
-                }
-                if (!child.get('refresh')) {
-                    child.set('refresh', true)
-                    if (!child.get('data')) {
-                        child.bxRefreshTmpl(keys, data, renderType)
-                        i = 0
-                    }
-                }
-            }
-            // 更新 refresh 的状态为 false
-            S.each(children, function(child) {
-                child.set('refresh', false)
-            })
-        },
 
         /**
          * 模板和数据渲染成字符串
@@ -470,16 +248,15 @@ KISSY.add("brix/base",
             self.bxBind()
             self.bxSync()
 
+            // 应该移动到 interface/zuomo 里
             // 局部刷新事件监听
             self.on('beforeRefreshTmpl', function(e) {
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
-                    S.each(children, function(child) {
-                        self.bxFind(child.attr('id')).destroy()
-                    })
-                    children = null
-                    self.set('counter', self.get('children').length)
+                    for (var i = 0; i < children.length; i++) {
+                        self.bxFind('#' + children[i].attr('id')).destroy()
+                    }
                 }
             })
 
@@ -492,13 +269,20 @@ KISSY.add("brix/base",
             })
 
             var children = self.get('children')
+            var total = children.length
+            var counter = 0
+
+            function check() {
+                counter++
+                if (counter === total) {
+                    self.fire('enabled')
+                }
+            }
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                child.on('enabled', function() {
-                    self.fire('enabled')
-                })
+                child.on('enabled', check)
                 child.bxEnable()
             }
 
@@ -558,99 +342,11 @@ KISSY.add("brix/base",
         },
 
         /**
-         * 构造子组件
-         * @param {Array} bricks 组件集合
-         * @param {Function} callback 子组件实例化完成后的回调
-         * @private
-         */
-        bxInitChildren: function(bricks, callback) {
-            var self = this
-            self.set('isReady', false)
-
-            if (bricks.length === 0) {
-                self.bxFireReady(callback)
-                return
-            }
-            var useList = []
-            S.each(bricks, function(o) {
-                var config = o.config
-                //mix self&&parent的config
-                var parent = self
-                while (parent) {
-                    var bxConfig = parent.get('config')
-                    S.mix(config, bxConfig[o.id])
-                    S.mix(config, bxConfig[o.name])
-                    parent = parent.get('parent')
-                }
-                if (!S.inArray(useList, o.name) && !o.config.autoBrick) {
-                    useList.push(o.name)
-                }
-            })
-            //实例化子组件
-            S.use(useList.join(','), function(S) {
-                var useClassList = arguments
-                //S.later(function() {
-                if (self.get('destroyed')) {
-                    return
-                }
-                var brickTmpls = self.get('brickTmpls')
-                S.each(bricks, function(o) {
-                    if (!o.destroyed) {
-                        var config = S.merge({
-                            //是否要将子模板和存储模板作为参数带入？
-                            el: '#' + o.id,
-                            brickTmpl: o.tag ? brickTmpls[o.tag].middle : false,
-                            parent: self
-                        }, o.config)
-                        var BrickClass = useClassList[S.indexOf(o.name, useList) + 1]
-                        var flg = false
-                        var constt = BrickClass
-                        var arr = []
-                        arr.push(config.listeners || {})
-                        config.listeners = {}
-                        while (constt) {
-                            //标识
-                            if (constt.MARK == 'Brix') {
-                                flg = true
-                            }
-                            var listeners = constt.ATTRS && constt.ATTRS.listeners && constt.ATTRS.listeners.value
-                            if (listeners) {
-                                arr.push(listeners)
-                            }
-                            constt = constt.superclass && constt.superclass.constructor
-                        }
-                        for (var i = arr.length - 1; i >= 0; i--) {
-                            var listeners = arr[i]
-                            for (var key in listeners) {
-                                config.listeners[key] = listeners[key]
-                            }
-                        }
-                        arr = null
-
-                        config.listeners.ready = function() {
-                            self.bxFireReady(callback)
-                        }
-
-                        o.brick = new BrickClass(config)
-                        //不是继承brix的组件，直接触发ready
-                        if (!flg) {
-                            self.bxFireReady(callback)
-                        }
-                    }
-                })
-                bricks = null
-                //}, 3000)
-            })
-        },
-
-
-        /**
          * 析构函数，销毁资源
          * @return {[type]} [description]
          */
         destructor: function() {
             var self = this
-            var el = self.get('el')
 
             //需要销毁子组件
             var children = self.get('children')
@@ -667,7 +363,7 @@ KISSY.add("brix/base",
             // 如果存在父组件，则移除
             if (parent) {
                 var siblings = parent.get('children')
-                var id = el.attr('id')
+                var id = self.get('id')
 
                 for (i = siblings.length - 1; i >= 0; i--) {
                     if (siblings[i].get('id') === id) {
@@ -678,6 +374,8 @@ KISSY.add("brix/base",
             }
 
             if (self.get('rendered')) {
+                var el = self.get('el')
+
                 self.bxUndelegate()
 
                 switch (self.get('destroyAction')) {
@@ -691,87 +389,7 @@ KISSY.add("brix/base",
             }
 
             self.set('destroyed', true)
-            el = null
         },
-
-        /**
-         * 设置数据，并刷新模板数据
-         * @param {String} datakey 需要更新的数据对象key
-         * @param {Object} data    数据对象
-         * @param {Object} [opts]    控制对象，包括以下控制选项
-         * @param {Boolean} [opts.silent] 是否触发change事件
-         * @param {Function} [opts.error] 验证失败的回调，包括失败原因
-         * @param {String} [opts.renderType] 渲染方式，目前支持html，append，prepend
-         */
-        setChunkData: function(datakey, data, opts) {
-            var self = this
-            var newData
-            var parent = self
-
-            while (parent) {
-                if ((newData = parent.get('data')) && newData) {
-                    break
-                }
-                parent = parent.get('parent')
-            }
-            if (!newData) {
-                newData = {}
-                parent = self
-            }
-            var keys = []
-            if (S.isObject(datakey)) {
-                //datakey = S.clone(datakey)
-                for (var key in datakey) {
-                    newData[key] = datakey[key]
-                    keys.push(key)
-                }
-                opts = data
-            }
-            else {
-                keys = [datakey]
-                newData[datakey] = data
-            }
-            parent.set('data', newData)
-            //根据传入的opts,设置renderType
-            var renderType = 'html'
-            if (opts) {
-                if (opts.renderType) {
-                    renderType = opts.renderType
-                    ;delete opts.renderType
-                }
-            }
-
-            self.bxRefreshTmpl(keys, newData, renderType)
-        },
-
-        /**
-         * 触发ready添加的方法
-         * @param {Function} callback 回调
-         * @private
-         */
-        // bxFireReady: function(callback) {
-        //     var self = this
-
-        //     if (self.get('isReady')) {
-        //         return
-        //     }
-        //     var bricks = self.get('bricks')
-        //     var counter = self.get('counter')
-
-        //     self.set('counter', ++counter)
-        //     if (bricks.length === 0 || counter === bricks.length) {
-        //         callback && callback.call(self)
-
-        //         //所有子组件渲染完成，触发本身的ready事件
-        //         self.fire('ready')
-
-        //         //ready只触发一次
-        //         self.detach('ready')
-
-        //         self.set('isReady', true)
-        //     }
-        // },
-
 
         // 原有事件绑定做记录？？？
         on: function() {
@@ -961,7 +579,12 @@ KISSY.add("brix/base",
         }
     }, 'Brick')
 
-    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig)
+    var INTERFACE_MAP = {
+        zuomo: IZuomo
+    }
+    var Interface = INTERFACE_MAP[app.config('interface')]
+
+    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, Interface)
 
     /**
      * 静态方法集合
@@ -972,10 +595,12 @@ KISSY.add("brix/base",
     return Brick
 }, {
     requires: [
+        'brix/app/config',
         'brix/core/bx-template',
         'brix/core/bx-name',
         'brix/core/bx-delegate',
         'brix/core/bx-config',
+        'brix/interface/zuomo',
         'promise',
         'rich-base',
         'xtemplate',
