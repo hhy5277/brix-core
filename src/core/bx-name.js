@@ -11,6 +11,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var node
 
             function check() {
+                console.log('checking', self.get('name'), total, counter)
                 counter++
                 if (counter === total) {
                     self.fire('rendered')
@@ -24,63 +25,80 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 }, 0)
             }
             else {
+                var klasses = []
+
                 for (var i = 0; i < total; i++) {
                     node = Node(nodes[i])
-
-                    this.bxInstantiate(node, check)
+                    klasses[i] = nodes[i].attr('bx-name').replace(/\/$/, '') + '/index'
                 }
+
+                KISSY.use(klasses.join(','), function(S) {
+                    var Klasses = S.makeArray(arguments)
+
+                    // remove the S in the arguments array
+                    Klasses.shift()
+
+                    for (var i = 0; i < Klasses.length; i++) {
+                        self.bxInstantiate(nodes[i], Klasses[i], check)
+                    }
+                })
             }
         },
 
-        bxInstantiate: function(el, fn) {
+        bxInstantiate: function(el, Klass, fn) {
             var parent = this
 
-            S.use(el.attr('bx-name').replace(/\/$/, '') + '/index', function(S, Brick) {
-                if (!S.isFunction(Brick)) {
-                    // no need to initialize anything.
-                    return
-                }
-                var opts = parent.bxHandleConfig(el, Brick)
-                var inst
+            if (!S.isFunction(Klass)) {
+                // no need to initialize anything.
+                return
+            }
+            var opts = parent.bxHandleConfig(el, Klass)
+            var tag = el.attr('bx-tag')
+            var inst
 
-                opts.el = el
+            S.mix(opts, {
+                el: el,
+                name: el.attr('bx-name'),
+                parent: parent,
 
-                var ancestor = parent
-
-                while (ancestor) {
-                    var overrides = ancestor.get('config')
-
-                    if (overrides) {
-                        S.mix(opts, overrides[el.attr('id')])
-                        S.mix(opts, overrides[el.attr('name')])
-                    }
-
-                    ancestor = S.isFunction(ancestor.get) && ancestor.get('parent')
-                }
-
-                inst = new Brick(opts)
-                inst.set('parent', parent)
-                inst.set('name', el.attr('bx-name'))
-                inst.set('id', el.attr('id'))
-
-                var children = parent.get('children')
-
-                if (!children) {
-                    children = []
-                    parent.set('children', children)
-                }
-                children.push(inst)
-
-                if (S.isFunction(inst.initialize)) {
-                    // inst.bxCacheSubTemplets(el)
-                    inst.on('rendered', fn)
-                    inst.callMethodByHierarchy('initialize', 'constructor')
-                }
-                else {
-                    fn()
-                }
-                el = null
+                // the tag and brickTmpl attribute is required for interface/zuomo
+                tag: tag,
+                brickTmpl: tag ? parent.get('brickTmpls')[tag].middle : {}
             })
+
+            var ancestor = parent
+
+            while (ancestor) {
+                var overrides = ancestor.get('config')
+
+                if (overrides) {
+                    S.mix(opts, overrides[el.attr('id')])
+                    S.mix(opts, overrides[el.attr('name')])
+                }
+
+                ancestor = S.isFunction(ancestor.get) && ancestor.get('parent')
+            }
+
+            inst = new Klass(opts)
+            inst.set('id', el.attr('id'))
+
+            var children = parent.get('children')
+
+            if (!children) {
+                children = []
+                parent.set('children', children)
+            }
+            children.push(inst)
+
+            if (inst.bxRender) {
+                // inst.bxCacheSubTemplets(el)
+                inst.on('rendered', fn)
+                inst.callMethodByHierarchy('initialize', 'constructor')
+            }
+            else {
+                fn()
+            }
+            el = null
         },
 
         /**
