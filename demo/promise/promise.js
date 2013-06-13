@@ -53,7 +53,6 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
             listeners: {
                 getData: function(e) {
                     S.later(function() {
-                        debugger
                         var data = {
                             a: 'a',
                             b: 'b',
