@@ -41,7 +41,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
                 for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
-                    klasses[i] = nodes[i].attr('bx-name').replace(/\/$/, '') + '/index'
+                    klasses[i] = node.attr('bx-name').replace(/\/$/, '') + '/index'
                 }
 
                 KISSY.use(klasses.join(','), function(S) {
@@ -148,12 +148,17 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
         },
 
         bxFind: function(name) {
-            var children = this.bxChildren
+            var children = this.get('children')
+            var isName = name.indexOf('/') > 0
+            var isId = name.charAt(0) === '#'
 
             for (var i = 0; i < children.length; i++) {
-                if (children[i].bxName === name) {
-                    return children[i]
-                }
+                var child = children[i]
+
+                if (isName && child.get('name') === name)
+                    return child
+                else if (isId && '#' + child.get('id') === name)
+                    return child
             }
         }
     }
