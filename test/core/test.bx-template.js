@@ -12,7 +12,10 @@ describe('brix/base', function() {
       app = _app
       Brick = _Brick
 
-      app.config('namespace', 'thx.test')
+      app.config({
+        namespace: 'thx.test',
+        base: '../'
+      })
 
       done()
     })
@@ -47,6 +50,14 @@ describe('brix/base', function() {
       })
     }
 
-
+    it('from module', function(done) {
+      app
+        .config('debug', false)
+        .boot('#fixture4')
+        .on('ready', function() {
+          expect(this.get('tmpl')).to.equal('<div class="ham"></div>')
+          done()
+        })
+    })
   })
 })

@@ -6,10 +6,15 @@
 </head>
 <body>
   <div id="mocha"></div>
+  <div id="fixture1" bx-app></div>
+  <div id="fixture2">
+    <div bx-name="brix/pagination"></div>
+  </div>
   <script src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
   <script src="expect.js"></script>
   <script src="mocha.js"></script>
   <script>mocha.setup('bdd')</script>
+  <script src="package.js"></script>
   <script src="test.app.js"></script>
   <script>
   mocha.checkLeaks();

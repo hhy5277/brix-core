@@ -2,11 +2,16 @@
 KISSY.add("brix/base",
           function(S, app,
                       bxTemplate, bxName, bxDelegate, bxConfig,
-                      IZuomo,
+                      IZuomo, IYicai,
                       Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
+    var INTERFACE_MAP = {
+        zuomo: IZuomo,
+        yicai: IYicai
+    }
+    var Interface = INTERFACE_MAP[app.config('interface')]
 
     var Brick = RichBase.extend({
         initializer: function() {
@@ -24,7 +29,7 @@ KISSY.add("brix/base",
                     return self.bxGetTemplate()
                 })
                 .then(function() {
-                    return self.bxFireGetTemplate()
+                    return self.bxAfterGetTemplate()
                 })
                 .then(function() {
                     return self.bxBuildTemplate()
@@ -36,14 +41,10 @@ KISSY.add("brix/base",
                     return self.bxBuildData()
                 })
                 .then(function() {
-                    if (self.get('autoRender')) {
-                        return self.bxRender()
-                    }
+                    return self.bxRender()
                 })
                 .then(function() {
-                    if (self.get('autoBehavior')) {
-                        return self.bxEnable()
-                    }
+                    return self.bxEnable()
                 })
                 .then(function() {
                     self.fire('ready')
@@ -91,7 +92,7 @@ KISSY.add("brix/base",
             return d.promise
         },
 
-        bxFireGetTemplate: function() {
+        bxAfterGetTemplate: function() {
             var self = this
             var d = new Promise.Defer()
 
@@ -113,7 +114,9 @@ KISSY.add("brix/base",
         /**
          * 编译模板
          */
-        bxBuildTemplate: noop,
+        bxBuildTemplate: function() {
+            if (this.bxIBuildTemplate) return this.bxIBuildTemplate()
+        },
 
         /**
          * 获取数据
@@ -170,7 +173,7 @@ KISSY.add("brix/base",
         bxRender: function() {
             var self = this
 
-            if (self.get("rendered")) {
+            if (!self.get('autoRender') || self.get("rendered")) {
                 return
             }
 
@@ -242,30 +245,16 @@ KISSY.add("brix/base",
         bxEnable: function() {
             var self = this
 
-            if (self.get('enabled') || !self.get('rendered')) {
-                // enabled before,
-                // or not rendered yet.
+            if (!self.get('autoEnable') ||      // do not enable automatically
+                    self.get('enabled') ||      // enabled before,
+                    !self.get('rendered')) {    // or not rendered yet.
                 return
             }
 
             self.bxBind()
             self.bxSync()
 
-            // 应该移动到 interface/zuomo 里
-            // 局部刷新事件监听
-            self.on('beforeRefreshTmpl', function(e) {
-                if (e.renderType === 'html') {
-                    var children = self.bxDirectChildren(e.node)
-
-                    for (var i = 0; i < children.length; i++) {
-                        self.bxFind('#' + children[i].attr('id')).destroy()
-                    }
-                }
-            })
-
-            self.on('afterRefreshTmpl', function(e) {
-                self.bxHandleName(e.node)
-            })
+            if (self.bxIEnable) self.bxIEnable()
 
             // bxEnable 过程是否需要支持异步？
             // 如果支持异步，是否需要两个状态属性，例如：
@@ -281,10 +270,12 @@ KISSY.add("brix/base",
             var total = children.length
             var counter = 0
 
+            function enabled() {
+                self.fire('enabled')
+            }
+
             function check(e) {
-                if (++counter === total) {
-                    self.fire('enabled')
-                }
+                if (++counter === total) enabled()
                 e.target.detach('enabled', check)
             }
 
@@ -296,9 +287,7 @@ KISSY.add("brix/base",
             }
 
             if (!children || children.length === 0) {
-                S.later(function() {
-                    self.fire('enabled')
-                }, 0)
+                S.later(enabled, 0)
             }
         },
 
@@ -315,9 +304,6 @@ KISSY.add("brix/base",
             self.constructor.superclass.bindInternal.call(self)
 
             self.callMethodByHierarchy("bindUI", "__bindUI")
-
-            // 兼容老的brix render后的初始化函数
-            // self.callMethodByHierarchy("initialize", "constructor")
 
             /**
              * @event afterBindUI
@@ -400,6 +386,10 @@ KISSY.add("brix/base",
             self.set('destroyed', true)
         },
 
+        boot: function() {
+            return this.constructor.boot.apply(this, arguments)
+        },
+
         // 原有事件绑定做记录？？？
         on: function() {
             var self = this
@@ -407,21 +397,23 @@ KISSY.add("brix/base",
             Brick.superclass.on.apply(self, arguments)
         }
     }, {
-        ATTRS: {
+        ATTRS: S.mix({
             /**
              * 模板
              * @cfg {Object}
              */
             tmpl: {
-                value: false
+                value: null
             },
+
             /**
              * 数据
              * @cfg {Object}
              */
             data: {
-                value: false
+                value: null
             },
+
             /**
              * 是否已经渲染
              * @type {Boolean}
@@ -429,13 +421,15 @@ KISSY.add("brix/base",
             rendered: {
                 value: false
             },
+
             /**
              * 是否已经添加行为
              * @type {Object}
              */
-            addBehaviored: {
+            enabled: {
                 value: false
             },
+
             /**
              * 组件根节点
              * @cfg {Node}
@@ -465,20 +459,7 @@ KISSY.add("brix/base",
                     return '#' + el.attr('id')
                 }
             },
-            /**
-             * 子模板
-             * @type {Array}
-             */
-            subTmpls: {
-                value: []
-            },
-            /**
-             * 存储模板
-             * @type {Array}
-             */
-            storeTmpls: {
-                value: []
-            },
+
             /**
              * 是否自动渲染
              * @cfg {Boolean}
@@ -486,13 +467,15 @@ KISSY.add("brix/base",
             autoRender: {
                 value: true
             },
+
             /**
              * 自动添加组件行为
              * @cfg {Boolean}
              */
-            autoBehavior: {
+            autoEnable: {
                 value: true
             },
+
             /**
              * brick对子组件的配置增强,示例：{id:{xx:{},yy:{}},name{xx:{},yy:{}}}
              * @cfg {Object}
@@ -500,6 +483,7 @@ KISSY.add("brix/base",
             config: {
                 value: {}
             },
+
             /**
              * 模板引擎,默认xTemplate
              * @cfg {Object}
@@ -507,6 +491,7 @@ KISSY.add("brix/base",
             templateEngine: {
                 value: XTemplate
             },
+
             /**
              * 是否已经销毁
              * @type {Object}
@@ -514,6 +499,7 @@ KISSY.add("brix/base",
             destroyed: {
                 value: false
             },
+
             /**
              * 销毁操作时候的动作，默认remove。
              * 可选none:什么都不做，empty:清空内部html
@@ -522,6 +508,7 @@ KISSY.add("brix/base",
             destroyAction: {
                 value: 'remove'
             },
+
             /**
              * 后期事件代理
              * {
@@ -535,6 +522,7 @@ KISSY.add("brix/base",
             events: {
 
             },
+
             /**
              * 存储所有子组件
              * @type {Array}
@@ -542,50 +530,55 @@ KISSY.add("brix/base",
             children: {
                 value: []
             },
+
             /**
              * 组件的父组件实例对象
              * @cfg {Object}
              */
             parent: {
                 value: false
-            },
-            /**
-             * 子模板嵌套的级别
-             * @cfg {Number}
-             */
-            level: {
-                value: 4
-            },
-
-            /**
-             * 组件的分析模板，不进入渲染逻辑
-             * @type {String}
-             */
-            brickTmpl: {
-                value: false
-            },
-            /**
-             * 存储组件模板集合
-             * @type {Object}
-             */
-            brickTmpls: {
-                value: {}
             }
-        }
+        }, Interface.ATTRS)
     }, 'Brick')
 
-    var INTERFACE_MAP = {
-        zuomo: IZuomo
-    }
-    var Interface = INTERFACE_MAP[app.config('interface')]
+    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, Interface.METHODS)
 
-    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, Interface)
+    S.mix(Brick, {
+        boot: function(el, data) {
+            var options
 
-    /**
-     * 静态方法集合
-     */
+            if (S.isPlainObject(el)) {
+                // .boot({ el: el, tmpl: tmpl })
+                if (el.el) {
+                    data = null
+                    options = el
+                }
+                else {
+                    options = {
+                        data: el,
+                        el: '[bx-app]'
+                    }
+                }
+            }
+            else if (S.isString(el)) {
+                options = {
+                    el: el,
+                    data: data
+                }
+            }
+            else {
+                options = {}
+            }
+            el = options.el
 
-    Brick.MARK = 'Brix'
+            if (!el || S.isString(el)) el = S.one(el || '[bx-app]')
+            if (!el) throw new Error('Cannot find el!')
+
+            options.el = el
+
+            return new Brick(options)
+        }
+    })
 
     return Brick
 }, {
@@ -595,7 +588,8 @@ KISSY.add("brix/base",
         'brix/core/bx-name',
         'brix/core/bx-delegate',
         'brix/core/bx-config',
-        'brix/interface/zuomo',
+        'brix/interface/if-zuomo',
+        'brix/interface/if-yicai',
         'promise',
         'rich-base',
         'xtemplate',

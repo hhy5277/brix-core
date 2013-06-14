@@ -15,23 +15,7 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
         boot: function(el, data) {
             this.prepareLoader()
 
-            if (S.isPlainObject(el)) {
-                data = el
-                el = '[bx-app]'
-            }
-            el = el || '[bx-app]'
-            el = S.isString(el) ? S.one(el) : el
-
-            if (el) {
-                var page = new Brick({
-                    el: el,
-                    data: data
-                })
-
-                page.bxLoad(el)
-
-                return page
-            }
+            return Brick.boot(el, data)
         },
 
         bootStyle: function(fn) {

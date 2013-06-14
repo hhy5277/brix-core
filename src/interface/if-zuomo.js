@@ -1,9 +1,10 @@
 /*jshint asi:true */
-KISSY.add('brix/interface/zuomo', function(S) {
+KISSY.add('brix/interface/if-zuomo', function(S) {
 
-    var exports = {
+    var exports = {}
 
-        bxBuildTemplate: function() {
+    exports.METHODS = {
+        bxIBuildTemplate: function() {
             var self = this
             var tmpl = self.get('tmpl')
             var level = self.get('level')
@@ -11,8 +12,8 @@ KISSY.add('brix/interface/zuomo', function(S) {
             if (tmpl) {
                 tmpl = self.bxIBrickTag(tmpl)
                 tmpl = self.bxITmplName(tmpl)
-                //存储模板暂时不做
-                //self.bxIBuildStoreTmpls(tmpl)
+                // 存储模板暂时不做
+                // self.bxIBuildStoreTmpls(tmpl)
                 self.set('tmpl', tmpl)
 
                 self.bxIBuildSubTmpls(self.bxIBuildBrickTmpl(tmpl), false, level)
@@ -29,6 +30,25 @@ KISSY.add('brix/interface/zuomo', function(S) {
             }
 
             return false
+        },
+
+        bxIEnable: function() {
+            var self = this
+
+            // 局部刷新事件监听
+            self.on('beforeRefreshTmpl', function(e) {
+                if (e.renderType === 'html') {
+                    var children = self.bxDirectChildren(e.node)
+
+                    for (var i = 0; i < children.length; i++) {
+                        self.bxFind('#' + children[i].attr('id')).destroy()
+                    }
+                }
+            })
+
+            self.on('afterRefreshTmpl', function(e) {
+                self.bxHandleName(e.node)
+            })
         },
 
         /**
@@ -106,21 +126,24 @@ KISSY.add('brix/interface/zuomo', function(S) {
             var level = self.get('level')
 
             var r = '(<([\\w]+)\\s+[^>]*?bx-tmpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>(@brix@)</\\2>)'
+
             while (level--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
             }
             r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+
             var reg = new RegExp(r, "ig")
             var m
+            var replacer = function(all, bx) {
+                var o = brickTmpls[bx]
+
+                return o.start + o.middle + o.end
+            }
             while ((m = reg.exec(tmpl)) !== null) {
                 subTmpls.push({
                     name: m[3],
                     datakey: m[4],
-                    tmpl: m[5].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, function(all, bx) {
-                        var o = brickTmpls[bx]
-
-                        return o.start + o.middle + o.end
-                    })
+                    tmpl: m[5].replace(/@brix@(brix_brick_tag_\d+)@brix@/ig, replacer)
                 })
                 //递归编译子模板
                 self.bxIBuildSubTmpls(m[5])
@@ -273,6 +296,47 @@ KISSY.add('brix/interface/zuomo', function(S) {
             }
 
             self.bxIRefreshTmpl(keys, newData, renderType)
+        }
+    }
+
+    exports.ATTRS = {
+        /**
+         * 子模板
+         * @type {Array}
+         */
+        subTmpls: {
+            value: []
+        },
+
+        /**
+         * 存储模板
+         * @type {Array}
+         */
+        storeTmpls: {
+            value: []
+        },
+
+        /**
+         * 子模板嵌套的级别
+         * @cfg {Number}
+         */
+        level: {
+            value: 4
+        },
+
+        /**
+         * 组件的分析模板，不进入渲染逻辑
+         * @type {String}
+         */
+        brickTmpl: {
+            value: false
+        },
+        /**
+         * 存储组件模板集合
+         * @type {Object}
+         */
+        brickTmpls: {
+            value: {}
         }
     }
 
