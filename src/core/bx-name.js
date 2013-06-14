@@ -22,17 +22,18 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var self = this
             var total = nodes.length
 
-            function check() {
-                console.log('checking', self.get('name'), total, counter)
-                counter++
-                if (counter === total) {
+            function check(e) {
+                if (++counter === total) {
+                    self.setInternal("rendered", true)
                     self.fire('rendered')
-                    root = nodes = node = null
                 }
+                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
+                e.target.detach('rendered', check)
             }
 
             if (total === 0) {
-                setTimeout(function() {
+                S.later(function() {
+                    self.setInternal('rendered', true)
                     self.fire('rendered')
                 }, 0)
             }
@@ -88,7 +89,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                     S.mix(opts, overrides[el.attr('name')])
                 }
 
-                ancestor = S.isFunction(ancestor.get) && ancestor.get('parent')
+                ancestor = ancestor.get('parent')
             }
 
             inst = new Klass(opts)

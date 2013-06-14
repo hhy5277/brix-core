@@ -81,8 +81,11 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleTemplate(function(tmpl) {
-                self.set('tmpl', tmpl)
                 d.resolve(tmpl)
+            })
+
+            d.promise.then(function(tmpl) {
+                self.set('tmpl', tmpl)
             })
 
             return d.promise
@@ -92,19 +95,19 @@ KISSY.add("brix/base",
             var self = this
             var d = new Promise.Defer()
 
-            //开发者获取模板后，调用next方法
-            //fn 留作扩展使用
+            // 开发者获取模板后，调用next方法
+            // fn 留作扩展使用
             var fn = self.fire('getTemplate', {
                 next: function(tmpl) {
                     d.resolve(tmpl)
                 }
             })
 
-            if (!fn) {
-                d.resolve(self.get('tmpl'))
-            }
+            d.promise.then(function(tmpl) {
+                self.set('tmpl', tmpl)
+            })
 
-            return d.promise
+            if (fn) return d.promise
         },
 
         /**
@@ -191,12 +194,7 @@ KISSY.add("brix/base",
 
             self.bxDelegate()
 
-            // 初始化子组件
-            self.bxHandleName(el)
-
-            console.log('bxRender', self.get('name'))
-
-            self.on('rendered', function() {
+            function resolve() {
                 /**
                  * @event afterRenderUI
                  * fired after root node is rendered into dom
@@ -204,11 +202,16 @@ KISSY.add("brix/base",
                  */
                 self.fire('afterRenderUI')
 
-                console.log('bxRender rendered', self.get('name'))
-                self.setInternal("rendered", true)
-
                 d.resolve()
+            }
+
+            self.on('rendered', function() {
+                resolve()
+                self.detach('rendered', resolve)
             })
+
+            // 初始化子组件
+            self.bxHandleName(el)
 
             return d.promise
         },
@@ -224,7 +227,7 @@ KISSY.add("brix/base",
             var self = this
             var templateEngine = self.get('templateEngine')
 
-            //根据模板引擎，选择渲染方式
+            // 根据模板引擎，选择渲染方式
             if (typeof templateEngine === 'function') {
                 return new templateEngine(tmpl).render(data)
             }
@@ -239,7 +242,7 @@ KISSY.add("brix/base",
         bxEnable: function() {
             var self = this
 
-            if (!self.get('rendered') && self.get('enabled')) {
+            if (self.get('enabled') || !self.get('rendered')) {
                 // enabled before,
                 // or not rendered yet.
                 return
@@ -264,19 +267,25 @@ KISSY.add("brix/base",
                 self.bxHandleName(e.node)
             })
 
-            self.on('enabled', function() {
-                self.set('enabled', true)
-            })
+            // bxEnable 过程是否需要支持异步？
+            // 如果支持异步，是否需要两个状态属性，例如：
+            //
+            // - bxEnableCalled 用来标识 bxEnable 方法已被调用
+            // - enabled 用来标识已经添加行为成功
+            //
+            // 目前是直接拿 enabled 来判断是否已调用方法，用 .on('enabled')
+            // 事件来在添加行为完毕之后做其它操作。
+            self.setInternal('enabled', true)
 
             var children = self.get('children')
             var total = children.length
             var counter = 0
 
-            function check() {
-                counter++
-                if (counter === total) {
+            function check(e) {
+                if (++counter === total) {
                     self.fire('enabled')
                 }
+                e.target.detach('enabled', check)
             }
 
             for (var i = 0; i < children.length; i++) {
@@ -547,13 +556,6 @@ KISSY.add("brix/base",
             level: {
                 value: 4
             },
-            /**
-             * 是否完整自身子组件渲染
-             * @type {Object}
-             */
-            isReady: {
-                value: false
-            },
 
             /**
              * 组件的分析模板，不进入渲染逻辑
@@ -568,13 +570,6 @@ KISSY.add("brix/base",
              */
             brickTmpls: {
                 value: {}
-            },
-            /**
-             * 已经完成渲染的子组件计数器
-             * @type {Number}
-             */
-            counter: {
-                value: 0
             }
         }
     }, 'Brick')
