@@ -1,3 +1,4 @@
+/*jshint asi:true */
 KISSY.config({
     packages: {
         brix: {
@@ -5,10 +6,10 @@ KISSY.config({
             base: '../../src'
         }
     }
-});
+})
 
 
-KISSY.use('brix/app,brix/base', function(S, app, Brick) {
+KISSY.use('brix/app,brix/base', function(S, app) {
 
     app.config({
         namespace: 'thx.demo',
@@ -19,15 +20,15 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                 dropdown: '1.1.0'
             }
         }
-    });
+    })
 
     app.bootStyle(function() {
-        S.one("button").on("click", bootstrap);
-    });
+        S.one("button").on("click", bootstrap)
+    })
 
 
     function bootstrap() {
-        var brick = new Brick({
+        app.boot({
             el: '#container',
             tmpl: '#tmpl',
             config: {
@@ -42,10 +43,10 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                     listeners: {
                         getTemplate: function(e) {
                             return setTimeout(function() {
-                                var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>';
+                                var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>'
 
-                                e.next(tmpl);
-                            }, 1);
+                                e.next(tmpl)
+                            }, 1)
                         }
                     }
                 }
@@ -66,29 +67,27 @@ KISSY.use('brix/app,brix/base', function(S, app, Brick) {
                                 d1: '3'
                             }, {
                                 d1: function() {
-                                    return '4';
+                                    return '4'
                                 }
                             }],
                             e: true,
                             f: function() {
-                                return 'xx';
+                                return 'xx'
                             },
                             g: [5,6,7],
                             startDay: 'haha'
-                        };
-                        e.next(data);
-                    }, 500);
+                        }
+                        e.next(data)
+                    }, 500)
 
-                    return true;
+                    return true
                 }
             }
-        });
+        }).on('ready', function(){
+            S.log('ready')
+            this.setChunkData({a: 'aaaa' + S.guid()})
+            window.brick = this
+        })
 
-        brick.on('ready', function(){
-            S.log('ready');
-            brick.setChunkData({a: 'aaaa' + S.guid()});
-        });
-
-        window.brick = brick;
     }
-});
+})

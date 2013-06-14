@@ -41,9 +41,9 @@ KISSY.add('brix/core/bx-template', function(S, app) {
                         break
                     }
                 }
-                var subTemplets = self.bxParent.bxCachedSubTemplets
+                var subTemplates = self.get('parent').get('subTemplatesCache')
 
-                callback(withinEach ? subTemplets[0] : subTemplets.shift())
+                callback(withinEach ? subTemplates[0] : subTemplates.shift())
             }
             else {
                 // 模板是直接传进来的，不需做处理
@@ -84,7 +84,7 @@ KISSY.add('brix/core/bx-template', function(S, app) {
             if (!(new RegExp(ns + '\\/?$')).test(base)) {
                 parts.push(ns)
             }
-            if (imports[ns]) {
+            if (imports && imports[ns]) {
                 parts.push(name)
                 parts.push(imports[ns][name])
             }

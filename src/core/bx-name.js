@@ -92,6 +92,11 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 ancestor = ancestor.get('parent')
             }
 
+            // 暂时去掉了对父类的 listeners 的处理，原代码见：
+            // https://github.com/thx/brix-core/blob/bfa78a0b2b4dcfea4c24220e54850381140c7516/src/base.js#L606
+            //
+            // @keyapril 这里的使用场景得补充一下。
+
             inst = new Klass(opts)
             inst.set('id', el.attr('id'))
 
@@ -104,7 +109,6 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             children.push(inst)
 
             if (inst.bxRender) {
-                // inst.bxCacheSubTemplets(el)
                 inst.on('rendered', fn)
                 inst.callMethodByHierarchy('initialize', 'constructor')
             }
