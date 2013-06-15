@@ -1,7 +1,7 @@
 /*jshint asi:true */
 KISSY.add("brix/base",
           function(S, app,
-                      bxTemplate, bxName, bxDelegate, bxConfig,
+                      bxTemplate, bxName, bxDelegate, bxConfig, bxRemote,
                       IZuomo, IYicai,
                       Promise, RichBase, XTemplate) {
 
@@ -38,6 +38,9 @@ KISSY.add("brix/base",
                     return self.bxGetData()
                 })
                 .then(function() {
+                    return self.bxAfterGetData()
+                })
+                .then(function() {
                     return self.bxBuildData()
                 })
                 .then(function() {
@@ -52,9 +55,7 @@ KISSY.add("brix/base",
 
             // 将初始化过程变成异步，从而允许这样的写法：
             //
-            //     var brick = new Brick({ ... })
-            //
-            //     brick.on('ready', function() {
+            //     new Brick({ ... }).on('ready', function() {
             //         // 监听 ready 事件
             //     })
             //
@@ -118,10 +119,25 @@ KISSY.add("brix/base",
             if (this.bxIBuildTemplate) return this.bxIBuildTemplate()
         },
 
+        bxGetData: function() {
+            var d = new Promise.Defer()
+            var self = this
+
+            self.bxHandleRemote(function(data) {
+                d.resolve(data)
+            })
+
+            d.promise.then(function(data) {
+                self.set('data', data)
+            })
+
+            return d.promise
+        },
+
         /**
          * 获取数据
          */
-        bxGetData: function() {
+        bxAfterGetData: function() {
             var d = new Promise.Defer()
             var self = this
 
@@ -129,15 +145,15 @@ KISSY.add("brix/base",
             //fn 留作扩展使用
             var fn = self.fire('getData', {
                 next: function(data) {
-                    self.set('data', data)
-                    d.resolve()
+                    d.resolve(data)
                 }
             })
-            if (!fn) {
-                d.resolve()
-            }
 
-            return d.promise
+            d.promise.then(function(data) {
+                self.set('data', data)
+            })
+
+            if (fn) return d.promise
         },
 
         /**
@@ -541,7 +557,7 @@ KISSY.add("brix/base",
         }, Interface.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, Interface.METHODS)
+    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
 
     S.mix(Brick, {
         boot: function(el, data) {
@@ -575,8 +591,18 @@ KISSY.add("brix/base",
             if (!el) throw new Error('Cannot find el!')
 
             options.el = el
+            options.parent = this
 
-            return new Brick(options)
+            var children = this.get('children')
+
+            if (!children) {
+                children = []
+                this.set('children', children)
+            }
+
+            var brick = new Brick(options)
+
+            return brick
         }
     })
 
@@ -588,6 +614,7 @@ KISSY.add("brix/base",
         'brix/core/bx-name',
         'brix/core/bx-delegate',
         'brix/core/bx-config',
+        'brix/core/bx-remote',
         'brix/interface/if-zuomo',
         'brix/interface/if-yicai',
         'promise',

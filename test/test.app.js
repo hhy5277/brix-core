@@ -43,17 +43,29 @@ describe('brix/app', function() {
 
   describe('#boot', function() {
 
-    // For more testcases on Brick, see test.base.js
-    it('return a new brick', function(done) {
-      var brick = app.boot()
+    var brick
 
+    before(function() {
+      brick = app.boot()
+    })
+
+    it('return a new brick', function() {
       expect(brick).to.be.a(Brick)
+    })
 
+    it('use [bx-app] as default el', function() {
+      expect(brick.get('el').hasAttr('bx-app')).to.be(true)
+    })
+    
+    it('fires ready when... ready', function(done) {
       brick.on('ready', function() {
         expect(this).to.be.a(Brick)
-        expect(this.get('rendered')).to.equal(true)
+        expect(this.get('rendered')).to.be(true)
+        expect(this.get('enabled')).to.be(true)
         done()
       })
     })
+    
+    // For more testcases on Brick, see test.base.js
   })
 })

@@ -4,7 +4,6 @@ var Brick
 var S = KISSY
 
 
-
 describe('brix/base', function() {
 
   before(function(done) {
@@ -18,35 +17,54 @@ describe('brix/base', function() {
     })
   })
 
-  describe('#bxGetTemplate', function() {
-    it('from parameter', function(done) {
-      app
-        .boot({
-          el: '#fixture1',
-          tmpl: '<div class="foo"></div>'
-        })
-        .on('ready', function() {
-          expect(this.get('tmpl')).to.equal('<div class="foo"></div>')
-          done()
-        })
-    })
 
-    it('from script tag', function(done) {
-      app.boot('#fixture2').on('ready', function() {
-        expect(S.Node(this.get('tmpl')).hasClass('foo-template')).to.equal(true)
+  // Same as app.boot
+  // only the booted bricks goes to the brick that called #boot method.
+  describe('#boot', function() {
+
+    var rootBrick
+
+    before(function(done) {
+      app.boot('#fixture0').on('ready', function() {
+        rootBrick = this
         done()
       })
     })
 
-    if (/^http/.test(location.href)) {
-      it('from xhr', function(done) {
-        app.boot('#fixture3').on('ready', function() {
-          expect(this.get('tmpl')).to.equal('<div class="egg"></div>')
+    it('same as app.boot', function() {
+      expect(rootBrick).to.be.a(Brick)
+      expect(rootBrick.boot('#fixture1')).to.be.a(Brick)
+    })
+
+    it('the parent of booted bricks will be different', function(done) {
+      rootBrick.boot('#fixture2').on('ready', function() {
+        expect(this.get('parent')).to.equal(rootBrick)
+        expect(this.get('parent').get('parent')).to.equal(app)
+        done()
+      })
+    })
+
+    it('use brix/base if bx-naked', function() {
+      expect(rootBrick.boot('#fixture3').constructor).to.equal(Brick)
+    })
+
+    it('receives arbitrary arguments too', function(done) {
+      rootBrick
+        .boot({
+          el: '#fixture4',
+          tmpl: '<p>Hello {{world}}!</p>',
+          data: {
+            world: 'earth'
+          }
+        })
+        .on('ready', function() {
+          expect(this.get('tmpl')).to.equal('<p>Hello {{world}}!</p>')
+          expect(this.get('data')).to.eql({
+            world: 'earth'
+          })
+          expect(this.get('el').html()).to.equal('<p>Hello earth!</p>')
           done()
         })
-      })
-    }
-
-
+    })
   })
 })
