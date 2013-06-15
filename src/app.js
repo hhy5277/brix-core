@@ -12,10 +12,10 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
     }
 
     S.augment(BxApp, appConfig, {
-        boot: function(el, data) {
+        boot: function() {
             this.prepareLoader()
 
-            return Brick.boot(el, data)
+            return Brick.boot.apply(this, arguments)
         },
 
         bootStyle: function(fn) {

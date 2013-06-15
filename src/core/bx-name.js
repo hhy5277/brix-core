@@ -39,10 +39,16 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
             else {
                 var klasses = []
+                var naked
 
                 for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
-                    klasses[i] = node.attr('bx-name').replace(/\/$/, '') + '/index'
+                    naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+
+                    if (naked === 'js' || naked === 'all')
+                        klasses[i] = 'brix/base'
+                    else 
+                        klasses[i] = node.attr('bx-name').replace(/\/$/, '') + '/index'
                 }
 
                 KISSY.use(klasses.join(','), function(S) {
@@ -92,7 +98,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 ancestor = ancestor.get('parent')
             }
 
-            // 暂时去掉了对父类的 listeners 的处理，原代码见：
+            // 对父类的 listeners 的处理还没加进来，原代码见：
             // https://github.com/thx/brix-core/blob/bfa78a0b2b4dcfea4c24220e54850381140c7516/src/base.js#L606
             //
             // @keyapril 这里的使用场景得补充一下。
