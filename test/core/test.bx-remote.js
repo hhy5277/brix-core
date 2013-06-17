@@ -28,12 +28,14 @@ describe('brix/base', function() {
       })
     })
 
-    it('via xhr in debug mode', function(done) {
-      app.boot('#fixture2').on('ready', function() {
-        expect(this.get('data').books.length).to.equal(3)
-        done()
+    if (/^http/.test(location.href)) {
+      it('via xhr in debug mode', function(done) {
+        app.boot('#fixture2').on('ready', function() {
+          expect(this.get('data').books.length).to.equal(3)
+          done()
+        })
       })
-    })
+    }
 
     it('via kissy module in prod', function(done) {
       app.config('debug', false)
