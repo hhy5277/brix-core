@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add("brix/base",
           function(S, app,
                       bxTpl, bxName, bxDelegate, bxConfig, bxRemote,
