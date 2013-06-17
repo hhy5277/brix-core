@@ -27,7 +27,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             return false
         },
 
-        bxIEnable: function() {
+        bxIActivate: function() {
             var self = this
 
             // 局部刷新事件监听

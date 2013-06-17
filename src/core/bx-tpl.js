@@ -2,26 +2,26 @@
  *
  */
 /*jshint asi:true */
-KISSY.add('brix/core/bx-template', function(S, app) {
+KISSY.add('brix/core/bx-tpl', function(S, app) {
 
     var exports = {
-        bxHandleTemplate: function(callback) {
+        bxHandleTpl: function(callback) {
             var self = this
             var el = self.get('el')
-            var source = self.get('tmpl') || el.attr('bx-template')
+            var source = self.get('tpl') || el.attr('bx-tpl')
 
             if (!source) {
                 // 不需要在前端渲染模板
                 callback()
             }
             else if (source.charAt(0) === '#') {
-                self.bxScriptTemplate(source, callback)
+                self.bxScriptTpl(source, callback)
             }
             else if (source === '.') {
-                self.bxHereTemplate(el, callback)
+                self.bxHereTpl(el, callback)
             }
             else if (/^\.\//.test(source)) {
-                self.bxRemoteTemplate(
+                self.bxRemoteTpl(
                     el.attr('bx-name').replace(/\/?$/, '') + source.substr(1),
                     callback
                 )
@@ -41,9 +41,9 @@ KISSY.add('brix/core/bx-template', function(S, app) {
                         break
                     }
                 }
-                var subTemplates = self.get('parent').get('subTemplatesCache')
+                var subTpls = self.get('parent').get('subTplsCache')
 
-                callback(withinEach ? subTemplates[0] : subTemplates.shift())
+                callback(withinEach ? subTpls[0] : subTpls.shift())
             }
             else {
                 // 模板是直接传进来的，不需做处理
@@ -51,28 +51,28 @@ KISSY.add('brix/core/bx-template', function(S, app) {
             }
         },
 
-        bxScriptTemplate: function(selector, callback) {
+        bxScriptTpl: function(selector, callback) {
             callback(S.one(selector).html())
         },
 
-        bxHereTemplate: function(el, callback) {
+        bxHereTpl: function(el, callback) {
             callback(el.html())
         },
 
-        bxRemoteTemplate: function(mod, callback) {
+        bxRemoteTpl: function(mod, callback) {
             if (app.config('debug')) {
-                this.bxXhrTemplate(mod, callback)
+                this.bxXhrTpl(mod, callback)
             }
             else {
-                S.use(mod, function(S, template) {
-                    callback(template)
+                S.use(mod, function(S, tpl) {
+                    callback(tpl)
                 })
             }
         },
 
-        bxXhrTemplate: function(mod, callback) {
+        bxXhrTpl: function(mod, callback) {
             if (!/^http/.test(location.href)) {
-                throw Error('Cannot load template via xhr in current mode.')
+                throw Error('Cannot load tpl via xhr in current mode.')
             }
             var parts = mod.split('/')
             var ns = parts.shift()
@@ -93,8 +93,8 @@ KISSY.add('brix/core/bx-template', function(S, app) {
             }
             parts.push(file + '.html')
 
-            S.IO.get(base + parts.join('/'), function(template) {
-                callback(template)
+            S.IO.get(base + parts.join('/'), function(tpl) {
+                callback(tpl)
             })
         }
     }

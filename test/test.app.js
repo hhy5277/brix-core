@@ -61,7 +61,7 @@ describe('brix/app', function() {
       brick.on('ready', function() {
         expect(this).to.be.a(Brick)
         expect(this.get('rendered')).to.be(true)
-        expect(this.get('enabled')).to.be(true)
+        expect(this.get('activated')).to.be(true)
         done()
       })
     })

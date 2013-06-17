@@ -30,7 +30,7 @@ KISSY.use('brix/app,brix/base', function(S, app) {
     function bootstrap() {
         app.boot({
             el: '#container',
-            tmpl: '#tmpl',
+            tpl: '#tpl',
             config: {
                 brixtest2: {
                     data: {
@@ -41,11 +41,11 @@ KISSY.use('brix/app,brix/base', function(S, app) {
                 },
                 brixtest4: {
                     listeners: {
-                        getTemplate: function(e) {
+                        getTpl: function(e) {
                             return S.later(function() {
-                                var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>'
+                                var tpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tpl="text" bx-datakey="text">hahah{{text}}</span>'
 
-                                e.next(tmpl)
+                                e.next(tpl)
                             }, 1)
                         }
                     }

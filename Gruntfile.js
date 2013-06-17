@@ -28,7 +28,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: ['src/**/*.js'],
-        dest: 'build/brix-<%= pkg.version %>.js'
+        dest: 'build/brix.js'
       }
     },
     connect: {
@@ -57,6 +57,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-mocha');
 
-  grunt.registerTask('test', ['jshint', 'connect', 'qunit']);
+  grunt.registerTask('test', ['jshint', 'mocha']);
   grunt.registerTask('build', ['jshint', 'concat']);
 };
