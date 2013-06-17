@@ -10,6 +10,11 @@ describe('brix/base', function() {
       app = _app
       Brick = _Brick
 
+      app.config({
+        namespace: 'thx.test',
+        base: '../'
+      })
+
       done()
     })
   })
@@ -23,5 +28,19 @@ describe('brix/base', function() {
       })
     })
 
+    it('via xhr in debug mode', function(done) {
+      app.boot('#fixture2').on('ready', function() {
+        expect(this.get('data').books.length).to.equal(3)
+        done()
+      })
+    })
+
+    it('via kissy module in prod', function(done) {
+      app.config('debug', false)
+      app.boot('#fixture3').on('ready', function() {
+        expect(this.get('data').players).to.eql(['Kobe Bryant', 'Tracy McGrady'])
+        done()
+      })
+    })
   })
 })
