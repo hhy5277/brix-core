@@ -10,7 +10,8 @@ module.exports = function(grunt) {
         '!test/expect.js'
       ],
       options: {
-        jshintrc: '.jshintrc'
+        jshintrc: '.jshintrc',
+        jshintignore: '.jshintignore'
       }
     },
     concat: {

@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/core/bx-config', function(S) {
 
     var exports = {

@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/interface/if-yicai', function() {
 
     var exports = {}

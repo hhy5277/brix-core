@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {

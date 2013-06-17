@@ -1,0 +1,8 @@
+test/mocha.js
+test/expect.js
+
+node_modules
+.git
+
+demo/components
+demo/imports

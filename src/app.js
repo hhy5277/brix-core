@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/app', function(S, appConfig, Brick) {
 
     function BxApp() {

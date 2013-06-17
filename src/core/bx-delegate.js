@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/core/bx-delegate', function(S) {
 
     var exports = {

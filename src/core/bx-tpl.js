@@ -1,7 +1,3 @@
-/**
- *
- */
-/*jshint asi:true */
 KISSY.add('brix/core/bx-tpl', function(S, app) {
 
     var exports = {
