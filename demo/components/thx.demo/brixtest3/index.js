@@ -37,21 +37,6 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 				}
 			}
 		},
-		DOCEVENTS:{
-			'':{
-				click:function(){
-					S.log('点击了document');
-				}
-			}
-		},
-		WINEVENTS:{
-			scroll:function(){
-				S.log('scroll_'+S.guid());
-			},
-			resize:function(){
-				S.log('resize_'+S.guid());
-			}
-		},
 		FIRES:{
 			myfire:'myfire'
 		},

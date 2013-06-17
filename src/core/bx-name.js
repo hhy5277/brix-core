@@ -80,9 +80,9 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 name: el.attr('bx-name'),
                 parent: parent,
 
-                // the tag and brickTmpl attribute is required for interface/zuomo
+                // the tag and brickTpl attribute is required for interface/zuomo
                 tag: tag,
-                brickTmpl: tag ? parent.get('brickTmpls')[tag].middle : {}
+                brickTpl: tag ? parent.get('brickTpls')[tag].middle : {}
             })
 
             var ancestor = parent

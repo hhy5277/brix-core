@@ -52,13 +52,13 @@ describe('brix/base', function() {
       rootBrick
         .boot({
           el: '#fixture4',
-          tmpl: '<p>Hello {{world}}!</p>',
+          tpl: '<p>Hello {{world}}!</p>',
           data: {
             world: 'earth'
           }
         })
         .on('ready', function() {
-          expect(this.get('tmpl')).to.equal('<p>Hello {{world}}!</p>')
+          expect(this.get('tpl')).to.equal('<p>Hello {{world}}!</p>')
           expect(this.get('data')).to.eql({
             world: 'earth'
           })

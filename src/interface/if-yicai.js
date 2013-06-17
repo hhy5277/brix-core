@@ -5,30 +5,30 @@ KISSY.add('brix/interface/if-yicai', function() {
 
     exports.METHODS = {
 
-        bxIBuildTemplate: function(el) {
+        bxIBuildTpl: function(el) {
             var nodes = this.bxDirectChildren(el)
-            var subTemplates = this.get('subTemplatesCache')
+            var subTpls = this.get('subTplsCache')
 
-            if (!subTemplates) {
-                subTemplates = []
-                this.set('subTemplatesCache', subTemplates)
+            if (!subTpls) {
+                subTpls = []
+                this.set('subTplsCache', subTpls)
             }
 
             for (var i = 0; i < nodes.length; i++) {
                 var node = nodes[i]
-                var template = node.attr('bx-template')
+                var tpl = node.attr('bx-tpl')
 
-                if (node.attr('bx-model') && (!template || template === '.')) {
-                    subTemplates.push(node.html())
+                if (node.attr('bx-model') && (!tpl || tpl === '.')) {
+                    subTpls.push(node.html())
                     node.html('')
-                    node.attr('bx-template', 'cached')
+                    node.attr('bx-tpl', 'cached')
                 }
             }
         }
     }
 
     exports.ATTRS = {
-        subTemplatesCache: {
+        subTplsCache: {
             value: []
         }
     }
