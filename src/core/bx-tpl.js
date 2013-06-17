@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-tpl', function(S, app) {
+KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -70,28 +70,8 @@ KISSY.add('brix/core/bx-tpl', function(S, app) {
             if (!/^http/.test(location.href)) {
                 throw Error('Cannot load tpl via xhr in current mode.')
             }
-            var parts = mod.split('/')
-            var ns = parts.shift()
-            var name = parts.shift()
-            var file = parts.shift()
-            var base = S.config('packages')[ns].base
-            var imports = app.config('imports')
 
-            if (!(new RegExp(ns + '\\/?$')).test(base)) {
-                parts.push(ns)
-            }
-            if (imports && imports[ns]) {
-                parts.push(name)
-                parts.push(imports[ns][name])
-            }
-            else {
-                parts.push(name)
-            }
-            parts.push(file + '.html')
-
-            S.IO.get(base + parts.join('/'), function(tpl) {
-                callback(tpl)
-            })
+            IO.get(this.bxResolveModule(mod, '.html'), callback)
         }
     }
 
@@ -99,8 +79,8 @@ KISSY.add('brix/core/bx-tpl', function(S, app) {
 }, {
     requires: [
         'brix/app/config',
-        'node',
         'ajax',
+        'node',
         'sizzle'
     ]
 })

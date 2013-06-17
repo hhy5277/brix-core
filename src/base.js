@@ -1,6 +1,6 @@
 KISSY.add("brix/base",
           function(S, app,
-                      bxTpl, bxName, bxDelegate, bxConfig, bxRemote,
+                      bxUtil, bxTpl, bxName, bxDelegate, bxConfig, bxRemote,
                       IZuomo, IYicai,
                       Promise, RichBase, XTemplate) {
 
@@ -19,6 +19,9 @@ KISSY.add("brix/base",
             var promise = d.promise
 
             promise
+                .then(function() {
+                    if (!self.get('name')) self.set('name', self.get('el').attr('bx-name'))
+                })
                 .then(function() {
                     self.on('ready', function() {
                         //需要在自己完成后调用什么方法呢？
@@ -475,6 +478,10 @@ KISSY.add("brix/base",
                 }
             },
 
+            name: {
+                value: null
+            },
+
             /**
              * 是否自动渲染
              * @cfg {Boolean}
@@ -556,7 +563,7 @@ KISSY.add("brix/base",
         }, Interface.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxTpl, bxName, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
 
     S.mix(Brick, {
         boot: function(el, data) {
@@ -609,6 +616,7 @@ KISSY.add("brix/base",
 }, {
     requires: [
         'brix/app/config',
+        'brix/core/bx-util',
         'brix/core/bx-tpl',
         'brix/core/bx-name',
         'brix/core/bx-delegate',

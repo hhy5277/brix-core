@@ -157,7 +157,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             return arr
         },
 
-        bxFind: function(name) {
+        find: function(name) {
             var children = this.get('children')
             var isName = name.indexOf('/') > 0
             var isId = name.charAt(0) === '#'
