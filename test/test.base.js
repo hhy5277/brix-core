@@ -66,5 +66,6 @@ describe('brix/base', function() {
           done()
         })
     })
+    
   })
 })
