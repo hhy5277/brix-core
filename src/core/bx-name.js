@@ -103,7 +103,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             // @keyapril 这里的使用场景得补充一下。
 
             inst = new Klass(opts)
-            inst.set('id', el.attr('id'))
+            
 
             var children = parent.get('children')
 
@@ -115,7 +115,8 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (inst.bxRender) {
                 inst.on('rendered', fn)
-                inst.callMethodByHierarchy('initialize', 'constructor')
+                //这里干什么？
+                //inst.callMethodByHierarchy('initialize', 'constructor')
             }
             else {
                 fn()

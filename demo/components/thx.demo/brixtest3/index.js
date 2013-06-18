@@ -34,6 +34,7 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 					self.setChunkData({
 						text:'我改变了'+S.guid()
 					});
+					self.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
 				}
 			}
 		},

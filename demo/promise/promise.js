@@ -85,6 +85,24 @@ KISSY.use('brix/app,brix/base', function(S, app) {
             S.log('ready')
             this.setChunkData({a: 'aaaa' + S.guid()})
             window.brick = this
+            this.delegate('#brixtest', 'myfire', function(){
+                S.log('brixtest_myfire')
+            })
+            this.delegate('#brixtest2', 'myfire', function(e){
+                S.log('brixtest2_myfire')
+                //取消默认事件和冒泡
+                e.halt(true);
+            })
+            this.delegate('#brixtest2', 'myfire', function(){
+                S.log('brixtest22_myfire')
+            })
+            var fn = function(e){
+                S.log('brixtest3'+'_'+e.fireName);
+            }
+            this.delegate('#brixtest3', 'myfire', fn)
+            this.undelegate('#brixtest3', 'myfire', fn)
+
+            this.find('#brixtest').delegate('#brixtest3', 'myfire', fn)
         })
 
     }

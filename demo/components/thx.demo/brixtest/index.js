@@ -93,12 +93,12 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 					S.log('图片加载了');
 				}
 			},
-			document: {
+			'document': {
 				click: function() {
 					S.log('点击了document');
 				}
 			},
-			window: {
+			'window': {
 				scroll: function() {
 					// S.log(S.guid('scroll-'));
 				},
