@@ -432,7 +432,7 @@ KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
     };
 
     S.extend(Pagination, Brick, {
-        initialize: function() {
+        bindUI: function() {
             var self = this;
             self._setUrlInfo();
             //从url信息中初始配置参数

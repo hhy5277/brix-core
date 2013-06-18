@@ -34,7 +34,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
                     for (var i = 0; i < children.length; i++) {
-                        self.bxFind('#' + children[i].attr('id')).destroy()
+                        self.find('#' + children[i].attr('id')).destroy()
                     }
                 }
             })
