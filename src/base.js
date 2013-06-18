@@ -608,6 +608,8 @@ KISSY.add("brix/base",
 
             var brick = new Brick(options)
 
+            children.push(brick)
+            
             return brick
         }
     })

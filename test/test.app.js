@@ -1,6 +1,8 @@
 var app
 var Brick
 
+var S = KISSY
+
 
 describe('brix/app', function() {
 
@@ -66,6 +68,14 @@ describe('brix/app', function() {
       })
     })
     
+    it('goes into the children of app', function() {
+      expect(S.indexOf(brick, app.get('children'))).to.not.be.below(0)
+    })
+
+    it('has it\'s parent point to app', function() {
+      expect(brick.get('parent')).to.equal(app)
+    })
+
     // For more testcases on Brick, see test.base.js
   })
 })
