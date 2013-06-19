@@ -15,26 +15,19 @@ KISSY.add("brix/base",
     var Brick = RichBase.extend({
         initializer: function() {
             var self = this
+            //这里是否考虑同步执行？
+            var el = self.get('el')
+            //id和名称都用采用静默更新
+            self.set('id', el.attr('id'), {
+                silent : true
+            })
+            if (!self.get('name')) self.set('name', el.attr('bx-name'), {
+                                                silent : true
+                                            })
             var d = new Promise.Defer()
             var promise = d.promise
 
             promise
-                .then(function() {
-                    //这里是否考虑同步执行？
-                    var el = self.get('el')
-                    //id和名称都用采用静默更新
-                    self.set('id', el.attr('id'), {
-                        silent : true
-                    })
-                    if (!self.get('name')) self.set('name', el.attr('bx-name'), {
-                                                        silent : true
-                                                    })
-                })
-                .then(function() {
-                    self.on('ready', function() {
-                        //需要在自己完成后调用什么方法呢？
-                    })
-                })
                 .then(function() {
                     return self.bxGetTpl()
                 })
