@@ -9,10 +9,13 @@ KISSY.add('brix/core/bx-config', function(S) {
          */
         bxHandleConfig: function(el, Klass) {
             // Compact config
-            if (el.hasAttr('bx-config')) {
-                return S.globalEval(el.attr('bx-config')) || {}
+            var config = el.attr('bx-config')
+            if (config) {
+                return (new Function('return ' + config))();
+            } else {
+                return {};
             }
-
+            
             Klass = Klass || this.constructor
             var optionList = []
 
