@@ -441,8 +441,16 @@ KISSY.add("brix/base",
             var parent = this.get('parent')
             if(parent){
                 context = context || this;
-                eventType = (context == this ? '#' + context.get('id') + '_' + eventType : eventType)
-                parent.fire(eventType, eventData, context)
+                if(context===this){
+                    var eventTypeId = '#' + context.get('id') + '_' + eventType
+                    var eventTypeName = context.get('name') + '_' + eventType
+                    parent.fire(eventTypeId, eventData, context)
+                    parent.fire(eventTypeName, eventData, context)
+                }
+                else{
+                    parent.fire(eventType, eventData, context)
+                }
+                
             }
         }
     }, {
