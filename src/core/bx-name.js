@@ -115,8 +115,6 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (inst.bxRender) {
                 inst.on('rendered', fn)
-                //这里干什么？
-                //inst.callMethodByHierarchy('initialize', 'constructor')
             }
             else {
                 fn()
