@@ -9,9 +9,9 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		initializer: function() {
 			S.log('initializer3');
 		},
-		bindUI: function() {
+		bind: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI3');
+			S.log('bind 3');
 		},
 		destructor: function() {
 			S.log('destructor3');
@@ -43,7 +43,7 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		},
 		METHODS: {
 			testMethod: function() {
-				return 'test'
+				return 'test';
 			}
 		}
 	}, 'BrixTest3');

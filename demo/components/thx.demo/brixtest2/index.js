@@ -9,11 +9,11 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 		initializer: function() {
 			S.log('initializer2');
 		},
-		bindUI: function() {
+		bind: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI2');
+			S.log('bind 2');
 		},
-		syncUI:function(){
+		sync:function(){
 			this.get('el').one('#brixtest3').one('span').css('color','red');
 		},
 		destructor: function() {

@@ -8,69 +8,91 @@ KISSY.add('brix/app/config', function(S) {
 
             interface: 'zuomo',
 
-            imports: null,
+            imports: {},
 
-            timestamp: null,
-
-            namespace: null,
-
-            components: null
+            components: {}
         },
 
         config: function(prop, data) {
+            var _data = this.configData
+
             if (S.isPlainObject(prop)) {
-                S.mix(this.configData, prop)
+                data = prop
+                prop = null
             }
             else if (S.isString(prop)) {
                 if (typeof data !== 'undefined') {
-                    this.configData[prop] = data
+                    var newData = {}
+
+                    newData[prop] = data
+                    data = newData
                 }
                 else {
-                    return this.configData[prop]
+                    return _data[prop]
                 }
+            }
+
+            if (data) {
+                S.mix(_data, data)
+
+                if ('components' in data) this.bxResolveComponents()
+                if ('imports' in data) this.bxResolveImports()
             }
 
             return this
         },
 
-        mapTimestamp: function() {
-            var stamp = this.config('timestamp')
-            var ns = this.config('namespace')
+        bxResolveComponents: function() {
+            var components = this.config('components')
 
-            if (stamp && ns) {
-                var injectTimestamp = function(m, name, file) {
-                    return [ns, stamp, name, file].join('/')
+            if (S.isString(components)) {
+                this.config('components', { ns: components })
+            }
+        },
+
+        bxResolveImports: function() {
+            var imports = this.config('imports')
+
+            for (var ns in imports) {
+                var bricks = imports[ns]
+
+                for (var name in bricks) {
+                    var brick = bricks[name]
+
+                    if (S.isString(brick)) {
+                        bricks[name] = { version: brick, requires: 'all' }
+                    }
+                    else if (!brick.requires) {
+                        brick.requires = 'all'
+                    }
+                }
+            }
+        },
+
+        bxMapImports: function() {
+            this.bxMapModules(this.config('imports'))
+        },
+
+        bxMapComponents: function() {
+            var components = this.config('components')
+            var tag = components.tag
+            var ns = components.ns
+
+            if (tag && ns) {
+                var injectTag = function(m, name, file) {
+                    return [ns, tag, name, file].join('/')
                 }
 
                 S.config('map', [
-                    [new RegExp(ns + '\\/([^\\/]+)\\/([^\\/]+)$'), injectTimestamp]
+                    [new RegExp(ns + '\\/([^\\/]+)\\/([^\\/]+)$'), injectTag]
                 ])
             }
         },
 
-        mapImports: function() {
-            this.mapModules(this.config('imports'))
-        },
-
-        mapComponents: function() {
-            var comps = this.config('components')
-
-            if (S.isPlainObject(comps)) {
-                var ns = this.config('namespace')
-                var obj = {}
-
-                obj[ns] = comps
-                this.mapModules(obj)
-            }
-            else {
-                this.mapTimestamp()
-            }
-        },
-
-        mapModules: function(lock) {
+        bxMapModules: function(lock) {
             function makeReplacer(ns) {
                 return function(match, name, file) {
-                    return [ns, name, lock[ns][name], file].join('/')
+                    return [ns, name, lock[ns][name].version, file].join('/')
                 }
             }
             var maps = []
@@ -82,7 +104,7 @@ KISSY.add('brix/app/config', function(S) {
             S.config('map', maps)
         },
 
-        packageImports: function() {
+        bxPackageImports: function() {
             var imports = this.config('imports')
             var importsBase = this.config('base') + '/imports'
             var ignoreNs = S.config('ignorePackageNameInUri')
@@ -97,9 +119,10 @@ KISSY.add('brix/app/config', function(S) {
             S.config('packages', packages)
         },
 
-        packageComponents: function() {
-            var ns = this.config('namespace')
-            var base = this.config('base')
+        bxPackageComponents: function() {
+            var components = this.config('components')
+            var ns = components.ns
+            var base = components.base || this.config('base')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var obj = {}
 
@@ -109,7 +132,7 @@ KISSY.add('brix/app/config', function(S) {
             S.config('packages', obj)
         },
 
-        comboStyle: function() {
+        bxComboStyle: function() {
             var imports = this.config('imports') || {}
             var styles = []
             var comp
@@ -120,14 +143,11 @@ KISSY.add('brix/app/config', function(S) {
                     styles.push([ns, comp, 'index.css'].join('/'))
                 }
             }
-            var components = this.config('components') || []
+            var components = this.config('components')
+            var bricks = components.bricks || []
 
-            if (S.isPlainObject(components)) {
-                components = S.keys(components)
-            }
-            ns = this.config('namespace')
-            for (var i = 0; i < components.length; i++) {
-                styles.push([ns, components[i], 'index.css'].join('/'))
+            for (var i = 0; i < bricks.length; i++) {
+                styles.push([components.ns, bricks[i], 'index.css'].join('/'))
             }
 
             return styles

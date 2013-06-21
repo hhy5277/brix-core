@@ -8,9 +8,9 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 		initializer: function() {
 			S.log('initializer');
 		},
-		bindUI: function() {
+		bind: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI');
+			S.log('bind');
 		},
 		destructor: function() {
 			S.log('destructor');

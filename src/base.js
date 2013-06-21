@@ -1,29 +1,22 @@
 KISSY.add("brix/base",
-          function(S, app,
+          function(S, app, Interface,
                       bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote,
-                      IZuomo, IYicai,
                       Promise, RichBase, XTemplate) {
 
     var noop = S.noop
-
-    var INTERFACE_MAP = {
-        zuomo: IZuomo,
-        yicai: IYicai
-    }
-    var Interface = INTERFACE_MAP[app.config('interface')]
 
     var Brick = RichBase.extend({
         initializer: function() {
             var self = this
             //这里是否考虑同步执行？
             var el = self.get('el')
+            
             //id和名称都用采用静默更新
-            self.set('id', el.attr('id'), {
-                silent : true
-            })
-            if (!self.get('name')) self.set('name', el.attr('bx-name'), {
-                                                silent : true
-                                            })
+            self.set('id', el.attr('id'), { silent : true })
+            if (!self.get('name')) {
+                self.set('name', el.attr('bx-name'), { silent : true })
+            }
+
             var d = new Promise.Defer()
             var promise = d.promise
 
@@ -69,14 +62,14 @@ KISSY.add("brix/base",
             }, 0)
         },
 
-        bindUI: noop,
+        bind: noop,
 
         /**
          * 同步属性与用户界面
          * @protected
          * @method
          */
-        syncUI: noop,
+        sync: noop,
 
         /**
          * 获取模板
@@ -199,11 +192,11 @@ KISSY.add("brix/base",
             var d = new Promise.Defer()
 
             /**
-             * @event beforeRenderUI
+             * @event beforeRender
              * fired when root node is ready
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeRenderUI')
+            self.fire('beforeRender')
 
             var tpl = self.get('tpl')
             var el = self.get('el')
@@ -218,11 +211,11 @@ KISSY.add("brix/base",
 
             function resolve() {
                 /**
-                 * @event afterRenderUI
+                 * @event afterRender
                  * fired after root node is rendered into dom
                  * @param {KISSY.Event.CustomEventObject} e
                  */
-                self.fire('afterRenderUI')
+                self.fire('afterRender')
 
                 d.resolve()
             }
@@ -314,45 +307,46 @@ KISSY.add("brix/base",
             var self = this
 
             /**
-             * @event beforeBindUI
+             * @event beforeBind
              * fired before component 's internal event is bind.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeBindUI')
+            self.fire('beforeBind')
 
             self.constructor.superclass.bindInternal.call(self)
 
-            self.callMethodByHierarchy("bindUI", "__bindUI")
+            self.callMethodByHierarchy("bind", "__bind")
+
 
             /**
-             * @event afterBindUI
+             * @event afterBind
              * fired when component 's internal event is bind.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('afterBindUI')
+            self.fire('afterBind')
         },
 
         bxSync: function() {
             var self = this
 
             /**
-             * @event beforeSyncUI
+             * @event beforeSync
              * fired before component 's internal state is synchronized.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeSyncUI')
+            self.fire('beforeSync')
 
             Brick.superclass.syncInternal.call(self)
 
-            self.callMethodByHierarchy("syncUI", "__syncUI")
+            self.callMethodByHierarchy("sync", "__sync")
 
             /**
-             * @event afterSyncUI
+             * @event afterSync
              * fired after component 's internal state is synchronized.
              * @param {KISSY.Event.CustomEventObject} e
              */
 
-            self.fire('afterSyncUI')
+            self.fire('afterSync')
         },
 
         /**
@@ -407,6 +401,31 @@ KISSY.add("brix/base",
 
         boot: function() {
             return this.constructor.boot.apply(this, arguments)
+        },
+
+        /**
+         * 扩展组件的事件触发，或通知到所有父组件
+         * @param  {String}  type       要触发的自定义事件名称
+         * @param  {Object}  eventData  要混入触发事件对象的数据对象
+         */
+        // 因为用到了 Brick 变量，所以从 core/bx-delegate 搬到这里，有更好的办法么？
+        fire: function(eventType, eventData, context) {
+            Brick.superclass.fire.apply(this, arguments)
+
+            //触发父组件的事件
+            var parent = this.get('parent')
+            if (parent) {
+                context = context || this;
+                if (context === this) {
+                    var eventTypeId = '#' + context.get('id') + '_' + eventType
+                    var eventTypeName = context.get('name') + '_' + eventType
+                    parent.fire(eventTypeId, eventData, context)
+                    parent.fire(eventTypeName, eventData, context)
+                } else {
+                    parent.fire(eventType, eventData, context)
+                }
+
+            }
         }
     }, {
         ATTRS: S.mix({
@@ -622,6 +641,7 @@ KISSY.add("brix/base",
 }, {
     requires: [
         'brix/app/config',
+        'brix/interface/index',
         'brix/core/bx-util',
         'brix/core/bx-tpl',
         'brix/core/bx-name',
@@ -629,8 +649,6 @@ KISSY.add("brix/base",
         'brix/core/bx-delegate',
         'brix/core/bx-config',
         'brix/core/bx-remote',
-        'brix/interface/if-zuomo',
-        'brix/interface/if-yicai',
         'promise',
         'rich-base',
         'xtemplate',

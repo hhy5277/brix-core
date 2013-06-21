@@ -266,7 +266,7 @@ KISSY.add("brix/dropdown/index", function(S, Brick) {
     };
 
     S.extend(Dropdown, Brick, {
-        bindUI: function() {
+        bind: function() {
             var self = this,
                 el = this.get('el');
             el.attr('tabindex',0);

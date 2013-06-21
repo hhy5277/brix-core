@@ -11,6 +11,7 @@ KISSY.add('brix/core/bx-delegate', function(S) {
         delegate: function(selector, eventType, fn, context) {
             this.on(selector + '_' + eventType, fn, context)
         },
+
         /**
          * 为符合匹配的相应事件移除事件代理
          * @param {String} selector  选择器（暂时支持组件id）
@@ -20,29 +21,6 @@ KISSY.add('brix/core/bx-delegate', function(S) {
          */
         undelegate: function(selector, eventType, fn, context) {
             this.detach(selector + '_' + eventType, fn, context)
-        },
-        /**
-         * 扩展组件的事件触发，或通知到所有父组件
-         * @param  {String}  type       要触发的自定义事件名称
-         * @param  {Object}  eventData  要混入触发事件对象的数据对象
-         */
-        fire: function(eventType, eventData, context) {
-            Brick.superclass.fire.apply(this, arguments)
-
-            //触发父组件的事件
-            var parent = this.get('parent')
-            if (parent) {
-                context = context || this;
-                if (context === this) {
-                    var eventTypeId = '#' + context.get('id') + '_' + eventType
-                    var eventTypeName = context.get('name') + '_' + eventType
-                    parent.fire(eventTypeId, eventData, context)
-                    parent.fire(eventTypeName, eventData, context)
-                } else {
-                    parent.fire(eventType, eventData, context)
-                }
-
-            }
         }
     }
 

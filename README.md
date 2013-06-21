@@ -1,9 +1,7 @@
 Brix Core
 =========
 
-Brix 3 on the way.
-
-## 快速演示
+## 演示
 
 安装开发环境，启动 HTTP 服务。
 
@@ -12,4 +10,254 @@ $ npm install
 $ npm start
 ```
 
-在浏览器中打开 <http://localhost:5000/demo/promise>
+访问 <http://localhost:5000/demo/>
+
+## 快速上手
+
+用过 Brix 早期版本的同学，请看这篇 [diff](http://cyj.me/f2e/brix-1-2-3-diff)。
+
+### brix/app
+
+Brix 的初始化入口，统一放在 brix/app 模块，在你的页面上引用 
+[KISSY seed](http://a.tbcdn.cn/s/kissy/1.3.0/seed.js) ，配置好 brix 包路径，
+例如：
+
+```html
+<script src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
+<script>
+KISSY.config({
+    packages: {
+        brix: {
+            base: 'http://g.tbcdn.cn/brix/3.0.0'
+        }
+    }
+})
+</script>
+```
+
+配置好包路径之后，就可以开始使用 brix/app 模块，让它帮你加载、维护组件了：
+
+```js
+KISSY.use('brix/app', function(S, app) {
+    // 配置当前页面的组件命名空间
+    app.config('components', 'thx.demo')
+
+    // 启动页面
+    app.boot()
+})
+```
+
+启动页面 `app.boot()` 做的事情是，找到 `[bx-app]` 节点，作为 el 参数，交给 Brick 
+实例化，等于：
+
+```js
+KISSY.use('brix/base', function(S, Brick) {
+    var page = new Brick({
+        el: S.one('[bx-app]')
+    })
+})
+```
+
+然后由实例化的组件（page）继续去找 `[bx-app]` 节点中剩余的带有 bx-name 属性的节点，
+并根据设定的值加载相应的模块，初始化它们，并且还可以：
+
+- 用 bx-remote 声明组件需要的数据
+- 用 bx-naked 或者 bx-requires 声明组件是否有相应模块，若否，则用 brix/base
+- 用 bx-tpl 声明组件模板所在
+
+### 拆分页面
+
+根据这一规则，我们可以把页面分成多个区块，每个区块由各自的 CSS 与 JS，
+并且可以相同区块出现多次：
+
+```html
+<body bx-app>
+  <div bx-name="thx.demo/ceiling"></div>
+  <div bx-name="thx.demo/nav"></div>
+  <div bx-name="thx.demo/featured-item"></div>
+  <div bx-name="thx.demo/relative-items"></div>
+  <div bx-name="thx.demo/featured-item"
+       bx-remote="http://tns.simba.taobao.com/?name=itemdsp"
+       bx-tpl="#featured-p4p-item">
+  </div>
+  <div bx-name="thx.demo/footer"></div>
+  <scirpt id="featured-p4p-item" type="text/x-tpl"></script>
+</body>
+```
+
+对这种传统页面，我们可以轻易地把页面拆分，并维护好各个组件的加载。
+
+### 组件嵌套
+
+上述例子中，都是大组件的概念，设计师更喜欢称其为模块，并将其中用到定制化的
+下拉框、按钮、标签栏等称为组件。在 Brix 中，它们确实也是组件，Brix 
+体现这种构造的方式是，允许组件嵌套：
+
+```html
+<div id="J_items"
+     bx-name="thx.demo/relative-items"
+     bx-tpl="#J_itemsTpl"
+     bx-remote="http://tns.simba.taobao.com/?name=itemdsp&count=3">
+</div>
+
+<script id="J_itemsTpl">
+  <ul>
+    {{#each items}}
+    <li bx-name="thx.demo/item">
+      <a href="{{clickurl}}">{{title}}</a>
+      <span bx-name="brix/wangwang" data-nick="{{nickname}}">{{nickname}}</span>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+```
+
+我们可以初始化这段页面，并在它 ready 之后做些事情：
+
+```js
+app.boot('#J_items').on('ready', function() {
+    // this         ==> thx.demo/relative-items 组件实例
+    // this.find    ==> 查找当前组件的子组件
+
+    alert('旺旺点灯 ' + this.find('brix/wangwang', true).length + ' 个！')
+    // 弹出“旺旺点灯 3 个！”
+})
+```
+
+### 组件的树状结构
+
+在上例中，组件初始化完后，是这样的结构：
+
+```
+app
+`-- thx.demo/relative-items
+   |-- thx.demo/item
+   |   `-- brix/wangwang
+   |
+   |-- thx.demo/item
+   |   `-- brix/wangwang
+   |
+   `-- thx.demo.item
+       `-- brix/wangwang
+```
+
+这棵树的根节点是 app ，叶子节点是 brix/wangwang ，中间的每个组件实例都有两个属性：
+
+- parent
+- children 
+
+根节点没有 parent ，叶子节点没有 children ：
+
+```js
+app.get('children')         // ==> [thx.demo/relative-items]
+app.get('parent')           // ==> undefined
+```
+
+## app.config 
+
+在实际项目开发中，不可避免地要使用公共组件，或者其他项目的组件。在 Brix 中，
+我们将其一视同仁，都称为外部组件，通过 imports 路径配置：
+
+```js
+app.config('imports', {
+    brix: {                     // 命名空间（namespace）
+        wangwang: '0.1.0'       // 组件名，版本
+    },
+    'thx.gallery': {        
+        kwicks: '0.1.0'
+    }
+})
+```
+
+## app.bootStyle
+
+如果需要让 Brix 来帮忙加载样式，可以使用 app.bootStyle 方法：
+
+```js
+app.config('components': {
+    ns: 'thx.demo',
+    styles: [ 'foo', 'bar']
+})
+app.config('imports': {
+    brix: { wangwang: '0.1.0' }
+})
+
+app.bootStyle(function() { 
+    app.boot()
+})
+
+// 将会执行：
+// S.use('thx.demo/foo/index.css,thx.demo/bar/index.css,brix/wangwang/0.1.0/index.css', callback)
+```
+
+可以通过显式声明，告诉 brix/app 哪些组件没有 CSS ：
+
+```js
+app.config('components', {
+    // thx.demo/bar 组件没有 index.css ，直接从这个数组里去掉即可
+    ns: 'thx.demo',
+    styles: [ 'foo' ]
+})
+
+app.config('imports', {
+    brix: {
+        wangwang: {
+            version: '0.1.0',
+            requires: 'js'      // 默认 requires: 'all' ，此处说明只有 JS
+        },
+        carousel: '1.1.0'
+    }
+})
+```
+
+## app.boot 与 Brick#boot
+
+组件也可以自行启动某段 HTML，适用于弹出较复杂的浮层等情况：
+
+```js
+app.boot('#page1').on('ready', function() {
+    this.find('thx.demo/foo').boot('#layer1', { ... }).on('ready', function() {
+        PopupManager.show(this)    
+    })
+})
+```
+
+## 上线
+
+上线时需要更新配置，取决于你的发布方式，主要有：
+
+- debug
+- components
+  - ns
+  - base
+  - tag
+
+```js
+app.config('debug', false)
+app.config('components', {
+    ns: 'thx.demo',
+    base: 'http://a.tbcdn.cn/apps/thx/demo',
+    tag: '20130621'
+})
+```
+
+总之对时间戳形式的发布来说，我们需要知道当前项目的命名空间，
+
+如果你需要 app.bootStyle ，则 components 配置可以这样写：
+
+```js
+app.config('components', {
+    ns: 'thx.demo',
+    base: 'http://a.tbcdn.cn/apps/thx/demo',
+    tag: '20130621',
+    styles: [ ... ]       // 有 index.css 的组件
+})
+```
+
+## Interface
+
+3.0.0 版本将提供两种局部刷新支持方式：
+
+- Brix 2 风格的局部刷新
+- AngularJS 风格，但是暂时还很弱的，局部刷新
+
