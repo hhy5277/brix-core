@@ -100,7 +100,7 @@ KISSY.use('brix/base', function(S, Brick) {
      bx-remote="http://tns.simba.taobao.com/?name=itemdsp&count=3">
 </div>
 
-<script id="J_itemsTpl">
+<script id="J_itemsTpl" type="text/x-tpl">
   <ul>
     {{#each items}}
     <li bx-name="thx.demo/item">
@@ -194,9 +194,10 @@ app.bootStyle(function() {
 
 ```js
 app.config('components', {
-    // thx.demo/bar 组件没有 index.css ，直接从这个数组里去掉即可
     ns: 'thx.demo',
-    styles: [ 'foo' ]
+
+    // thx.demo/bar 组件没有 index.css ，直接从这个数组里去掉即可
+    bricks: [ 'foo' ]
 })
 
 app.config('imports', {
@@ -256,8 +257,8 @@ app.config('components', {
 
 ## Interface
 
-3.0.0 版本将提供两种局部刷新支持方式：
+3.0.0 版本提供两种局部刷新支持方式：
 
 - Brix 2 风格的局部刷新
-- AngularJS 风格，但是暂时还很弱的，局部刷新
+- （暂未）AngularJS 风格，但是暂时还很弱的，局部刷新
 
