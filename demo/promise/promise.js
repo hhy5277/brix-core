@@ -12,7 +12,7 @@ KISSY.config({
 KISSY.use('brix/app,brix/base', function(S, app) {
 
     app.config({
-        namespace: 'thx.demo',
+        components: 'thx.demo',
         base: '../',
         imports: {
             brix: {

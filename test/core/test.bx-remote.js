@@ -11,7 +11,7 @@ describe('brix/base', function() {
       Brick = _Brick
 
       app.config({
-        namespace: 'thx.test',
+        components: 'thx.test',
         base: '../'
       })
 
