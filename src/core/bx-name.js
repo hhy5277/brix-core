@@ -47,7 +47,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                     if (naked === 'js' || naked === 'all')
                         klasses[i] = 'brix/base'
                     else 
-                        klasses[i] = node.attr('bx-name').replace(/\/$/, '') + '/index'
+                        klasses[i] = node.attr('bx-name').replace(/\/?$/, '/index')
                 }
 
                 KISSY.use(klasses.join(','), function(S) {
@@ -81,7 +81,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
                 // the tag and brickTpl attribute is required for interface/zuomo
                 tag: tag,
-                brickTpl: tag ? parent.get('brickTpls')[tag].middle : {}
+                brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
             })
 
             var ancestor = parent

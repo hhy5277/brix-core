@@ -1,5 +1,41 @@
 KISSY.add('brix/app/config', function(S) {
 
+    // A simple Class for brick declaration processing.
+    //
+    // A brick can be declared as:
+    //
+    // - 0.1.0
+    // - 0.1.0/js
+    // - 0.1.0/css
+    //
+    // A declaration instance can then check whether this declaration says 
+    // anything about js, css requirements or not.
+    //
+    // var foo = new Declaration('0.1.0/js')
+    //
+    // foo.requires('css')        // ==> false
+    //
+    function Declaration(str) {
+        var parts = str.split('/')
+
+        this.version = parts[0]
+        this.assets = parts[1] || 'all'
+    }
+
+    S.augment(Declaration, {
+        naked: function(type) {
+            return !this.requires(type)
+        },
+
+        requires: function(type) {
+            return this.assets === 'all' || this.assets === type
+        },
+
+        toString: function() {
+            return this.version
+        }
+    })
+
     var exports = {
         configData: {
             debug: true,
@@ -10,7 +46,13 @@ KISSY.add('brix/app/config', function(S) {
 
             imports: {},
 
-            components: {}
+            components: null,
+
+            namespace: null,
+
+            timestamp: null,
+
+            componentsBase: null
         },
 
         config: function(prop, data) {
@@ -43,10 +85,13 @@ KISSY.add('brix/app/config', function(S) {
         },
 
         bxResolveComponents: function() {
+            // resolve simplified components settings into verbose format.
             var components = this.config('components')
 
-            if (S.isString(components)) {
-                this.config('components', { ns: components })
+            if (S.isPlainObject(components)) {
+                for (var name in components) {
+                    components[name] = new Declaration(components[name])
+                }
             }
         },
 
@@ -57,14 +102,7 @@ KISSY.add('brix/app/config', function(S) {
                 var bricks = imports[ns]
 
                 for (var name in bricks) {
-                    var brick = bricks[name]
-
-                    if (S.isString(brick)) {
-                        bricks[name] = { version: brick, requires: 'all' }
-                    }
-                    else if (!brick.requires) {
-                        brick.requires = 'all'
-                    }
+                    bricks[name] = new Declaration(bricks[name])
                 }
             }
         },
@@ -74,9 +112,9 @@ KISSY.add('brix/app/config', function(S) {
         },
 
         bxMapComponents: function() {
+            var tag = this.config('timestamp')
+            var ns = this.config('namespace')
             var components = this.config('components')
-            var tag = components.tag
-            var ns = components.ns
 
             if (tag && ns) {
                 var injectTag = function(m, name, file) {
@@ -87,12 +125,19 @@ KISSY.add('brix/app/config', function(S) {
                     [new RegExp(ns + '\\/([^\\/]+)\\/([^\\/]+)$'), injectTag]
                 ])
             }
+            else if (S.isPlainObject(components)) {
+                var obj = {}
+
+                obj[ns] = components
+
+                this.bxMapModules(obj)
+            }
         },
 
         bxMapModules: function(lock) {
             function makeReplacer(ns) {
                 return function(match, name, file) {
-                    return [ns, name, lock[ns][name].version, file].join('/')
+                    return [ns, name, lock[ns][name], file].join('/')
                 }
             }
             var maps = []
@@ -121,8 +166,8 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageComponents: function() {
             var components = this.config('components')
-            var ns = components.ns
-            var base = components.base || this.config('base')
+            var ns = this.config('namespace')
+            var base = this.config('componentsBase') || this.config('base')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var obj = {}
 
@@ -135,19 +180,28 @@ KISSY.add('brix/app/config', function(S) {
         bxComboStyle: function() {
             var imports = this.config('imports') || {}
             var styles = []
-            var comp
-            var ns
 
-            for (ns in imports) {
-                for (comp in imports[ns]) {
-                    styles.push([ns, comp, 'index.css'].join('/'))
+            var checkStyle = function(ns, bricks) {
+                for (var name in bricks) {
+                    if (bricks[name].requires('css')) {
+                        styles.push([ns, name, 'index.css'].join('/'))
+                    }
                 }
             }
-            var components = this.config('components')
-            var bricks = components.bricks || []
 
-            for (var i = 0; i < bricks.length; i++) {
-                styles.push([components.ns, bricks[i], 'index.css'].join('/'))
+            for (var ns in imports) {
+                checkStyle(ns, imports[ns])
+            }
+            var components = this.config('components')
+            var ns = this.config('namespace')
+            
+            if (S.isPlainObject(components)) {
+                checkStyle(ns, components)
+            }
+            else if (S.isArray(components)) {
+                for (var i = 0; i < components.length; i++) {
+                    styles.push([ns, components[i], 'index.css'].join('/'))
+                }
             }
 
             return styles
