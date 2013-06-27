@@ -40,7 +40,7 @@ KISSY.config({
 ```js
 KISSY.use('brix/app', function(S, app) {
     // 配置当前页面的组件命名空间
-    app.config('components', 'thx.demo')
+    app.config('namespace', 'thx.demo')
 
     // 启动页面
     app.boot()
@@ -174,9 +174,9 @@ app.config('imports', {
 如果需要让 Brix 来帮忙加载样式，可以使用 app.bootStyle 方法：
 
 ```js
-app.config('components': {
-    ns: 'thx.demo',
-    styles: [ 'foo', 'bar']
+app.config({
+    namespace: 'thx.demo',
+    components: [ 'foo', 'bar']
 })
 app.config('imports': {
     brix: { wangwang: '0.1.0' }
@@ -193,19 +193,16 @@ app.bootStyle(function() {
 可以通过显式声明，告诉 brix/app 哪些组件没有 CSS ：
 
 ```js
-app.config('components', {
-    ns: 'thx.demo',
+app.config({
+    namespace: 'thx.demo',
 
     // thx.demo/bar 组件没有 index.css ，直接从这个数组里去掉即可
-    bricks: [ 'foo' ]
+    components: [ 'foo' ]
 })
 
 app.config('imports', {
     brix: {
-        wangwang: {
-            version: '0.1.0',
-            requires: 'js'      // 默认 requires: 'all' ，此处说明只有 JS
-        },
+        wangwang: '0.1.0/js'    // 默认 /all ，此处说明此模块只有 index.js
         carousel: '1.1.0'
     }
 })
@@ -235,10 +232,10 @@ app.boot('#page1').on('ready', function() {
 
 ```js
 app.config('debug', false)
-app.config('components', {
-    ns: 'thx.demo',
-    base: 'http://a.tbcdn.cn/apps/thx/demo',
-    tag: '20130621'
+app.config({
+    namespace: 'thx.demo',
+    componentsBase: 'http://a.tbcdn.cn/apps/thx/demo',
+    componentsTag: '20130621'
 })
 ```
 
@@ -247,11 +244,11 @@ app.config('components', {
 如果你需要 app.bootStyle ，则 components 配置可以这样写：
 
 ```js
-app.config('components', {
-    ns: 'thx.demo',
-    base: 'http://a.tbcdn.cn/apps/thx/demo',
-    tag: '20130621',
-    styles: [ ... ]       // 有 index.css 的组件
+app.config({
+    namespace: 'thx.demo',
+    componentsBase: 'http://a.tbcdn.cn/apps/thx/demo',
+    componentsTag: '20130621',
+    components: [ ... ]       // 有 index.css 的组件
 })
 ```
 
