@@ -234,8 +234,8 @@ app.boot('#page1').on('ready', function() {
 app.config('debug', false)
 app.config({
     namespace: 'thx.demo',
-    componentsBase: 'http://a.tbcdn.cn/apps/thx/demo',
-    componentsTag: '20130621'
+    base: 'http://a.tbcdn.cn/apps/thx/demo',
+    timestamp: '20130621'
 })
 ```
 
@@ -246,8 +246,8 @@ app.config({
 ```js
 app.config({
     namespace: 'thx.demo',
-    componentsBase: 'http://a.tbcdn.cn/apps/thx/demo',
-    componentsTag: '20130621',
+    base: 'http://a.tbcdn.cn/apps/thx/demo',
+    tiemstamp: '20130621',
     components: [ ... ]       // 有 index.css 的组件
 })
 ```

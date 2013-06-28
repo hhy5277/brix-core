@@ -50,9 +50,7 @@ KISSY.add('brix/app/config', function(S) {
 
             namespace: null,
 
-            timestamp: null,
-
-            componentsBase: null
+            timestamp: null
         },
 
         config: function(prop, data) {
@@ -165,9 +163,8 @@ KISSY.add('brix/app/config', function(S) {
         },
 
         bxPackageComponents: function() {
-            var components = this.config('components')
             var ns = this.config('namespace')
-            var base = this.config('componentsBase') || this.config('base')
+            var base = this.config('base')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var obj = {}
 
@@ -188,12 +185,14 @@ KISSY.add('brix/app/config', function(S) {
                     }
                 }
             }
+            var ns
 
-            for (var ns in imports) {
+            for (ns in imports) {
                 checkStyle(ns, imports[ns])
             }
             var components = this.config('components')
-            var ns = this.config('namespace')
+
+            ns = this.config('namespace')
             
             if (S.isPlainObject(components)) {
                 checkStyle(ns, components)
