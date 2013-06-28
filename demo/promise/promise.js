@@ -30,7 +30,7 @@ KISSY.use('brix/app,brix/base', function(S, app) {
     function bootstrap() {
         app.boot({
             el: '#container',
-            tmpl: '#tmpl',
+            tpl: '#tpl',
             config: {
                 brixtest2: {
                     data: {
@@ -41,11 +41,11 @@ KISSY.use('brix/app,brix/base', function(S, app) {
                 },
                 brixtest4: {
                     listeners: {
-                        getTemplate: function(e) {
-                            return setTimeout(function() {
-                                var tmpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tmpl="text" bx-datakey="text">hahah{{text}}</span>'
+                        getTpl: function(e) {
+                            return S.later(function() {
+                                var tpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tpl="text" bx-datakey="text">hahah{{text}}</span>'
 
-                                e.next(tmpl)
+                                e.next(tpl)
                             }, 1)
                         }
                     }
@@ -53,7 +53,7 @@ KISSY.use('brix/app,brix/base', function(S, app) {
             },
             listeners: {
                 getData: function(e) {
-                    S.later(function() {
+                    return S.later(function() {
                         var data = {
                             a: 'a',
                             b: 'b',
@@ -79,14 +79,30 @@ KISSY.use('brix/app,brix/base', function(S, app) {
                         }
                         e.next(data)
                     }, 500)
-
-                    return true
                 }
             }
         }).on('ready', function(){
             S.log('ready')
             this.setChunkData({a: 'aaaa' + S.guid()})
             window.brick = this
+            this.delegate('#brixtest', 'myfire', function(){
+                S.log('brixtest_myfire')
+            })
+            this.delegate('#brixtest2', 'myfire', function(e){
+                S.log('brixtest2_myfire')
+                //取消默认事件和冒泡
+                e.halt(true);
+            })
+            this.delegate('#brixtest2', 'myfire', function(){
+                S.log('brixtest22_myfire')
+            })
+            var fn = function(e){
+                S.log('brixtest3'+'_'+e.fireName);
+            }
+            this.delegate('#brixtest3', 'myfire', fn)
+            this.undelegate('#brixtest3', 'myfire', fn)
+
+            this.find('#brixtest').delegate('#brixtest3', 'myfire', fn)
         })
 
     }

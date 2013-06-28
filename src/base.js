@@ -1,41 +1,40 @@
-/*jshint asi:true */
 KISSY.add("brix/base",
-          function(S, app,
-                      bxTemplate, bxName, bxDelegate, bxConfig,
-                      IZuomo, IYicai,
+          function(S, app, Interface,
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote,
                       Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
-    var INTERFACE_MAP = {
-        zuomo: IZuomo,
-        yicai: IYicai
-    }
-    var Interface = INTERFACE_MAP[app.config('interface')]
-
     var Brick = RichBase.extend({
         initializer: function() {
             var self = this
+            //这里是否考虑同步执行？
+            var el = self.get('el')
+            
+            //id和名称都用采用静默更新
+            self.set('id', el.attr('id'), { silent : true })
+            if (!self.get('name')) {
+                self.set('name', el.attr('bx-name'), { silent : true })
+            }
+
             var d = new Promise.Defer()
             var promise = d.promise
 
             promise
                 .then(function() {
-                    self.on('ready', function() {
-                        //需要在自己完成后调用什么方法呢？
-                    })
+                    return self.bxGetTpl()
                 })
                 .then(function() {
-                    return self.bxGetTemplate()
+                    return self.bxAfterGetTpl()
                 })
                 .then(function() {
-                    return self.bxAfterGetTemplate()
-                })
-                .then(function() {
-                    return self.bxBuildTemplate()
+                    return self.bxBuildTpl()
                 })
                 .then(function() {
                     return self.bxGetData()
+                })
+                .then(function() {
+                    return self.bxAfterGetData()
                 })
                 .then(function() {
                     return self.bxBuildData()
@@ -44,7 +43,7 @@ KISSY.add("brix/base",
                     return self.bxRender()
                 })
                 .then(function() {
-                    return self.bxEnable()
+                    return self.bxActivate()
                 })
                 .then(function() {
                     self.fire('ready')
@@ -52,9 +51,7 @@ KISSY.add("brix/base",
 
             // 将初始化过程变成异步，从而允许这样的写法：
             //
-            //     var brick = new Brick({ ... })
-            //
-            //     brick.on('ready', function() {
+            //     new Brick({ ... }).on('ready', function() {
             //         // 监听 ready 事件
             //     })
             //
@@ -65,47 +62,47 @@ KISSY.add("brix/base",
             }, 0)
         },
 
-        bindUI: noop,
+        bind: noop,
 
         /**
          * 同步属性与用户界面
          * @protected
          * @method
          */
-        syncUI: noop,
+        sync: noop,
 
         /**
          * 获取模板
          */
-        bxGetTemplate: function() {
+        bxGetTpl: function() {
             var d = new Promise.Defer()
             var self = this
 
-            self.bxHandleTemplate(function(tmpl) {
-                d.resolve(tmpl)
+            self.bxHandleTpl(function(tpl) {
+                d.resolve(tpl)
             })
 
-            d.promise.then(function(tmpl) {
-                self.set('tmpl', tmpl)
+            d.promise.then(function(tpl) {
+                self.set('tpl', tpl)
             })
 
             return d.promise
         },
 
-        bxAfterGetTemplate: function() {
+        bxAfterGetTpl: function() {
             var self = this
             var d = new Promise.Defer()
 
             // 开发者获取模板后，调用next方法
             // fn 留作扩展使用
-            var fn = self.fire('getTemplate', {
-                next: function(tmpl) {
-                    d.resolve(tmpl)
+            var fn = self.fire('getTpl', {
+                next: function(tpl) {
+                    d.resolve(tpl)
                 }
             })
 
-            d.promise.then(function(tmpl) {
-                self.set('tmpl', tmpl)
+            d.promise.then(function(tpl) {
+                self.set('tpl', tpl)
             })
 
             if (fn) return d.promise
@@ -114,14 +111,29 @@ KISSY.add("brix/base",
         /**
          * 编译模板
          */
-        bxBuildTemplate: function() {
-            if (this.bxIBuildTemplate) return this.bxIBuildTemplate()
+        bxBuildTpl: function() {
+            if (this.bxIBuildTpl) return this.bxIBuildTpl()
+        },
+
+        bxGetData: function() {
+            var d = new Promise.Defer()
+            var self = this
+
+            self.bxHandleRemote(function(data) {
+                d.resolve(data)
+            })
+
+            d.promise.then(function(data) {
+                self.set('data', data)
+            })
+
+            return d.promise
         },
 
         /**
          * 获取数据
          */
-        bxGetData: function() {
+        bxAfterGetData: function() {
             var d = new Promise.Defer()
             var self = this
 
@@ -129,15 +141,15 @@ KISSY.add("brix/base",
             //fn 留作扩展使用
             var fn = self.fire('getData', {
                 next: function(data) {
-                    self.set('data', data)
-                    d.resolve()
+                    d.resolve(data)
                 }
             })
-            if (!fn) {
-                d.resolve()
-            }
 
-            return d.promise
+            d.promise.then(function(data) {
+                self.set('data', data)
+            })
+
+            if (fn) return d.promise
         },
 
         /**
@@ -153,7 +165,7 @@ KISSY.add("brix/base",
             }
             else {
                 // 是否需要拷贝父亲的数据
-                // if (self.get('tmpl')) {
+                // if (self.get('tpl')) {
                 //     var parent = self
                 //     var newData
                 //     while (parent) {
@@ -180,17 +192,17 @@ KISSY.add("brix/base",
             var d = new Promise.Defer()
 
             /**
-             * @event beforeRenderUI
+             * @event beforeRender
              * fired when root node is ready
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeRenderUI')
+            self.fire('beforeRender')
 
-            var tmpl = self.get('tmpl')
+            var tpl = self.get('tpl')
             var el = self.get('el')
 
-            if (tmpl) {
-                var html = S.trim(self.bxRenderTemplate(tmpl, self.get('data')))
+            if (tpl) {
+                var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
 
                 el.html(html)
             }
@@ -199,11 +211,11 @@ KISSY.add("brix/base",
 
             function resolve() {
                 /**
-                 * @event afterRenderUI
+                 * @event afterRender
                  * fired after root node is rendered into dom
                  * @param {KISSY.Event.CustomEventObject} e
                  */
-                self.fire('afterRenderUI')
+                self.fire('afterRender')
 
                 d.resolve()
             }
@@ -226,27 +238,27 @@ KISSY.add("brix/base",
          * @return {String} html片段
          * @private
          */
-        bxRenderTemplate: function(tmpl, data) {
+        bxRenderTpl: function(tpl, data) {
             var self = this
-            var templateEngine = self.get('templateEngine')
+            var TplEngine = self.get('TplEngine')
 
             // 根据模板引擎，选择渲染方式
-            if (typeof templateEngine === 'function') {
-                return new templateEngine(tmpl).render(data)
+            if (typeof TplEngine === 'function') {
+                return new TplEngine(tpl).render(data)
             }
             else {
-                return templateEngine.render(tmpl, data)
+                return TplEngine.render(tpl, data)
             }
         },
 
         /**
          * 给组件添加行为
          */
-        bxEnable: function() {
+        bxActivate: function() {
             var self = this
 
-            if (!self.get('autoEnable') ||      // do not enable automatically
-                    self.get('enabled') ||      // enabled before,
+            if (!self.get('autoActivate') ||      // do not enable automatically
+                    self.get('activated') ||      // activated before,
                     !self.get('rendered')) {    // or not rendered yet.
                 return
             }
@@ -254,40 +266,40 @@ KISSY.add("brix/base",
             self.bxBind()
             self.bxSync()
 
-            if (self.bxIEnable) self.bxIEnable()
+            if (self.bxIActivate) self.bxIActivate()
 
-            // bxEnable 过程是否需要支持异步？
+            // bxActivate 过程是否需要支持异步？
             // 如果支持异步，是否需要两个状态属性，例如：
             //
-            // - bxEnableCalled 用来标识 bxEnable 方法已被调用
-            // - enabled 用来标识已经添加行为成功
+            // - bxActivateCalled 用来标识 bxActivate 方法已被调用
+            // - activated 用来标识已经添加行为成功
             //
-            // 目前是直接拿 enabled 来判断是否已调用方法，用 .on('enabled')
+            // 目前是直接拿 activated 来判断是否已调用方法，用 .on('activated')
             // 事件来在添加行为完毕之后做其它操作。
-            self.setInternal('enabled', true)
+            self.setInternal('activated', true)
 
             var children = self.get('children')
             var total = children.length
             var counter = 0
 
-            function enabled() {
-                self.fire('enabled')
+            function activated() {
+                self.fire('activated')
             }
 
             function check(e) {
-                if (++counter === total) enabled()
-                e.target.detach('enabled', check)
+                if (++counter === total) activated()
+                e.target.detach('activated', check)
             }
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                child.on('enabled', check)
-                child.bxEnable()
+                child.on('activated', check)
+                child.bxActivate()
             }
 
             if (!children || children.length === 0) {
-                S.later(enabled, 0)
+                S.later(activated, 0)
             }
         },
 
@@ -295,45 +307,46 @@ KISSY.add("brix/base",
             var self = this
 
             /**
-             * @event beforeBindUI
+             * @event beforeBind
              * fired before component 's internal event is bind.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeBindUI')
+            self.fire('beforeBind')
 
             self.constructor.superclass.bindInternal.call(self)
 
-            self.callMethodByHierarchy("bindUI", "__bindUI")
+            self.callMethodByHierarchy("bind", "__bind")
+
 
             /**
-             * @event afterBindUI
+             * @event afterBind
              * fired when component 's internal event is bind.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('afterBindUI')
+            self.fire('afterBind')
         },
 
         bxSync: function() {
             var self = this
 
             /**
-             * @event beforeSyncUI
+             * @event beforeSync
              * fired before component 's internal state is synchronized.
              * @param {KISSY.Event.CustomEventObject} e
              */
-            self.fire('beforeSyncUI')
+            self.fire('beforeSync')
 
             Brick.superclass.syncInternal.call(self)
 
-            self.callMethodByHierarchy("syncUI", "__syncUI")
+            self.callMethodByHierarchy("sync", "__sync")
 
             /**
-             * @event afterSyncUI
+             * @event afterSync
              * fired after component 's internal state is synchronized.
              * @param {KISSY.Event.CustomEventObject} e
              */
 
-            self.fire('afterSyncUI')
+            self.fire('afterSync')
         },
 
         /**
@@ -390,11 +403,29 @@ KISSY.add("brix/base",
             return this.constructor.boot.apply(this, arguments)
         },
 
-        // 原有事件绑定做记录？？？
-        on: function() {
-            var self = this
+        /**
+         * 扩展组件的事件触发，或通知到所有父组件
+         * @param  {String}  type       要触发的自定义事件名称
+         * @param  {Object}  eventData  要混入触发事件对象的数据对象
+         */
+        // 因为用到了 Brick 变量，所以从 core/bx-delegate 搬到这里，有更好的办法么？
+        fire: function(eventType, eventData, context) {
+            Brick.superclass.fire.apply(this, arguments)
 
-            Brick.superclass.on.apply(self, arguments)
+            //触发父组件的事件
+            var parent = this.get('parent')
+            if (parent) {
+                context = context || this;
+                if (context === this) {
+                    var eventTypeId = '#' + context.get('id') + '_' + eventType
+                    var eventTypeName = context.get('name') + '_' + eventType
+                    parent.fire(eventTypeId, eventData, context)
+                    parent.fire(eventTypeName, eventData, context)
+                } else {
+                    parent.fire(eventType, eventData, context)
+                }
+
+            }
         }
     }, {
         ATTRS: S.mix({
@@ -402,7 +433,7 @@ KISSY.add("brix/base",
              * 模板
              * @cfg {Object}
              */
-            tmpl: {
+            tpl: {
                 value: null
             },
 
@@ -426,7 +457,7 @@ KISSY.add("brix/base",
              * 是否已经添加行为
              * @type {Object}
              */
-            enabled: {
+            activated: {
                 value: false
             },
 
@@ -459,6 +490,20 @@ KISSY.add("brix/base",
                     return '#' + el.attr('id')
                 }
             },
+            /**
+             * 组件的id
+             * @type {String}
+             */
+            id:{
+                value:null
+            },
+            /**
+             * 组件名称
+             * @type {String}
+             */
+            name: {
+                value: null
+            },
 
             /**
              * 是否自动渲染
@@ -472,7 +517,7 @@ KISSY.add("brix/base",
              * 自动添加组件行为
              * @cfg {Boolean}
              */
-            autoEnable: {
+            autoActivate: {
                 value: true
             },
 
@@ -485,10 +530,10 @@ KISSY.add("brix/base",
             },
 
             /**
-             * 模板引擎,默认xTemplate
+             * 模板引擎,默认xTpl
              * @cfg {Object}
              */
-            templateEngine: {
+            TplEngine: {
                 value: XTemplate
             },
 
@@ -541,14 +586,14 @@ KISSY.add("brix/base",
         }, Interface.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxTemplate, bxName, bxDelegate, bxConfig, Interface.METHODS)
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
 
     S.mix(Brick, {
         boot: function(el, data) {
             var options
 
             if (S.isPlainObject(el)) {
-                // .boot({ el: el, tmpl: tmpl })
+                // .boot({ el: el, tpl: tpl })
                 if (el.el) {
                     data = null
                     options = el
@@ -575,8 +620,20 @@ KISSY.add("brix/base",
             if (!el) throw new Error('Cannot find el!')
 
             options.el = el
+            options.parent = this
 
-            return new Brick(options)
+            var children = this.get('children')
+
+            if (!children) {
+                children = []
+                this.set('children', children)
+            }
+
+            var brick = new Brick(options)
+
+            children.push(brick)
+            
+            return brick
         }
     })
 
@@ -584,12 +641,14 @@ KISSY.add("brix/base",
 }, {
     requires: [
         'brix/app/config',
-        'brix/core/bx-template',
+        'brix/interface/index',
+        'brix/core/bx-util',
+        'brix/core/bx-tpl',
         'brix/core/bx-name',
+        'brix/core/bx-event',
         'brix/core/bx-delegate',
         'brix/core/bx-config',
-        'brix/interface/if-zuomo',
-        'brix/interface/if-yicai',
+        'brix/core/bx-remote',
         'promise',
         'rich-base',
         'xtemplate',

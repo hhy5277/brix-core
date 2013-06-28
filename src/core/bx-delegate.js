@@ -1,84 +1,26 @@
-/*jshint asi:true */
-KISSY.add('brix/core/bx-delegate', function(S) {
+KISSY.add('brix/core/bx-delegate', function() {
 
     var exports = {
-
-        bxDelegate: function(el) {
-            el = el || this.get('el')
-            var c = this.constructor
-
-            while (c) {
-                this.bxDelegateMap(c.EVENTS)
-                c = c.superclass ? c.superclass.constructor : null
-            }
+        /**
+         * 为符合匹配的相应事件添加事件处理器, 并在该组件的子孙组件中匹配selector 的组件上触发事件时调用
+         * @param {String} selector  选择器（暂时支持组件id和bx-name）
+         * @param {String} eventType 代理事件名称
+         * @param {Function} fn 当事件触发时的回调函数
+         * @param {Object} context  回调函数的this值，如果不指定默认为绑定事件的当前元素
+         */
+        delegate: function(selector, eventType, fn, context) {
+            this.on(selector + '_' + eventType, fn, context)
         },
 
-        bxDelegateMap: function(eventsMap) {
-            var el = this.get('el')
-            var Event = S.Event
-
-            for (var sel in eventsMap) {
-                var events = eventsMap[sel]
-
-                for (var type in events) {
-                    var fn = events[type]
-
-                    if (sel === 'self') {
-                        el.on(type, fn, this)
-                    }
-                    else if (sel === 'window') {
-                        Event.on(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.on('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.on(document, type, fn, this)
-                    }
-                    else {
-                        el.delegate(type, sel, fn, this)
-                    }
-                }
-            }
-        },
-
-        bxUndelegate: function(el) {
-            el = el || this.get('el')
-            var c = this.constructor
-
-            while (c) {
-                this.bxUndelegateMap(c.EVENTS)
-                c = c.superclass ? c.superclass.constructor : null
-            }
-        },
-
-        bxUndelegateMap: function(eventsMap) {
-            var el = this.get('el')
-            var Event = S.Event
-
-            for (var sel in eventsMap) {
-                var events = eventsMap[sel]
-
-                for (var type in events) {
-                    var fn = events[type]
-
-                    if (sel === 'self') {
-                        el.detach(type, fn, this)
-                    }
-                    else if (sel === 'window') {
-                        Event.detach(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.detach('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.detach(document, type, fn, this)
-                    }
-                    else {
-                        el.undelegate(type, sel, fn, this)
-                    }
-                }
-            }
+        /**
+         * 为符合匹配的相应事件移除事件代理
+         * @param {String} selector  选择器（暂时支持组件id）
+         * @param {String} eventType 代理事件名称
+         * @param {Function} fn 当事件触发时的回调函数
+         * @param {Object} context  回调函数的this值，如果不指定默认为绑定事件的当前元素
+         */
+        undelegate: function(selector, eventType, fn, context) {
+            this.detach(selector + '_' + eventType, fn, context)
         }
     }
 

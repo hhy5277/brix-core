@@ -1,0 +1,12 @@
+{
+  "books": [{
+    "title": "A Song of Ice and Fire",
+    "author": "George R. R. Martin"
+  }, {
+    "title": "The Lord of the Rings",
+    "author": "J. R. R. Tolkien"
+  }, {
+    "title": "Diablo",
+    "author": "Blizzard"
+  }]
+}

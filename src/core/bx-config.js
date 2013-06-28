@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/core/bx-config', function(S) {
 
     var exports = {
@@ -10,8 +9,14 @@ KISSY.add('brix/core/bx-config', function(S) {
          */
         bxHandleConfig: function(el, Klass) {
             // Compact config
-            if (el.hasAttr('bx-config')) {
-                return S.globalEval(el.attr('bx-config')) || {}
+            var config = el.attr('bx-config')
+
+            if (config) {
+                // http://jslinterrors.com/the-function-constructor-is-a-form-of-eval/
+                /*jshint -W054 */
+                return (new Function('return ' + config))();
+            } else {
+                return {};
             }
 
             Klass = Klass || this.constructor

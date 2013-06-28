@@ -369,7 +369,7 @@ KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
             }
             self._destroyDropdown();
             self._resizeConfig();
-            self.renderUI();
+            self.render();
             self._getDropDown();
             return false;
         },
@@ -432,7 +432,7 @@ KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
     };
 
     S.extend(Pagination, Brick, {
-        initialize: function() {
+        bind: function() {
             var self = this;
             self._setUrlInfo();
             //从url信息中初始配置参数
@@ -459,14 +459,14 @@ KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
             //对配置参数容错
             self._resizeConfig();
             if (self.get('defaultUI')) {
-                self.renderUI();
+                self.render();
             }
             self._getDropDown();
         },
         destructor: function() {
             this._destroyDropdown();
         },
-        renderUI: function() {
+        render: function() {
             var self = this,
                 mode = self.get('mode'),
                 formatUrl = self.get('formatUrl'),

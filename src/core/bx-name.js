@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {
@@ -39,10 +38,16 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
             else {
                 var klasses = []
+                var naked
 
                 for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
-                    klasses[i] = node.attr('bx-name').replace(/\/$/, '') + '/index'
+                    naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+
+                    if (naked === 'js' || naked === 'all')
+                        klasses[i] = 'brix/base'
+                    else 
+                        klasses[i] = node.attr('bx-name').replace(/\/?$/, '/index')
                 }
 
                 KISSY.use(klasses.join(','), function(S) {
@@ -74,9 +79,9 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 name: el.attr('bx-name'),
                 parent: parent,
 
-                // the tag and brickTmpl attribute is required for interface/zuomo
+                // the tag and brickTpl attribute is required for interface/zuomo
                 tag: tag,
-                brickTmpl: tag ? parent.get('brickTmpls')[tag].middle : {}
+                brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
             })
 
             var ancestor = parent
@@ -92,13 +97,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 ancestor = ancestor.get('parent')
             }
 
-            // 暂时去掉了对父类的 listeners 的处理，原代码见：
+            // 对父类的 listeners 的处理还没加进来，原代码见：
             // https://github.com/thx/brix-core/blob/bfa78a0b2b4dcfea4c24220e54850381140c7516/src/base.js#L606
             //
             // @keyapril 这里的使用场景得补充一下。
 
             inst = new Klass(opts)
-            inst.set('id', el.attr('id'))
+            
 
             var children = parent.get('children')
 
@@ -110,7 +115,6 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (inst.bxRender) {
                 inst.on('rendered', fn)
-                inst.callMethodByHierarchy('initialize', 'constructor')
             }
             else {
                 fn()
@@ -152,7 +156,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             return arr
         },
 
-        bxFind: function(name) {
+        find: function(name) {
             var children = this.get('children')
             var isName = name.indexOf('/') > 0
             var isId = name.charAt(0) === '#'
