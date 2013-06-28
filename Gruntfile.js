@@ -2,15 +2,23 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     jshint: {
-      all: [
-        'Gruntfile.js',
-        'src/**/*.js',
-        'test/**/*.js',
-        '!test/mocha.js',
-        '!test/expect.js'
-      ],
-      options: {
-        jshintrc: '.jshintrc'
+      Gruntfile: {
+        src: ['Gruntfile.js'],
+        options: grunt.file.readJSON('.jshintrc')
+      },
+      src: {
+        src: [
+          'src/**/*.js'
+        ],
+        options: grunt.file.readJSON('src/.jshintrc')
+      },
+      test: {
+        src: [
+          'test/**/*.js',
+          '!test/mocha.js',
+          '!test/expect.js'
+        ],
+        options: grunt.file.readJSON('test/.jshintrc')
       }
     },
     concat: {
