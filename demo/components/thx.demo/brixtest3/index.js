@@ -9,9 +9,9 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		initializer: function() {
 			S.log('initializer3');
 		},
-		bindUI: function() {
+		bind: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI3');
+			S.log('bind 3');
 		},
 		destructor: function() {
 			S.log('destructor3');
@@ -34,22 +34,8 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 					self.setChunkData({
 						text:'我改变了'+S.guid()
 					});
+					self.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
 				}
-			}
-		},
-		DOCEVENTS:{
-			'':{
-				click:function(){
-					S.log('点击了document');
-				}
-			}
-		},
-		WINEVENTS:{
-			scroll:function(){
-				S.log('scroll_'+S.guid());
-			},
-			resize:function(){
-				S.log('resize_'+S.guid());
 			}
 		},
 		FIRES:{
@@ -57,7 +43,7 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		},
 		METHODS: {
 			testMethod: function() {
-				return 'test'
+				return 'test';
 			}
 		}
 	}, 'BrixTest3');

@@ -1,4 +1,3 @@
-/*jshint asi:true */
 KISSY.add('brix/app', function(S, appConfig, Brick) {
 
     function BxApp() {
@@ -12,24 +11,25 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
     }
 
     S.augment(BxApp, appConfig, {
-        boot: function(el, data) {
-            this.prepareLoader()
+        boot: function() {
+            this.prepare()
 
-            return Brick.boot(el, data)
+            return Brick.boot.apply(this, arguments)
         },
 
         bootStyle: function(fn) {
-            this.prepareLoader()
+            this.prepare()
 
-            S.use(this.comboStyle().join(','), fn)
+            S.use(this.bxComboStyle().join(','), fn)
         },
 
-        prepareLoader: function() {
+        prepare: function() {
+            // prepare only once.
             if (!this.get('prepared')) {
-                this.mapImports()
-                this.mapComponents()
-                this.packageImports()
-                this.packageComponents()
+                this.bxMapImports()
+                this.bxMapComponents()
+                this.bxPackageImports()
+                this.bxPackageComponents()
                 this.set('prepared', true)
             }
         }

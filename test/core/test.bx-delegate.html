@@ -1,21 +1,23 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>brix/core/bx-template</title>
+  <title>brix/core/bx-delegate</title>
   <link rel="stylesheet" href="../mocha.css" />
 </head>
 <body>
   <div id="mocha"></div>
-  <div id="fixture1"></div>
-  <div id="fixture2" bx-template="#foo-template"></div>
-  <div id="fixture3" bx-name="thx.test/egg" bx-template="./template"></div>
-  <div id="fixture4" bx-name="thx.test/ham" bx-template="./template"></div>
+  <div id="fixture1">
+    <div id="brix2_1" bx-name="thx.test/brixtest2/" bx-config="{destroyAction:'empty'}" bx-tpl="./tpl">
+    </div>
+    <div id="brix3_2" bx-name="thx.test/brixtest3/" bx-config="{destroyAction:'empty'}" bx-tpl="./tpl">
+    </div>
+  </div>
   <script src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
   <script src="../expect.js"></script>
   <script src="../mocha.js"></script>
   <script>mocha.setup('bdd')</script>
   <script src="package.js"></script>
-  <script src="test.bx-template.js"></script>
+  <script src="test.bx-delegate.js"></script>
   <script>
   mocha.checkLeaks();
   mocha.globals(['KISSY']);
@@ -23,9 +25,6 @@
   if (typeof PHANTOMJS === 'undefined') {
     mocha.run();
   }
-  </script>
-  <script type="text/x-template" id="foo-template">
-    <div class="foo-template"></div>
   </script>
 </body>
 </html>

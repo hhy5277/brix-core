@@ -8,9 +8,9 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 		initializer: function() {
 			S.log('initializer');
 		},
-		bindUI: function() {
+		bind: function() {
 			//和老版本的initialize作用相同
-			S.log('bindUI');
+			S.log('bind');
 		},
 		destructor: function() {
 			S.log('destructor');
@@ -93,12 +93,12 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 					S.log('图片加载了');
 				}
 			},
-			document: {
+			'document': {
 				click: function() {
 					S.log('点击了document');
 				}
 			},
-			window: {
+			'window': {
 				scroll: function() {
 					// S.log(S.guid('scroll-'));
 				},
