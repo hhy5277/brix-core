@@ -22,25 +22,34 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     self.bxIBuildSubTpls(self.bxIBuildBrickTpls(brickTpl))
                 }
             }
-            
+
             return false
         },
 
         bxIActivate: function() {
             var self = this
+            var counter = 0
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
+                counter++
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
                     for (var i = 0; i < children.length; i++) {
-                        self.find('#' + children[i].attr('id')).destroy()
+                        var brick = self.find('#' + children[i].attr('id'))
+
+                        if (brick) brick.destroy()
                     }
                 }
             })
 
             self.on('afterRefreshTpl', function(e) {
-                self.bxHandleName(e.node)
+                self.bxHandleName(e.node, function() {
+                    if (--counter === 0) {
+                        self.setInternal('rendered', true)
+                        self.fire('rendered')
+                    }
+                })
             })
         },
 
@@ -180,6 +189,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     if (el.attr('bx-subtpl') == o.name) {
                         nodes = el.add(nodes)
                     }
+
                     nodes.each(function(node) {
                         self.fire('beforeRefreshTpl', {
                             node: node,

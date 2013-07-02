@@ -1,4 +1,4 @@
-KISSY.add("thx.test/brixtest2/index", function(S, Brick) {
+KISSY.add("thx.test/delegate-test2/index", function(S, Brick) {
 
 	var BrixTest2 = Brick.extend({
 		constructor: function BrixTest2() {
@@ -97,7 +97,7 @@ KISSY.add("thx.test/brixtest2/index", function(S, Brick) {
 				return 'test'
 			}
 		}
-	}, 'BrixTest2');
+	}, 'DelegateTest2');
 	S.augment(BrixTest2, BrixTest2.METHODS);
 	return BrixTest2;
 }, {

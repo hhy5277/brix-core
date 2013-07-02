@@ -39,10 +39,10 @@ describe('brix/base', function() {
 
         var brix2_1 = this.find('#brix2_1')
         var brix3_2 = this.find('#brix3_2')
-        
+
         brix2_1.fire('myfire')
         brix3_2.fire('myfire')
-        
+
         expect(firedCount).to.equal(2)
 
         brix2_1.get('el').one('#input21').fire('click');
@@ -68,10 +68,10 @@ describe('brix/base', function() {
       var brick = app.boot('#fixture1').on('ready', function() {
         var firedCount = 0
 
-        this.delegate('thx.test/brixtest2/','myfire',function(){
+        this.delegate('thx.test/delegate-test2','myfire',function(){
           firedCount++
         })
-        this.delegate('thx.test/brixtest3/','myfire',function(){
+        this.delegate('thx.test/delegate-test3','myfire',function(){
           firedCount++
         })
 
@@ -84,7 +84,6 @@ describe('brix/base', function() {
         expect(firedCount).to.equal(2)
 
         brix2_1.get('el').one('#input21').fire('click');
-        //debugger
         expect(firedCount).to.equal(3)
 
         brix3_2.get('el').one('.input31').fire('click')
@@ -93,14 +92,16 @@ describe('brix/base', function() {
         //局部刷新后还拿不到他的子组件
         brix2_1.on('rendered',function(){
           var brix3_1 = brix2_1.find('#brix3_1')
-          
+
           brix3_1.fire('myfire')
-          expect(firedCount).to.equal(5)
+          expect(firedCount).to.equal(6)
           brick.destroy();
           done()
         })
+
+        brix2_1.get('el').one('#input21').fire('click');
       })
     })
-  
+
   })
 })
