@@ -66,6 +66,28 @@ describe('brix/base', function() {
           done()
         })
     })
-    
+
+  })
+
+  describe('promise', function() {
+    it('supports async procedures in event listeners', function() {
+      var code = 0
+
+      app
+        .boot('#fixture5')
+        .on('getTpl', function() {
+          return S.later(function() {
+            code += 1
+          }, 10)
+        })
+        .on('getData', function() {
+          return S.later(function() {
+            code += 10
+          }, 10)
+        })
+        .on('ready', function() {
+          expect(code).to.equal(11)
+        })
+    })
   })
 })

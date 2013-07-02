@@ -5,12 +5,16 @@ KISSY.add("brix/base",
 
     var noop = S.noop
 
+    var DOM = S.DOM
+
+    var DESTROY_ACTIONS = ['remove', 'empty']
+
     var Brick = RichBase.extend({
         initializer: function() {
             var self = this
             //这里是否考虑同步执行？
             var el = self.get('el')
-            
+
             //id和名称都用采用静默更新
             self.set('id', el.attr('id'), { silent : true })
             if (!self.get('name')) {
@@ -226,7 +230,10 @@ KISSY.add("brix/base",
             })
 
             // 初始化子组件
-            self.bxHandleName(el)
+            self.bxHandleName(el, function() {
+                self.setInternal("rendered", true)
+                self.fire('rendered')
+            })
 
             return d.promise
         },
@@ -287,8 +294,8 @@ KISSY.add("brix/base",
             }
 
             function check(e) {
-                if (++counter === total) activated()
                 e.target.detach('activated', check)
+                if (++counter === total) activated()
             }
 
             for (var i = 0; i < children.length; i++) {
@@ -386,13 +393,12 @@ KISSY.add("brix/base",
 
                 self.bxUndelegate()
 
-                switch (self.get('destroyAction')) {
-                    case 'remove':
-                        el.remove()
-                        break
-                    case 'empty':
-                        el.empty()
-                        break
+                if (el && DOM.contains(document, el[0])) {
+                    var action = self.get('destroyAction')
+
+                    if (S.inArray(action, DESTROY_ACTIONS)) {
+                        el[action]()
+                    }
                 }
             }
 
@@ -410,22 +416,36 @@ KISSY.add("brix/base",
          */
         // 因为用到了 Brick 变量，所以从 core/bx-delegate 搬到这里，有更好的办法么？
         fire: function(eventType, eventData, context) {
-            Brick.superclass.fire.apply(this, arguments)
+            var ret = Brick.superclass.fire.apply(this, arguments)
 
             //触发父组件的事件
             var parent = this.get('parent')
+
             if (parent) {
                 context = context || this;
                 if (context === this) {
                     var eventTypeId = '#' + context.get('id') + '_' + eventType
                     var eventTypeName = context.get('name') + '_' + eventType
+
                     parent.fire(eventTypeId, eventData, context)
                     parent.fire(eventTypeName, eventData, context)
-                } else {
+                }
+                else {
                     parent.fire(eventType, eventData, context)
                 }
-
             }
+
+            return ret
+        },
+
+        once: function(eventType, fn, context) {
+            var self = this
+            var wrap = function() {
+                self.detach(eventType, wrap)
+                fn()
+            }
+
+            self.on(eventType, wrap, context)
         }
     }, {
         ATTRS: S.mix({
@@ -495,7 +515,7 @@ KISSY.add("brix/base",
              * @type {String}
              */
             id:{
-                value:null
+                value: null
             },
             /**
              * 组件名称
@@ -632,7 +652,7 @@ KISSY.add("brix/base",
             var brick = new Brick(options)
 
             children.push(brick)
-            
+
             return brick
         }
     })

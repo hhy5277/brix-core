@@ -1,7 +1,7 @@
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {
-        bxHandleName: function(root) {
+        bxHandleName: function(root, fn) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var children = this.get('children') || []
@@ -21,19 +21,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var self = this
             var total = nodes.length
 
-            function check(e) {
-                if (++counter === total) {
-                    self.setInternal("rendered", true)
-                    self.fire('rendered')
-                }
-                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
-                e.target.detach('rendered', check)
+            function check() {
+                if (++counter === total) fn()
             }
 
             if (total === 0) {
                 S.later(function() {
-                    self.setInternal('rendered', true)
-                    self.fire('rendered')
+                    fn()
                 }, 0)
             }
             else {
@@ -46,7 +40,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
                     if (naked === 'js' || naked === 'all')
                         klasses[i] = 'brix/base'
-                    else 
+                    else
                         klasses[i] = node.attr('bx-name').replace(/\/?$/, '/index')
                 }
 
@@ -65,9 +59,16 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
         bxInstantiate: function(el, Klass, fn) {
             var parent = this
+            var DOM = S.DOM
 
             if (!S.isFunction(Klass)) {
                 // no need to initialize anything.
+                fn()
+                return
+            }
+            if (!(el && DOM.contains(document, el[0]))) {
+                // el is gone
+                fn()
                 return
             }
             var opts = parent.bxHandleConfig(el, Klass)
@@ -103,7 +104,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             // @keyapril 这里的使用场景得补充一下。
 
             inst = new Klass(opts)
-            
+
 
             var children = parent.get('children')
 
@@ -114,12 +115,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             children.push(inst)
 
             if (inst.bxRender) {
-                inst.on('rendered', fn)
+                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
+                inst.once('rendered', fn)
             }
             else {
                 fn()
             }
-            el = null
+            el = children = null
         },
 
         /**
