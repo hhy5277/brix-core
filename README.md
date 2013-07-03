@@ -18,7 +18,7 @@ $ npm start
 
 ### brix/app
 
-Brix 的初始化入口，统一放在 brix/app 模块，在你的页面上引用 
+Brix 的初始化入口，统一放在 brix/app 模块，在你的页面上引用
 [KISSY seed](http://a.tbcdn.cn/s/kissy/1.3.0/seed.js) ，配置好 brix 包路径，
 例如：
 
@@ -40,14 +40,14 @@ KISSY.config({
 ```js
 KISSY.use('brix/app', function(S, app) {
     // 配置当前页面的组件命名空间
-    app.config('namespace', 'thx.demo')
+    app.config('components', 'thx.demo')
 
     // 启动页面
     app.boot()
 })
 ```
 
-启动页面 `app.boot()` 做的事情是，找到 `[bx-app]` 节点，作为 el 参数，交给 Brick 
+启动页面 `app.boot()` 做的事情是，找到 `[bx-app]` 节点，作为 el 参数，交给 Brick
 实例化，等于：
 
 ```js
@@ -81,7 +81,7 @@ KISSY.use('brix/base', function(S, Brick) {
        bx-tpl="#featured-p4p-item">
   </div>
   <div bx-name="thx.demo/footer"></div>
-  <scirpt id="featured-p4p-item" type="text/x-tpl"></script>
+  <script id="featured-p4p-item" type="text/x-tpl"></script>
 </body>
 ```
 
@@ -90,7 +90,7 @@ KISSY.use('brix/base', function(S, Brick) {
 ### 组件嵌套
 
 上述例子中，都是大组件的概念，设计师更喜欢称其为模块，并将其中用到定制化的
-下拉框、按钮、标签栏等称为组件。在 Brix 中，它们确实也是组件，Brix 
+下拉框、按钮、标签栏等称为组件。在 Brix 中，它们确实也是组件，Brix
 体现这种构造的方式是，允许组件嵌套：
 
 ```html
@@ -144,7 +144,7 @@ app
 这棵树的根节点是 app ，叶子节点是 brix/wangwang ，中间的每个组件实例都有两个属性：
 
 - parent
-- children 
+- children
 
 根节点没有 parent ，叶子节点没有 children ：
 
@@ -153,7 +153,7 @@ app.get('children')         // ==> [thx.demo/relative-items]
 app.get('parent')           // ==> undefined
 ```
 
-## app.config 
+## app.config
 
 在实际项目开发中，不可避免地要使用公共组件，或者其他项目的组件。在 Brix 中，
 我们将其一视同仁，都称为外部组件，通过 imports 路径配置：
@@ -163,7 +163,7 @@ app.config('imports', {
     brix: {                     // 命名空间（namespace）
         wangwang: '0.1.0'       // 组件名，版本
     },
-    'thx.gallery': {        
+    'thx.gallery': {
         kwicks: '0.1.0'
     }
 })
@@ -175,14 +175,15 @@ app.config('imports', {
 
 ```js
 app.config({
-    namespace: 'thx.demo',
-    components: [ 'foo', 'bar']
+    components: {
+        'thx.demo': [ 'foo', 'bar']
+    }
 })
 app.config('imports': {
     brix: { wangwang: '0.1.0' }
 })
 
-app.bootStyle(function() { 
+app.bootStyle(function() {
     app.boot()
 })
 
@@ -194,10 +195,10 @@ app.bootStyle(function() {
 
 ```js
 app.config({
-    namespace: 'thx.demo',
-
     // thx.demo/bar 组件没有 index.css ，直接从这个数组里去掉即可
-    components: [ 'foo' ]
+    components: {
+        'thx.demo': [ 'foo' ]
+    }
 })
 
 app.config('imports', {
@@ -215,7 +216,7 @@ app.config('imports', {
 ```js
 app.boot('#page1').on('ready', function() {
     this.find('thx.demo/foo').boot('#layer1', { ... }).on('ready', function() {
-        PopupManager.show(this)    
+        PopupManager.show(this)
     })
 })
 ```
@@ -233,7 +234,7 @@ app.boot('#page1').on('ready', function() {
 ```js
 app.config('debug', false)
 app.config({
-    namespace: 'thx.demo',
+    components: 'thx.demo',
     base: 'http://a.tbcdn.cn/apps/thx/demo',
     timestamp: '20130621'
 })
@@ -245,10 +246,11 @@ app.config({
 
 ```js
 app.config({
-    namespace: 'thx.demo',
     base: 'http://a.tbcdn.cn/apps/thx/demo',
     tiemstamp: '20130621',
-    components: [ ... ]       // 有 index.css 的组件
+    components: {
+        'thx.demo': [ ... ]       // 有 index.css 的组件
+    }
 })
 ```
 

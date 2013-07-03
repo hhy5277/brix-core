@@ -12,8 +12,8 @@ describe('app and Brick', function() {
       Brick = _Brick
 
       app.config({
-        namespace: 'thx.opoa',
-        base: '../'
+        components: 'thx.test',
+        base: './'
       })
 
       done()
@@ -26,13 +26,13 @@ describe('app and Brick', function() {
       app
         .boot('#fixture1')
         .on('ready', function() {
-          // 因为 [bx-name="thx.opoa/destroy-foo"] 节点已经被干掉了
-          expect(this.find('thx.opoa/destroy-foo')).to.be(undefined)
-          expect(this.get('children').to.be.empty())
+          // 因为 [bx-name="thx.test/opoa-foo"] 节点已经被干掉了
+          expect(this.find('thx.test/opoa-foo')).to.be(undefined)
+          expect(this.get('children')).to.be.empty()
         })
 
-        // 5ms 后清空 #fixture1 中的内容，即不再有 thx.opoa/destroy-foo 组件
-        // thx.opoa/destroy-foo/index 模块原本在 10ms 后返回
+        // 5ms 后清空 #fixture1 中的内容，即不再有 thx.test/opoa-foo 组件
+        // thx.test/opoa-foo/index 模块原本在 10ms 后返回
         S.later(function() {
           S.one('#fixture1').empty()
         }, 5)
@@ -46,7 +46,7 @@ describe('app and Brick', function() {
         .boot('#fixture2')
         .on('ready', function() {
           expect(this.get('children').length).to.be(1)
-          expect(this.find('thx.opoa/destroy-foo')).to.be.a(Brick)
+          expect(this.find('thx.test/opoa-foo')).to.be.a(Brick)
 
           S.one('#fixture2').remove()
 

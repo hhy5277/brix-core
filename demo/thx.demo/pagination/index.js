@@ -1,4 +1,4 @@
-KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
+KISSY.add('thx.demo/pagination/index', function(S, Brick, Dropdown) {
 
     function param(o) {
         if (!S.isPlainObject(o)) {
@@ -706,5 +706,5 @@ KISSY.add('brix/pagination/index', function(S, Brick, Dropdown) {
     S.augment(Pagination, Pagination.METHODS);
     return Pagination;
 }, {
-    requires: ["brix/base", 'brix/dropdown/index']
+    requires: ["brix/base", 'thx.demo/dropdown/index']
 });

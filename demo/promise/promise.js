@@ -12,14 +12,12 @@ KISSY.config({
 KISSY.use('brix/app,brix/base', function(S, app) {
 
     app.config({
-        namespace: 'thx.demo',
         base: '../',
-        imports: {
-            brix: {
-                pagination: '1.0.0',
-                dropdown: '1.1.0'
-            }
+        components: {
+            'thx.demo': ['pagination', 'dropdown']
         }
+        // 如果不需要 app.bootStyle ，则可以仅定义当前项目的命名空间
+        // components: 'thx.demo'
     })
 
     app.bootStyle(function() {
@@ -81,10 +79,11 @@ KISSY.use('brix/app,brix/base', function(S, app) {
                     e.next(data)
                 }, 500)
             })
-            .on('ready', function(){
-                S.log('ready')
+            .once('ready', function() {
                 this.setChunkData({a: 'aaaa' + S.guid()})
+
                 window.brick = this
+
                 this.delegate('#brixtest', 'myfire', function(){
                     S.log('brixtest_myfire')
                 })

@@ -437,7 +437,7 @@ KISSY.add("brix/base",
             var self = this
             var wrap = function() {
                 self.detach(eventType, wrap)
-                fn()
+                fn.apply(this, arguments)
             }
 
             self.on(eventType, wrap, context)

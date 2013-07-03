@@ -1,4 +1,4 @@
-KISSY.add('thx.opoa/destroy-foo/index', function(S, Brick) {
+KISSY.add('thx.test/opoa-foo/index', function(S, Brick) {
 
     var dawn = +new Date()
 

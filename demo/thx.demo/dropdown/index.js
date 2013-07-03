@@ -1,4 +1,4 @@
-KISSY.add("brix/dropdown/index", function(S, Brick) {
+KISSY.add("thx.demo/dropdown/index", function(S, Brick) {
     /**
      * 下拉选择
      * <br><a href="../demo/gallery/dropdown/dropdown.html" target="_blank">Demo</a>

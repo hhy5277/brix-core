@@ -13,14 +13,12 @@ describe('brix/app locked', function() {
 
   describe('config components', function() {
 
-    before(function() {
-      app.config('namespace', 'thx.prod')
-    })
-
     it('can be locked using components versions.', function(done) {
       app.config('components', {
-        foo: '0.1.0',
-        bar: '0.2.0'
+        'thx.prod': {
+          foo: '0.1.0',
+          bar: '0.2.0'
+        }
       })
 
       app.boot().on('ready', function() {
@@ -35,8 +33,10 @@ describe('brix/app locked', function() {
 
     it('can specify components with or without css.', function() {
       app.config('components', {
-        foo: '0.1.0/js',
-        bar: '0.2.0'
+        'thx.prod': {
+          foo: '0.1.0/js',
+          bar: '0.2.0'
+        }
       })
 
       app.bootStyle(function() {
