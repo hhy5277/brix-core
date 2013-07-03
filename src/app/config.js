@@ -8,7 +8,7 @@ KISSY.add('brix/app/config', function(S) {
     // - 0.1.0/js
     // - 0.1.0/css
     //
-    // A declaration instance can then check whether this declaration says 
+    // A declaration instance can then check whether this declaration says
     // anything about js, css requirements or not.
     //
     // var foo = new Declaration('0.1.0/js')
@@ -83,14 +83,49 @@ KISSY.add('brix/app/config', function(S) {
         },
 
         bxResolveComponents: function() {
-            // resolve simplified components settings into verbose format.
+            // Resolve simplified components settings into verbose format.
             var components = this.config('components')
+            var namespace
 
-            if (S.isPlainObject(components)) {
-                for (var name in components) {
-                    components[name] = new Declaration(components[name])
+            // components 可能的值：
+            //
+            // - 字符串，即当前项目的命名空间
+            // - {} ，用于配置详细组件信息（用于版本处理，组件样式加载等）
+            //
+            if (S.isString(components)) {
+                namespace = components
+            }
+            else {
+                // components 以对象形式定义，用于支持两种场景：
+                //
+                // 1. 声明需要 app.bootStyle 中加载的组件样式
+                // 2. 使用版本锁方式发布时，声明项目组件的各自版本
+                //
+                // 场景一：
+                //
+                //     { 'thx.demo': ['dropdown', 'pagination'] }
+                //
+                // 场景二：
+                //
+                //     {
+                //         'thx.demo': {
+                //             dropdown: '1.0.0',
+                //             pagination: '1.1.0'
+                //         }
+                //     }
+                //
+                // 此处的 for 循环用于将 'thx.demo' 从 components 对象中取出
+                for (namespace in components) {}
+                var bricks = components[namespace]
+
+                if (S.isPlainObject(bricks)) {
+                    for (var name in bricks) {
+                        bricks[name] = new Declaration(bricks[name])
+                    }
                 }
             }
+
+            this.config('namespace', namespace)
         },
 
         bxResolveImports: function() {
@@ -124,11 +159,7 @@ KISSY.add('brix/app/config', function(S) {
                 ])
             }
             else if (S.isPlainObject(components)) {
-                var obj = {}
-
-                obj[ns] = components
-
-                this.bxMapModules(obj)
+                this.bxMapModules(components)
             }
         },
 
@@ -169,8 +200,9 @@ KISSY.add('brix/app/config', function(S) {
             var obj = {}
 
             obj[ns] = {
-                base: base + '/components' + (ignoreNs ? '/' + ns : '')
+                base: base + (ignoreNs ? '/' + ns : '')
             }
+
             S.config('packages', obj)
         },
 
@@ -193,7 +225,8 @@ KISSY.add('brix/app/config', function(S) {
             var components = this.config('components')
 
             ns = this.config('namespace')
-            
+            components = components[ns]
+
             if (S.isPlainObject(components)) {
                 checkStyle(ns, components)
             }
