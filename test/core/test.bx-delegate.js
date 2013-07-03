@@ -23,85 +23,93 @@ describe('brix/base', function() {
 
   describe('delegate', function() {
 
-    it('delegate id', function(done) {
-      var brick = app.boot({el:'#fixture1', destroyAction: 'none'}).on('ready', function() {
-        var firedCount = 0
+    afterEach(function() {
+      var children = app.get('children')
 
-        this.delegate('#brix2_1','myfire',function(){
-          firedCount++
-        })
-        this.delegate('#brix3_1','myfire',function(){
-          firedCount++
-        })
-        this.delegate('#brix3_2','myfire',function(){
-          firedCount++
-        })
-
-        var brix2_1 = this.find('#brix2_1')
-        var brix3_2 = this.find('#brix3_2')
-
-        brix2_1.fire('myfire')
-        brix3_2.fire('myfire')
-
-        expect(firedCount).to.equal(2)
-
-        brix2_1.get('el').one('#input21').fire('click');
-        //debugger
-        expect(firedCount).to.equal(3)
-
-        brix3_2.get('el').one('.input31').fire('click')
-        expect(firedCount).to.equal(4)
-
-        //局部刷新后还拿不到他的子组件
-        brix2_1.on('rendered',function(){
-          var brix3_1 = brix2_1.find('#brix3_1')
-          brix3_1.fire('myfire')
-          expect(firedCount).to.equal(5)
-          brick.destroy();
-          done()
-        })
-      })
+      for (var i = 0; i < children.length; i++) {
+        children[i].destroy()
+      }
     })
 
-
-    it('delegate name', function(done) {
-      var brick = app.boot('#fixture1').on('ready', function() {
-        var firedCount = 0
-
-        this.delegate('thx.test/delegate-test2','myfire',function(){
-          firedCount++
+    it('by id', function(done) {
+      app
+        .boot({
+          el: '#fixture1',
+          destroyAction: 'none'
         })
-        this.delegate('thx.test/delegate-test3','myfire',function(){
-          firedCount++
-        })
+        .on('ready', function() {
+          var firedCount = 0
 
-        var brix2_1 = this.find('#brix2_1')
-        var brix3_2 = this.find('#brix3_2')
+          this.delegate('#fixture1-foo', 'fooEvent', function(){
+            firedCount++
+          })
 
-        brix2_1.fire('myfire')
-        brix3_2.fire('myfire')
+          this.find('#fixture1-foo').fire('fooEvent')
 
-        expect(firedCount).to.equal(2)
-
-        brix2_1.get('el').one('#input21').fire('click');
-        expect(firedCount).to.equal(3)
-
-        brix3_2.get('el').one('.input31').fire('click')
-        expect(firedCount).to.equal(4)
-
-        //局部刷新后还拿不到他的子组件
-        brix2_1.on('rendered',function(){
-          var brix3_1 = brix2_1.find('#brix3_1')
-
-          brix3_1.fire('myfire')
-          expect(firedCount).to.equal(6)
-          brick.destroy();
+          expect(firedCount).to.equal(1)
           done()
         })
-
-        brix2_1.get('el').one('#input21').fire('click');
-      })
     })
 
+    it('by name', function(done) {
+      app
+        .boot({
+          el: '#fixture2',
+          destroyAction: 'none'
+        })
+        .on('ready', function() {
+          var firedCount = 0
+
+          this.delegate('thx.test/delegate-bar', 'barEvent',  function() {
+            firedCount++
+          })
+
+          // both #child2 and #grandChild are instances of thx.test/delegate-bar
+          this.find('thx.test/delegate-bar').fire('barEvent')
+          expect(firedCount).to.equal(1)
+          done()
+        })
+    })
+
+    it('complicated', function(done) {
+      app
+        .boot({
+          el: '#fixture3',
+          destroyAction: 'none'
+        })
+        .on('ready', function() {
+          var firedCount = 0
+
+          this.delegate('thx.test/delegate-foo', 'fooEvent', function(){
+            firedCount++
+          })
+          this.delegate('#grandChild', 'barEvent', function() {
+            firedCount++
+          })
+
+          var child1 = this.find('thx.test/delegate-foo')
+          var child2 = child1.find('#grandChild')
+
+          child1.fire('fooEvent')
+          child2.fire('barEvent')
+
+          expect(firedCount).to.equal(2)
+
+          var input21 = child1.get('el').one('#input21')
+
+          input21.fire('click')
+          expect(firedCount).to.equal(3)
+
+          input21.fire('click')
+          expect(firedCount).to.equal(4)
+
+          //局部刷新后还拿不到他的子组件
+          child1.on('ready',function(){
+            child1.find('#grandChild').fire('barEvent')
+            expect(firedCount).to.equal(5)
+            done()
+          })
+        })
+    })
   })
 })

@@ -28,13 +28,17 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
         bxIActivate: function() {
             var self = this
-            var counter = 0
+            var needRenderCounter = 0
+            var needActivateCounter = 0
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
-                counter++
+                needRenderCounter++
+                needActivateCounter++
+
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
+
                     for (var i = 0; i < children.length; i++) {
                         var brick = self.find('#' + children[i].attr('id'))
 
@@ -44,12 +48,21 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             })
 
             self.on('afterRefreshTpl', function(e) {
-                self.bxHandleName(e.node, function() {
-                    if (--counter === 0) {
-                        self.setInternal('rendered', true)
-                        self.fire('rendered')
+                self.bxHandleName(
+                    e.node,
+                    function renderedCheck() {
+                        if (--needRenderCounter === 0) {
+                            self.setInternal('rendered', true)
+                            self.fire('rendered')
+                        }
+                    },
+                    function activatedCheck() {
+                        if (--needActivateCounter === 0) {
+                            self.setInternal('activated', true)
+                            self.fire('ready')
+                        }
                     }
-                })
+                )
             })
         },
 

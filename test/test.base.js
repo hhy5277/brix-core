@@ -89,5 +89,27 @@ describe('brix/base', function() {
           expect(code).to.equal(11)
         })
     })
+
+    it('make sure the render and activate procedure is separated', function(done) {
+      var code = 0
+
+      app
+        .boot('#fixture6')
+        .on('rendered', function() {
+          var foo = this.find('thx.test/promise-foo')
+
+          // child bricks will be ready first
+          foo.on('ready', function() {
+            code +=1
+            expect(code).to.be(1)
+          })
+        })
+        .on('ready', function() {
+          code += 10
+          expect(code).to.be(11)
+
+          done()
+        })
+    })
   })
 })
