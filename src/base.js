@@ -24,7 +24,7 @@ KISSY.add("brix/base",
             var d = new Promise.Defer()
             var promise = d.promise
 
-            promise
+            promise = promise
                 .then(function() {
                     return self.bxGetTpl()
                 })
@@ -46,12 +46,13 @@ KISSY.add("brix/base",
                 .then(function() {
                     return self.bxRender()
                 })
-                .then(function() {
+
+            if (!self.get('passive')) {
+                promise.then(function() {
                     return self.bxActivate()
                 })
-                .then(function() {
-                    self.fire('ready')
-                })
+            }
+
 
             // 将初始化过程变成异步，从而允许这样的写法：
             //
@@ -213,7 +214,7 @@ KISSY.add("brix/base",
 
             self.bxDelegate()
 
-            function resolve() {
+            self.once('rendered', function resolve() {
                 /**
                  * @event afterRender
                  * fired after root node is rendered into dom
@@ -222,11 +223,6 @@ KISSY.add("brix/base",
                 self.fire('afterRender')
 
                 d.resolve()
-            }
-
-            self.on('rendered', function() {
-                resolve()
-                self.detach('rendered', resolve)
             })
 
             // 初始化子组件
@@ -266,7 +262,7 @@ KISSY.add("brix/base",
 
             if (!self.get('autoActivate') ||      // do not enable automatically
                     self.get('activated') ||      // activated before,
-                    !self.get('rendered')) {    // or not rendered yet.
+                    !self.get('rendered')) {      // or not rendered yet.
                 return
             }
 
@@ -290,18 +286,18 @@ KISSY.add("brix/base",
             var counter = 0
 
             function activated() {
-                self.fire('activated')
+                self.setInternal('ready', true)
+                self.fire('ready')
             }
 
-            function check(e) {
-                e.target.detach('activated', check)
+            function check() {
                 if (++counter === total) activated()
             }
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                child.on('activated', check)
+                child.once('ready', check)
                 child.bxActivate()
             }
 
@@ -323,7 +319,6 @@ KISSY.add("brix/base",
             self.constructor.superclass.bindInternal.call(self)
 
             self.callMethodByHierarchy("bind", "__bind")
-
 
             /**
              * @event afterBind
@@ -510,6 +505,7 @@ KISSY.add("brix/base",
                     return '#' + el.attr('id')
                 }
             },
+
             /**
              * 组件的id
              * @type {String}
@@ -517,6 +513,7 @@ KISSY.add("brix/base",
             id:{
                 value: null
             },
+
             /**
              * 组件名称
              * @type {String}
@@ -539,6 +536,14 @@ KISSY.add("brix/base",
              */
             autoActivate: {
                 value: true
+            },
+
+            /**
+             * 被动模式，在父组件渲染时开启，详见 core/bx-name
+             * @cfg {Boolean}
+             */
+            passive: {
+                value: false
             },
 
             /**

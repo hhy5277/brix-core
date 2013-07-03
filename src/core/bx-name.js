@@ -1,13 +1,15 @@
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {
-        bxHandleName: function(root, fn) {
+        bxHandleName: function(root, renderedFn, activatedFn) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var children = this.get('children') || []
             var i, j
             var node
 
+            // Some of the child nodes might be instantiated already.
+            // Remove them out of the nodes array that will be processed.
             for (i = nodes.length - 1; i >= 0; i--) {
                 node = nodes[i]
 
@@ -17,22 +19,26 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                     }
                 }
             }
-            var counter = 0
+            var renderedCounter = 0
+            var activatedCounter = 0
             var self = this
             var total = nodes.length
 
-            function check() {
-                if (++counter === total) fn()
-            }
-
             if (total === 0) {
                 S.later(function() {
-                    fn()
+                    renderedFn()
+                    if (activatedFn) activatedFn()
                 }, 0)
             }
             else {
                 var klasses = []
                 var naked
+                var renderedCheck = function() {
+                    if (++renderedCounter === total) renderedFn()
+                }
+                var activatedCheck = activatedFn && function() {
+                    if (++activatedCounter === total) activatedFn()
+                }
 
                 for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
@@ -51,34 +57,40 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                     Klasses.shift()
 
                     for (var i = 0; i < Klasses.length; i++) {
-                        self.bxInstantiate(nodes[i], Klasses[i], check)
+                        self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
                     }
                 })
             }
         },
 
-        bxInstantiate: function(el, Klass, fn) {
+        bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
             var parent = this
             var DOM = S.DOM
+            var bothFn = function() {
+                renderedFn()
+                if (activatedFn) activatedFn()
+            }
 
             if (!S.isFunction(Klass)) {
                 // no need to initialize anything.
-                fn()
+                bothFn()
                 return
             }
             if (!(el && DOM.contains(document, el[0]))) {
                 // el is gone
-                fn()
+                bothFn()
                 return
             }
             var opts = parent.bxHandleConfig(el, Klass)
             var tag = el.attr('bx-tag')
-            var inst
 
             S.mix(opts, {
                 el: el,
                 name: el.attr('bx-name'),
                 parent: parent,
+
+                // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                passive: !activatedFn,
 
                 // the tag and brickTpl attribute is required for interface/zuomo
                 tag: tag,
@@ -103,9 +115,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             //
             // @keyapril 这里的使用场景得补充一下。
 
-            inst = new Klass(opts)
-
-
+            var inst = new Klass(opts)
             var children = parent.get('children')
 
             if (!children) {
@@ -116,10 +126,11 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (inst.bxRender) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
-                inst.once('rendered', fn)
+                inst.once('rendered', renderedFn)
+                if (activatedFn) inst.once('ready', activatedFn)
             }
             else {
-                fn()
+                bothFn()
             }
             el = children = null
         },
