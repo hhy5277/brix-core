@@ -35,17 +35,34 @@ module.exports = function(grunt) {
           ' */',
           '' // for the extra line break
         ].join('\n'),
-        footer: ';\n'
+        footer: ';\n',
+        process: function(src, fpath) {
+          // remove the placeholder object
+          if ('src/interface/index' === fpath) return
+
+          // rename corresponding interface module
+          if (fpath.indexOf('src/interface/if') === 0) {
+            src = src.replace(/brix\/interface\/[-\w]+/, 'brix/interface/index')
+          }
+
+          return src
+        }
       },
-      dist: {
-        src: ['src/**/*.js'],
+      main: {
+        src: ['src/**/*.js', '!src/interface/if-yicai.js'],
         dest: 'build/brix.js'
+      },
+      alt: {
+        src: ['src/**/*.js', '!src/interface/if-zuomo.js'],
+        dest: 'build/brix-alt.js'
       }
     },
     uglify: {
       dist: {
-        src: ['build/brix.js'],
-        dest: 'build/brix-min.js'
+        files: [
+          { src: ['build/brix.js'], dest: 'build/brix-min.js' },
+          { src: ['build/brix-alt.js'], dest: 'build/brix-alt-min.js' }
+        ]
       }
     },
     connect: {
