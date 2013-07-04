@@ -42,8 +42,6 @@ KISSY.add('brix/app/config', function(S) {
 
             base: '.',
 
-            interface: 'zuomo',
-
             imports: {},
 
             components: null,

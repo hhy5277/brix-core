@@ -4,8 +4,9 @@ KISSY.add('brix/interface/index', function(S, app, IZuomo, IYicai) {
         zuomo: IZuomo,
         yicai: IYicai
     }
-    
-    return INTERFACE_MAP[app.config('interface')]
+    var name = 'zuomo'  // or yicai
+
+    return INTERFACE_MAP[name]
 
 }, {
     requires: [
