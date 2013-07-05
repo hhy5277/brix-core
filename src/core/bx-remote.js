@@ -8,12 +8,12 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
             var data = self.get('data')
 
             if (data) return callback(data)
-            
+
             var remote = el.attr('bx-remote')
 
             if (/^http/.test(remote)) {
                 var uri = new Uri(remote)
-                
+
                 if (!uri.isSameOriginAs(new Uri(location.href)))
                     self.bxJsonpRemote(uri, callback)
             }
@@ -56,7 +56,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 url: uri.toString(),
                 jsonp: jsonp,
                 success: callback
-            })  
+            })
         },
 
         bxXhrRemote: function(mod, callback) {
