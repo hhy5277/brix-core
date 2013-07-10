@@ -94,8 +94,6 @@ KISSY.add('brix/app/config', function(S) {
 
             base: '.',
 
-            interface: 'zuomo',
-
             imports: {},
 
             components: null,
@@ -247,6 +245,11 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageComponents: function() {
             var ns = this.config('namespace')
+
+            // 如果已经定义过了，就不要覆盖
+            if (S.config('packages')[ns]) {
+                return
+            }
             var base = this.config('base')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var obj = {}
@@ -1370,12 +1373,12 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
             var data = self.get('data')
 
             if (data) return callback(data)
-            
+
             var remote = el.attr('bx-remote')
 
             if (/^http/.test(remote)) {
                 var uri = new Uri(remote)
-                
+
                 if (!uri.isSameOriginAs(new Uri(location.href)))
                     self.bxJsonpRemote(uri, callback)
             }
@@ -1418,7 +1421,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 url: uri.toString(),
                 jsonp: jsonp,
                 success: callback
-            })  
+            })
         },
 
         bxXhrRemote: function(mod, callback) {
@@ -1601,8 +1604,9 @@ KISSY.add('brix/interface/index', function(S, app, IZuomo, IYicai) {
         zuomo: IZuomo,
         yicai: IYicai
     }
-    
-    return INTERFACE_MAP[app.config('interface')]
+    var name = 'zuomo'  // or yicai
+
+    return INTERFACE_MAP[name]
 
 }, {
     requires: [
