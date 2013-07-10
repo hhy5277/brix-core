@@ -193,6 +193,11 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageComponents: function() {
             var ns = this.config('namespace')
+
+            // 如果已经定义过了，就不要覆盖
+            if (S.config('packages')[ns]) {
+                return
+            }
             var base = this.config('base')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var obj = {}
