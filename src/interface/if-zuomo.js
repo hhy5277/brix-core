@@ -1,12 +1,13 @@
 KISSY.add('brix/interface/if-zuomo', function(S) {
-
+    var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config']
     var exports = {}
 
     exports.METHODS = {
         bxIBuildTpl: function() {
             var self = this
             var tpl = self.get('tpl')
-
+            //临时存储监听的数据key
+            self.bxWatcherKeys = {}
             if (tpl) {
                 tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
@@ -22,7 +23,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     self.bxIBuildSubTpls(self.bxIBuildBrickTpls(brickTpl))
                 }
             }
-
+            //删除临时监听
+            delete self.bxWatcherKeys
             return false
         },
 
@@ -49,20 +51,17 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             self.on('afterRefreshTpl', function(e) {
                 self.bxHandleName(
-                    e.node,
-                    function renderedCheck() {
-                        if (--needRenderCounter === 0) {
-                            self.setInternal('rendered', true)
-                            self.fire('rendered')
-                        }
-                    },
-                    function activatedCheck() {
-                        if (--needActivateCounter === 0) {
-                            self.setInternal('activated', true)
-                            self.fire('ready')
-                        }
+                    e.node, function renderedCheck() {
+                    if (--needRenderCounter === 0) {
+                        self.setInternal('rendered', true)
+                        self.fire('rendered')
                     }
-                )
+                }, function activatedCheck() {
+                    if (--needActivateCounter === 0) {
+                        self.setInternal('activated', true)
+                        self.fire('ready')
+                    }
+                })
             })
         },
 
@@ -139,6 +138,9 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             var subTpls = self.get('subTpls')
             var brickTpls = self.get('brickTpls')
             var level = self.get('level')
+            var watcher = self.get('watcher')
+            var data = self.get('data')
+            var bxEvents = self.get('bx-events')
 
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>(@brix@)</\\2>)'
 
@@ -159,9 +161,32 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     datakey: m[4],
                     tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer)
                 })
+                if (data) {
+                    var temparr = m[4].split(',')
+                    for (var i = 0; i < temparr.length; i++) {
+                        var key = temparr[i]
+                        if (!self.bxWatcherKeys[key]) {
+                            self.bxWatcherKeys[key] = true
+                            !(function(key) {
+                                watcher.watch(data, key, function(v) {
+                                    self.bxIRefreshTpl([key], self.get('data'), 'html')
+                                })
+                            })(key)
+                        }
+                    }
+                }
                 //递归编译子模板
                 self.bxIBuildSubTpls(m[5])
             }
+            //获取模板中bx-type的对象
+            var rrr = /bx\-([^=]+)=["\']([^"\'\s]+)["\']/ig
+            tpl.replace(rrr, function(all, type, fn) {
+                if (!S.inArray(type, KEYS)) {
+                    bxEvents[fn] = bxEvents[fn] || []
+                    bxEvents[fn].push(type)
+                }
+                return all
+            })
         },
 
         /**
@@ -182,7 +207,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             S.each(subTpls, function(o) {
                 var datakeys = S.map(o.datakey.split(','), function(str) {
-                    return S.trim(str); //修复编辑器格式化造成的问题
+                    return S.trim(str) //修复编辑器格式化造成的问题
                 })
                 //是否包含的表示符
                 var flg = false
@@ -353,6 +378,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @type {Object}
          */
         brickTpls: {
+            value: {}
+        },
+        /**
+         * 存储dom中bx-type的事件对象
+         */
+        'bx-events': {
             value: {}
         }
     }

@@ -1,7 +1,6 @@
 KISSY.add("brix/base",
           function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote,
-                      Promise, RichBase, XTemplate) {
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
@@ -10,6 +9,22 @@ KISSY.add("brix/base",
     var DESTROY_ACTIONS = ['remove', 'empty']
 
     var Brick = RichBase.extend({
+        // constructor:function(){
+        //     var self = this;
+        //     //显示的调用父类的构造函数，这句很重要。
+        //     Brick.superclass.constructor.apply(self, arguments)
+        //     var scope = {};
+        //     var constt = self.constructor
+        //     for(var key in constt){
+        //         if(constt.hasOwnProperty(key)&&typeof self[key] === 'function'){
+        //             scope[key] = function(){
+        //                 self[key]();
+        //                 digest();
+        //             }
+        //         }
+                
+        //     }
+        // },
         initializer: function() {
             var self = this
             //这里是否考虑同步执行？
@@ -26,15 +41,6 @@ KISSY.add("brix/base",
 
             promise = promise
                 .then(function() {
-                    return self.bxGetTpl()
-                })
-                .then(function() {
-                    return self.bxAfterGetTpl()
-                })
-                .then(function() {
-                    return self.bxBuildTpl()
-                })
-                .then(function() {
                     return self.bxGetData()
                 })
                 .then(function() {
@@ -42,6 +48,15 @@ KISSY.add("brix/base",
                 })
                 .then(function() {
                     return self.bxBuildData()
+                })
+                .then(function() {
+                    return self.bxGetTpl()
+                })
+                .then(function() {
+                    return self.bxAfterGetTpl()
+                })
+                .then(function() {
+                    return self.bxBuildTpl()
                 })
                 .then(function() {
                     return self.bxRender()
@@ -432,7 +447,13 @@ KISSY.add("brix/base",
 
             return ret
         },
-
+        /**
+         * 事件绑定执行一次
+         * @param  {String}   eventType 事件名称
+         * @param  {Function} fn        事件方法
+         * @param  {Object}   context   当前上下文
+         * @return {[type]}             [description]
+         */
         once: function(eventType, fn, context) {
             var self = this
             var wrap = function() {
@@ -441,6 +462,16 @@ KISSY.add("brix/base",
             }
 
             self.on(eventType, wrap, context)
+        },
+        /**
+         * 运行fn后增加数据dirty checking
+         * @param  {Function} fn 需要执行的方法    
+         */
+        dirtyCheck:function(fn){
+            var self = this
+            var watcher = self.get('watcher')
+            fn.apply(self,Array.prototype.slice.call(arguments,1))
+            watcher.digest()
         }
     }, {
         ATTRS: S.mix({
@@ -555,7 +586,7 @@ KISSY.add("brix/base",
             },
 
             /**
-             * 模板引擎,默认xTpl
+             * 模板引擎,默认xTemplate
              * @cfg {Object}
              */
             TplEngine: {
@@ -576,7 +607,7 @@ KISSY.add("brix/base",
              * @cfg {String}
              */
             destroyAction: {
-                value: 'remove'
+                value: 'none'
             },
 
             /**
@@ -607,6 +638,13 @@ KISSY.add("brix/base",
              */
             parent: {
                 value: false
+            },
+            /**
+             * 数据监听器
+             * @type {Watcher}
+             */
+            watcher:{
+                value : new Watcher()
             }
         }, Interface.ATTRS)
     }, 'Brick')
@@ -674,6 +712,7 @@ KISSY.add("brix/base",
         'brix/core/bx-delegate',
         'brix/core/bx-config',
         'brix/core/bx-remote',
+        'brix/core/bx-watcher',
         'promise',
         'rich-base',
         'xtemplate',

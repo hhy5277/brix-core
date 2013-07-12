@@ -1,0 +1,30 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>brix/core/bx-watcher</title>
+  <link rel="stylesheet" href="../mocha.css" />
+</head>
+<body>
+  <div id="mocha"></div>
+  <div id="fixture1">
+    <div id="fixture1-foo"
+         bx-name="thx.test/watcher-foo"
+         bx-tpl="./tpl">
+    </div>
+  </div>
+  <script src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
+  <script src="../expect.js"></script>
+  <script src="../mocha.js"></script>
+  <script>mocha.setup('bdd')</script>
+  <script src="package.js"></script>
+  <script src="test.bx-watcher.js"></script>
+  <script>
+  mocha.checkLeaks();
+  mocha.globals(['KISSY']);
+
+  if (typeof PHANTOMJS === 'undefined') {
+    mocha.run();
+  }
+  </script>
+</body>
+</html>
