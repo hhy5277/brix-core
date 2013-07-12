@@ -69,6 +69,7 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			},
 			'#input6': {
 				click: function(e) {
+					debugger
 					//this.get('parent').destroyBrick(this.get('el').attr('id'));
 					this.destroy();
 				}
