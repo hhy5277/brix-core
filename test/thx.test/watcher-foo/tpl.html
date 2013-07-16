@@ -1,4 +1,10 @@
 <input type="button" class="input31 btn btn-red btn-size25" value="刷新文字">
-<input type="text" id="q" bx-datakey="text" value="{{text}}">
+<input id="q" type="text">
+<div bx-datakey="src">
+    <img src="{{{src}}}">
+</div>
 
-<span id="show"  bx-datakey="text" at="{{text}}">{{text}}</span>
+<span id="show"  bx-datakey="text">{{text}}</span>
+<!--上下位置变化会有坑-->
+<input type="text" bx-datakey="text" value="{{text}}"/>
+

@@ -312,22 +312,23 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                             }
                         })
 
-                        if (renderType == 'html') {
-                            node.empty();
-                        }
-
                         //重新设置局部内容
                         if(S.trim(o.tpl)){
+                            if (renderType == 'html') {
+                                node.empty();
+                            }
                             node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
-                        }
+                         }
                         
-                        // S.each(o.attrs,function(v,k){
-                        //     var val = S.trim(self.bxRenderTpl(v, newData))
-                        //     if(k=="value"){
-                        //         node.val(val)
-                        //     }
-                        //     node.attr(k,val)
-                        // });
+                        S.each(o.attrs,function(v,k){
+                            var val = S.trim(self.bxRenderTpl(v, newData))
+                            if(k=="value"){
+                                node.val(val)
+                            }
+                            else{
+                                node.attr(k,val)
+                            }
+                        })
                         
 
 
