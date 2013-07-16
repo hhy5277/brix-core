@@ -25,7 +25,7 @@ KISSY.add('brix/core/bx-event', function(S) {
             var fnc
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
-                if (typeof events !== 'function') {
+                //if (typeof events !== 'function') {
                     for (var type in events) {
                         fnc = events[type]
                         fnc.handle = (function(fnc) {
@@ -48,21 +48,21 @@ KISSY.add('brix/core/bx-event', function(S) {
                             el.delegate(type, sel, fn, this)
                         }
                     }
-                } else {
-                    if (bxEvents[sel]) {
-                        for (var i = 0; i < bxEvents[sel].length; i++) {
-                            fnc = events
-                            fnc.handle = (function(fnc) {
-                                return function() {
-                                    fnc.apply(this, arguments)
-                                    watcher.digest()
-                                }
-                            })(fnc)
-                            var fn = fnc.handle
-                            el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').on(bxEvents[sel][i], fn, this)
-                        }
-                    }
-                }
+                // } else {
+                //     if (bxEvents[sel]) {
+                //         for (var i = 0; i < bxEvents[sel].length; i++) {
+                //             fnc = events
+                //             fnc.handle = (function(fnc) {
+                //                 return function() {
+                //                     fnc.apply(this, arguments)
+                //                     watcher.digest()
+                //                 }
+                //             })(fnc)
+                //             var fn = fnc.handle
+                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').on(bxEvents[sel][i], fn, this)
+                //         }
+                //     }
+                // }
             }
         },
 
@@ -87,7 +87,7 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
-                if (typeof events !== 'function') {
+                //if (typeof events !== 'function') {
                     for (var type in events) {
                         var fn = events[type].handle
 
@@ -102,15 +102,17 @@ KISSY.add('brix/core/bx-event', function(S) {
                         } else {
                             el.undelegate(type, sel, fn, this)
                         }
+                        fn = null
+                        delete events[type].handle
                     }
-                } else {
-                    if (bxEvents[sel]) {
-                        for (var i = 0; i < bxEvents[sel].length; i++) {
-                            var fn = events.handle
-                            el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').detach(bxEvents[sel][i], fn, this)
-                        }
-                    }
-                }
+                // } else {
+                //     if (bxEvents[sel]) {
+                //         for (var i = 0; i < bxEvents[sel].length; i++) {
+                //             var fn = events.handle
+                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').detach(bxEvents[sel][i], fn, this)
+                //         }
+                //     }
+                // }
             }
         }
     }

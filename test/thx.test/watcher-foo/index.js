@@ -4,6 +4,15 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 		dirtyCheckFoo:function(firstName,lastName){
 			var data = this.get('data')
 			data.text = firstName+'_'+lastName
+		},
+		bind:function(){
+			var self = this
+			self.get('el').one('#q').on('valuechange',function(e){
+				var data = self.get('data')
+				data.text = e.currentTarget.value
+				var watcher = self.get('watcher');
+				watcher.digest()
+			})	
 		}
 	}, {
 		ATTRS: {
@@ -24,11 +33,6 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 						fireName: 'myfire3'
 					})
 				}
-			},
-			testData:function(e){
-				var self = this
-				var data = self.get('data')
-				data.text = e.currentTarget.value
 			}
 		},
 		FIRES:{
