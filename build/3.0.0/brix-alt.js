@@ -239,10 +239,8 @@ KISSY.add('brix/app/config', function(S) {
             var packages = {}
 
             for (var p in imports) {
-                if ('mosaics' !== p) {
-                    packages[p] = {
-                        base: importsBase + (ignoreNs ? '/' + p : '')
-                    }
+                packages[p] = {
+                    base: importsBase + (ignoreNs ? '/' + p : '')
                 }
             }
 
