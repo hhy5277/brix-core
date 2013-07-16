@@ -44,6 +44,8 @@ KISSY.add('brix/app/config', function(S) {
 
             imports: {},
 
+            importsBase: 'http://g.tbcdn.cn/thx/m',
+
             components: null,
 
             namespace: null,
@@ -178,13 +180,15 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageImports: function() {
             var imports = this.config('imports')
-            var importsBase = this.config('base') + '/imports'
+            var importsBase = this.config('importsBase')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var packages = {}
 
             for (var p in imports) {
-                packages[p] = {
-                    base: importsBase + (ignoreNs ? '/' + p : '')
+                if ('mosaics' !== p) {
+                    packages[p] = {
+                        base: importsBase + (ignoreNs ? '/' + p : '')
+                    }
                 }
             }
 

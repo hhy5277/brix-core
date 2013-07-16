@@ -96,6 +96,8 @@ KISSY.add('brix/app/config', function(S) {
 
             imports: {},
 
+            importsBase: 'http://g.tbcdn.cn/thx/m',
+
             components: null,
 
             namespace: null,
@@ -230,13 +232,15 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageImports: function() {
             var imports = this.config('imports')
-            var importsBase = this.config('base') + '/imports'
+            var importsBase = this.config('importsBase')
             var ignoreNs = S.config('ignorePackageNameInUri')
             var packages = {}
 
             for (var p in imports) {
-                packages[p] = {
-                    base: importsBase + (ignoreNs ? '/' + p : '')
+                if ('mosaics' !== p) {
+                    packages[p] = {
+                        base: importsBase + (ignoreNs ? '/' + p : '')
+                    }
                 }
             }
 
@@ -1536,18 +1540,20 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var name = parts.shift()
             var file = parts.shift()
             var base = S.config('packages')[ns].base
+            var components = app.config('components')
             var imports = app.config('imports')
 
             // S.config('ignorePackageNameInUri')
             if (!(new RegExp(ns + '\\/?$')).test(base)) {
                 parts.push(ns)
             }
+            parts.push(name)
+
             if (imports && imports[ns]) {
-                parts.push(name)
                 parts.push(imports[ns][name])
             }
-            else {
-                parts.push(name)
+            else if (components && S.isPlainObject(components[ns])) {
+                parts.push(components[ns][name])
             }
 
             parts.push(file + ext)

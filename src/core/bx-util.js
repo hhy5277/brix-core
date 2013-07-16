@@ -7,18 +7,20 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var name = parts.shift()
             var file = parts.shift()
             var base = S.config('packages')[ns].base
+            var components = app.config('components')
             var imports = app.config('imports')
 
             // S.config('ignorePackageNameInUri')
             if (!(new RegExp(ns + '\\/?$')).test(base)) {
                 parts.push(ns)
             }
+            parts.push(name)
+
             if (imports && imports[ns]) {
-                parts.push(name)
                 parts.push(imports[ns][name])
             }
-            else {
-                parts.push(name)
+            else if (components && S.isPlainObject(components[ns])) {
+                parts.push(components[ns][name])
             }
 
             parts.push(file + ext)
