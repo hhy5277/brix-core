@@ -155,6 +155,13 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 var o = brickTpls[bx]
                 return o.start + o.middle + o.end
             }
+
+            function watch(key) {
+                watcher.watch(data, key, function() {
+                    self.bxIRefreshTpl([key], self.get('data'), 'html')
+                })
+            }
+
             while ((m = reg.exec(tpl)) !== null) {
                 subTpls.push({
                     name: m[3],
@@ -163,15 +170,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 })
                 if (data) {
                     var temparr = m[4].split(',')
+
                     for (var i = 0; i < temparr.length; i++) {
                         var key = temparr[i]
                         if (!self.bxWatcherKeys[key]) {
                             self.bxWatcherKeys[key] = true
-                            !(function(key) {
-                                watcher.watch(data, key, function(v) {
-                                    self.bxIRefreshTpl([key], self.get('data'), 'html')
-                                })
-                            })(key)
+                            watch(key)
                         }
                     }
                 }

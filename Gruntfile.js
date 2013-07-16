@@ -50,18 +50,18 @@ module.exports = function(grunt) {
       },
       main: {
         src: ['src/**/*.js', '!src/interface/if-yicai.js'],
-        dest: 'build/brix.js'
+        dest: 'build/<%= pkg.version %>/brix.js'
       },
       alt: {
         src: ['src/**/*.js', '!src/interface/if-zuomo.js'],
-        dest: 'build/brix-alt.js'
+        dest: 'build/<%= pkg.version %>/brix-alt.js'
       }
     },
     uglify: {
       dist: {
         files: [
-          { src: ['build/brix.js'], dest: 'build/brix-min.js' },
-          { src: ['build/brix-alt.js'], dest: 'build/brix-alt-min.js' }
+          { src: ['build/<%= pkg.version %>/brix.js'], dest: 'build/<%= pkg.version %>/brix-min.js' },
+          { src: ['build/<%= pkg.version %>/brix-alt.js'], dest: 'build/<%= pkg.version %>/brix-alt-min.js' }
         ]
       }
     },
