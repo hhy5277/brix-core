@@ -10,6 +10,7 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 			self.get('el').one('#q').on('valuechange',function(e){
 				var data = self.get('data')
 				data.text = e.currentTarget.value
+				data.src = 'http://a.tbcdn.cn/s/kissy/'+e.currentTarget.value+'.png'
 				var watcher = self.get('watcher');
 				watcher.digest()
 			})	

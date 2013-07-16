@@ -1743,24 +1743,29 @@ KISSY.add('brix/interface/index', function(S) {
             var tpl = self.get('tpl')
             //临时存储监听的数据key
             self.bxWatcherKeys = {}
+            var tempTpl
             if (tpl) {
                 tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
                 //存储模板
                 self.bxIBuildStoreTpls(tpl)
                 self.set('tpl', tpl)
-                self.bxIBuildSubTpls(self.bxIBuildBrickTpls(tpl))
+                tempTpl = self.bxIBuildBrickTpls(tpl)
+                
 
-                return true
             } else {
                 var brickTpl = self.get('brickTpl')
                 if (brickTpl) {
-                    self.bxIBuildSubTpls(self.bxIBuildBrickTpls(brickTpl))
+                    tempTpl = self.bxIBuildBrickTpls(brickTpl)
                 }
             }
+            if(tempTpl){
+                self.bxISelfCloseTag(tempTpl)
+                self.bxIBuildSubTpls(tempTpl)
+            }
+
             //删除临时监听
             delete self.bxWatcherKeys
-            return false
         },
 
         bxIActivate: function() {
@@ -1899,6 +1904,9 @@ KISSY.add('brix/interface/index', function(S) {
             var storeAttr = function(all,attr,tmpl){
                     attrs[attr] = tmpl;
                 }
+
+
+
             while ((m = reg.exec(tpl)) !== null) {
                 attrs = {};
                 m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,storeAttr)
@@ -1931,6 +1939,48 @@ KISSY.add('brix/interface/index', function(S) {
             //     }
             //     return all
             // })
+        },
+        /**
+         * 子闭合标间的处理
+         * @param  {String} tpl 模板
+         */
+        bxISelfCloseTag:function(tpl){
+            var self = this
+            var subTpls = self.get('subTpls')
+            var watcher = self.get('watcher')
+            var data = self.get('data')
+            var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
+            var reg = new RegExp(r, "ig")
+            var m
+            function watch(key) {
+                watcher.watch(data, key, function() {
+                    self.bxIRefreshTpl([key], self.get('data'), 'html')
+                })
+            }
+            var attrs
+            var storeAttr = function(all,attr,tmpl){
+                    attrs[attr] = tmpl;
+                }
+            while ((m = reg.exec(tpl)) !== null) {
+                attrs = {};
+                m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,storeAttr)
+                subTpls.push({
+                    name: m[3],
+                    datakey: m[4],
+                    tpl: '',
+                    attrs : attrs
+                })
+                if (data) {
+                    var temparr = m[4].split(',')
+                    for (var i = 0; i < temparr.length; i++) {
+                        var key = temparr[i]
+                        if (!self.bxWatcherKeys[key]) {
+                            self.bxWatcherKeys[key] = true;
+                            watch(key);
+                        }
+                    }
+                }
+            }
         },
 
         /**
@@ -2001,7 +2051,18 @@ KISSY.add('brix/interface/index', function(S) {
                         }
 
                         //重新设置局部内容
-                        node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
+                        if(S.trim(o.tpl)){
+                            node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
+                        }
+                        
+                        // S.each(o.attrs,function(v,k){
+                        //     var val = S.trim(self.bxRenderTpl(v, newData))
+                        //     if(k=="value"){
+                        //         node.val(val)
+                        //     }
+                        //     node.attr(k,val)
+                        // });
+                        
 
 
                         /**
