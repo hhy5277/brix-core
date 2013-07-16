@@ -261,3 +261,54 @@ app.config({
 - Brix 2 风格的局部刷新
 - （暂未）AngularJS 风格，但是暂时还很弱的，局部刷新
 
+<<<<<<< HEAD
+=======
+## Brix Core 自身部署
+
+此代码仓库只做部署用，因为集团资源文件发布接口的要求，需要此仓库满足如下要求：
+
+- 所有的代码提交记录里，作者的邮箱必须是公司邮箱
+- 版本号满足 semver.org 的约定
+
+### 公司邮箱
+
+访问 <http://gitlab.alibaba-inc.com/profile> 即可看到 GitLab 上认的公司邮箱。
+
+如果之前没有配置过，请在相应的仓库目录中执行（把名字和邮箱换成你自己的）：
+
+```bash
+$ git config user.name 'Chen Yicai'
+$ git config user.email 'yicai.cyj@taobao.com'
+```
+
+如果不介意使用公司邮箱作为全局的作者信息，不介意在 Github 上关联公司邮箱，也可以加上全局参数：
+
+```bash
+$ git config --global user.name 'Chen Yicai'
+$ git config --global user.email 'yicai.cyj@taobao.com'
+```
+
+### 语义化版本号
+
+语义化版本号（<http://semver.org>）不是什么新鲜玩意，GitLab 发布接口里要求的也没有实际规范那么详细，
+只要版本号满足 `/^\d+\.\d+\.\d+$/` 格式即可，三位数子分别对应：
+
+- 主版本号
+- 次版本号
+- 补丁版本号
+
+三个版本号只增不减，往上递增的逻辑是：
+
+- 有重大改动时，升主版本号
+- 有影响到 API 但不算重大的改动时，升次版本号
+- 有 bug 修复等不影响已有 API 的改动时，升补丁版本号
+
+此外，也有开源项目使用次版本号区分稳定版与开发版：
+
+- 当次版本号为奇数，则为开发版
+- 当次版本号为偶数，则为稳定版
+
+### 其他
+
+请看 [资源文件本地发布方案](http://docs.alibaba-inc.com/pages/viewpage.action?spm=0.0.0.0.oUqpYK&pageId=109216022)
+>>>>>>> 837f5ce2006c49501ff8b27f2823cdf21f8fee99

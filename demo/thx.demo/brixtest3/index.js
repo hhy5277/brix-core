@@ -12,8 +12,21 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		bind: function() {
 			//和老版本的initialize作用相同
 			S.log('bind 3');
-
+			var self = this
 			this.dirtyCheck(this.myFn,'myFn');
+			var q = self.get('el').one('#q');
+			if(q){
+				q.on('valuechange',function(e){
+				var data = self.get('data')
+				data.text = e.currentTarget.value
+				var watcher = self.get('watcher');
+				watcher.digest()
+			})
+			}
+				
+
+
+
 		},
 
 		myFn :function(name){
@@ -45,13 +58,6 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 					// });
 					self.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
 				}
-			},
-			testData:function(e){
-				var self = this;
-				var data = self.get('data');
-				data.text = e.currentTarget.value;
-				var watcher = self.get('watcher');
-				watcher.digest()
 			}
 		},
 		FIRES:{

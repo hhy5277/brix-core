@@ -96,6 +96,8 @@ KISSY.add('brix/app/config', function(S) {
 
             imports: {},
 
+            importsBase: 'http://g.tbcdn.cn/thx/m',
+
             components: null,
 
             namespace: null,
@@ -230,13 +232,17 @@ KISSY.add('brix/app/config', function(S) {
 
         bxPackageImports: function() {
             var imports = this.config('imports')
-            var importsBase = this.config('base') + '/imports'
+
+            var importsBase = this.config('importsBase')
+
             var ignoreNs = S.config('ignorePackageNameInUri')
             var packages = {}
 
             for (var p in imports) {
-                packages[p] = {
-                    base: importsBase + (ignoreNs ? '/' + p : '')
+                if ('mosaics' !== p) {
+                    packages[p] = {
+                        base: importsBase + (ignoreNs ? '/' + p : '')
+                    }
                 }
             }
 
@@ -299,8 +305,7 @@ KISSY.add('brix/app/config', function(S) {
 });
 KISSY.add("brix/base",
           function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote,
-                      Promise, RichBase, XTemplate) {
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
@@ -309,6 +314,22 @@ KISSY.add("brix/base",
     var DESTROY_ACTIONS = ['remove', 'empty']
 
     var Brick = RichBase.extend({
+        // constructor:function(){
+        //     var self = this;
+        //     //显示的调用父类的构造函数，这句很重要。
+        //     Brick.superclass.constructor.apply(self, arguments)
+        //     var scope = {};
+        //     var constt = self.constructor
+        //     for(var key in constt){
+        //         if(constt.hasOwnProperty(key)&&typeof self[key] === 'function'){
+        //             scope[key] = function(){
+        //                 self[key]();
+        //                 digest();
+        //             }
+        //         }
+                
+        //     }
+        // },
         initializer: function() {
             var self = this
             //这里是否考虑同步执行？
@@ -325,15 +346,6 @@ KISSY.add("brix/base",
 
             promise = promise
                 .then(function() {
-                    return self.bxGetTpl()
-                })
-                .then(function() {
-                    return self.bxAfterGetTpl()
-                })
-                .then(function() {
-                    return self.bxBuildTpl()
-                })
-                .then(function() {
                     return self.bxGetData()
                 })
                 .then(function() {
@@ -341,6 +353,15 @@ KISSY.add("brix/base",
                 })
                 .then(function() {
                     return self.bxBuildData()
+                })
+                .then(function() {
+                    return self.bxGetTpl()
+                })
+                .then(function() {
+                    return self.bxAfterGetTpl()
+                })
+                .then(function() {
+                    return self.bxBuildTpl()
                 })
                 .then(function() {
                     return self.bxRender()
@@ -731,7 +752,13 @@ KISSY.add("brix/base",
 
             return ret
         },
-
+        /**
+         * 事件绑定执行一次
+         * @param  {String}   eventType 事件名称
+         * @param  {Function} fn        事件方法
+         * @param  {Object}   context   当前上下文
+         * @return {[type]}             [description]
+         */
         once: function(eventType, fn, context) {
             var self = this
             var wrap = function() {
@@ -740,6 +767,16 @@ KISSY.add("brix/base",
             }
 
             self.on(eventType, wrap, context)
+        },
+        /**
+         * 运行fn后增加数据dirty checking
+         * @param  {Function} fn 需要执行的方法    
+         */
+        dirtyCheck:function(fn){
+            var self = this
+            var watcher = self.get('watcher')
+            fn.apply(self,Array.prototype.slice.call(arguments,1))
+            watcher.digest()
         }
     }, {
         ATTRS: S.mix({
@@ -854,7 +891,7 @@ KISSY.add("brix/base",
             },
 
             /**
-             * 模板引擎,默认xTpl
+             * 模板引擎,默认xTemplate
              * @cfg {Object}
              */
             TplEngine: {
@@ -875,7 +912,7 @@ KISSY.add("brix/base",
              * @cfg {String}
              */
             destroyAction: {
-                value: 'remove'
+                value: 'none'
             },
 
             /**
@@ -906,6 +943,13 @@ KISSY.add("brix/base",
              */
             parent: {
                 value: false
+            },
+            /**
+             * 数据监听器
+             * @type {Watcher}
+             */
+            watcher:{
+                value : new Watcher()
             }
         }, Interface.ATTRS)
     }, 'Brick')
@@ -973,6 +1017,7 @@ KISSY.add("brix/base",
         'brix/core/bx-delegate',
         'brix/core/bx-config',
         'brix/core/bx-remote',
+        'brix/core/bx-watcher',
         'promise',
         'rich-base',
         'xtemplate',
@@ -1085,37 +1130,62 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             //外部动态传入的事件代理
             var events = this.get('events')
-            if(events){
+            if (events) {
                 this.bxDelegateMap(events)
             }
         },
 
         bxDelegateMap: function(eventsMap) {
             var el = this.get('el')
+            var watcher = this.get('watcher')
+            //var bxEvents = this.get('bx-events')
             var Event = S.Event
+            var fnc
+            var fn
+
+            function wrapFn(fnc) {
+                return function() {
+                    fnc.apply(this, arguments)
+                    watcher.digest()
+                }
+            }
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
+                //if (typeof events !== 'function') {
+                    for (var type in events) {
+                        fnc = events[type]
+                        fnc.handle = wrapFn(fnc)
 
-                for (var type in events) {
-                    var fn = events[type]
+                        fn = fnc.handle
 
-                    if (sel === 'self') {
-                        el.on(type, fn, this)
+                        if (sel === 'self') {
+                            el.on(type, fn, this)
+                        } else if (sel === 'window') {
+                            Event.on(window, type, fn, this)
+                        } else if (sel === 'body') {
+                            Event.on('body', type, fn, this)
+                        } else if (sel === 'document') {
+                            Event.on(document, type, fn, this)
+                        } else {
+                            el.delegate(type, sel, fn, this)
+                        }
                     }
-                    else if (sel === 'window') {
-                        Event.on(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.on('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.on(document, type, fn, this)
-                    }
-                    else {
-                        el.delegate(type, sel, fn, this)
-                    }
-                }
+                // } else {
+                //     if (bxEvents[sel]) {
+                //         for (var i = 0; i < bxEvents[sel].length; i++) {
+                //             fnc = events
+                //             fnc.handle = (function(fnc) {
+                //                 return function() {
+                //                     fnc.apply(this, arguments)
+                //                     watcher.digest()
+                //                 }
+                //             })(fnc)
+                //             var fn = fnc.handle
+                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').on(bxEvents[sel][i], fn, this)
+                //         }
+                //     }
+                // }
             }
         },
 
@@ -1128,37 +1198,47 @@ KISSY.add('brix/core/bx-event', function(S) {
             }
             //外部动态传入的事件代理
             var events = this.get('events')
-            if(events){
+            if (events) {
                 this.bxUndelegateMap(events)
             }
         },
 
         bxUndelegateMap: function(eventsMap) {
             var el = this.get('el')
+            //var bxEvents = this.get('bx-events')
             var Event = S.Event
+            var fn
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
+                //if (typeof events !== 'function') {
+                    for (var type in events) {
+                        fn = events[type].handle
 
-                for (var type in events) {
-                    var fn = events[type]
+                        if (sel === 'self') {
+                            el.detach(type, fn, this)
+                        } else if (sel === 'window') {
+                            Event.detach(window, type, fn, this)
+                        } else if (sel === 'body') {
+                            Event.detach('body', type, fn, this)
+                        } else if (sel === 'document') {
+                            Event.detach(document, type, fn, this)
+                        } else {
+                            el.undelegate(type, sel, fn, this)
+                        }
 
-                    if (sel === 'self') {
-                        el.detach(type, fn, this)
+                        fn = null;
+                        delete events[type].handle
                     }
-                    else if (sel === 'window') {
-                        Event.detach(window, type, fn, this)
-                    }
-                    else if (sel === 'body') {
-                        Event.detach('body', type, fn, this)
-                    }
-                    else if (sel === 'document') {
-                        Event.detach(document, type, fn, this)
-                    }
-                    else {
-                        el.undelegate(type, sel, fn, this)
-                    }
-                }
+                // } else {
+                //     if (bxEvents[sel]) {
+                //         for (var i = 0; i < bxEvents[sel].length; i++) {
+                //             var fn = events.handle
+                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').detach(bxEvents[sel][i], fn, this)
+                //         }
+                //     }
+                // }
+
             }
         }
     }
@@ -1536,18 +1616,23 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var name = parts.shift()
             var file = parts.shift()
             var base = S.config('packages')[ns].base
+
+            var components = app.config('components')
+
             var imports = app.config('imports')
 
             // S.config('ignorePackageNameInUri')
             if (!(new RegExp(ns + '\\/?$')).test(base)) {
                 parts.push(ns)
             }
+
+            parts.push(name)
+
             if (imports && imports[ns]) {
-                parts.push(name)
                 parts.push(imports[ns][name])
             }
-            else {
-                parts.push(name)
+            else if (components && S.isPlainObject(components[ns])) {
+                parts.push(components[ns][name])
             }
 
             parts.push(file + ext)
@@ -1562,6 +1647,91 @@ KISSY.add('brix/core/bx-util', function(S, app) {
         'brix/app/config'
     ]
 });
+KISSY.add('brix/core/bx-watcher', function() {
+    var memo = {}
+
+        function parse(expression) {
+            var fn = memo[expression]
+
+            if (!fn) {
+                /*jshint -W054 */
+
+                //fn = memo[expression] = new Function('context', 'locals', 'with(context){ return ' + expression + '; }')
+                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(typeof ' + expression + ' ==="undefined"){return}else{ return ' + expression + '}}')
+            }
+
+            return fn
+        }
+
+        function unwatch(watcher, watchers) {
+            return function() {
+                var index = watchers.indexOf(watcher)
+
+                if (index > -1) {
+                    watchers.splice(index, 1)
+                }
+            }
+        }
+
+        function Watcher() {
+            this.watchers = []
+            this.checking = false
+        }
+
+    Watcher.prototype.watch = function(context, expression, callback) {
+        var value, watcher
+
+            value = typeof expression === 'function' ? function() {
+                return expression(context)
+            } : parse(expression)
+
+            watcher = {
+                value: value,
+                context: context,
+                last: value(context),
+                callback: callback,
+                expression: expression
+            };
+        this.watchers.push(watcher)
+
+        return unwatch(watcher, this.watchers)
+    };
+
+    Watcher.prototype.digest = function() {
+        var clean, index, length, watcher, value, iterations = 10
+
+        if (this.checking) {
+            throw new Error('Digest phase is already started')
+        }
+
+        this.checking = true
+
+        do {
+            clean = true
+            index = -1
+            length = this.watchers.length
+
+            while (++index < length) {
+                watcher = this.watchers[index]
+                value = watcher.value(watcher.context)
+                if (value !== watcher.last) {
+                    watcher.callback(value, watcher.last)
+                    watcher.last = value
+                    clean = false
+                }
+            }
+        } while (!clean && iterations--)
+
+        if (!iterations) {
+            throw new Error('Too much iterations per digest');
+        }
+
+        this.checking = false
+    }
+
+    Watcher.parse = parse
+    return Watcher
+});;
 KISSY.add('brix/interface/index', function() {
 
     var exports = {}

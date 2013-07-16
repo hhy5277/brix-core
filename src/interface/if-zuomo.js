@@ -1,5 +1,6 @@
 KISSY.add('brix/interface/if-zuomo', function(S) {
-    var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
+    //var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
+
     var exports = {}
 
     exports.METHODS = {
@@ -52,16 +53,16 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             self.on('afterRefreshTpl', function(e) {
                 self.bxHandleName(
                     e.node, function renderedCheck() {
-                        if (--needRenderCounter === 0) {
-                            self.setInternal('rendered', true)
-                            self.fire('rendered')
-                        }
-                    }, function activatedCheck() {
-                        if (--needActivateCounter === 0) {
-                            self.setInternal('activated', true)
-                            self.fire('ready')
-                        }
-                    })
+                    if (--needRenderCounter === 0) {
+                        self.setInternal('rendered', true)
+                        self.fire('rendered')
+                    }
+                }, function activatedCheck() {
+                    if (--needActivateCounter === 0) {
+                        self.setInternal('activated', true)
+                        self.fire('ready')
+                    }
+                })
             })
         },
 
@@ -90,8 +91,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         bxITag: function(tpl) {
             return tpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
                 .replace(/(bx-name=["'][^"']+["'])/ig, function(match) {
-                    return match + ' bx-tag="brix_tag_' + S.guid() + '"'
-                })
+                return match + ' bx-tag="brix_tag_' + S.guid() + '"'
+            })
         },
 
         /**
@@ -102,8 +103,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         bxISubTpl: function(tpl) {
             return tpl.replace(/(bx-subtpl=["'][^"']+["'])/ig, '')
                 .replace(/(bx-datakey=["'][^"']+["'])/ig, function(match) {
-                    return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
-                })
+                return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
+            })
         },
 
         bxIBuildBrickTpls: function(tpl) {
@@ -143,6 +144,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
 
+
             while (level--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
             }
@@ -154,17 +156,23 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 var o = brickTpls[bx]
                 return o.start + o.middle + o.end
             }
-            while ((m = reg.exec(tpl)) !== null) {
-                var attrs = {};
-                m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,function(all,attr,tmpl){
-                    attrs[attr] = tmpl;
+            function watch(key) {
+                watcher.watch(data, key, function() {
+                    self.bxIRefreshTpl([key], self.get('data'), 'html')
                 })
-                debugger
+            }
+            var attrs
+            var storeAttr = function(all,attr,tmpl){
+                    attrs[attr] = tmpl;
+                }
+            while ((m = reg.exec(tpl)) !== null) {
+                attrs = {};
+                m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,storeAttr)
                 subTpls.push({
                     name: m[3],
                     datakey: m[4],
                     tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-                    attrs :attrs
+                    attrs : attrs
                 })
                 if (data) {
                     var temparr = m[4].split(',')
@@ -172,19 +180,13 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                         var key = temparr[i]
                         if (!self.bxWatcherKeys[key]) {
                             self.bxWatcherKeys[key] = true;
-                            !(function(key) {
-                                watcher.watch(data, key, function(v) {
-                                    //这里的操作类型是什么？html
-                                    self.bxIRefreshTpl([key], self.get('data'), 'html')
-                                })
-                            })(key)
+                            watch(key);
                         }
                     }
                 }
                 //递归编译子模板
                 self.bxIBuildSubTpls(m[5])
             }
-
             // var bxEvents = self.get('bx-events')
             // //获取模板中bx-type的对象
             // var rrr = /bx\-([^=]+)=["\']([^"\'\s]+)["\']/ig
@@ -266,6 +268,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
                         //重新设置局部内容
                         node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
+
 
                         /**
                          * @event afterRefreshTpl

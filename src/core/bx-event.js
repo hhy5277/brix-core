@@ -20,22 +20,27 @@ KISSY.add('brix/core/bx-event', function(S) {
         bxDelegateMap: function(eventsMap) {
             var el = this.get('el')
             var watcher = this.get('watcher')
-            var bxEvents = this.get('bx-events')
+            //var bxEvents = this.get('bx-events')
             var Event = S.Event
             var fnc
+            var fn
+
+            function wrapFn(fnc) {
+                return function() {
+                    fnc.apply(this, arguments)
+                    watcher.digest()
+                }
+            }
+
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 //if (typeof events !== 'function') {
                     for (var type in events) {
                         fnc = events[type]
-                        fnc.handle = (function(fnc) {
-                            return function() {
-                                fnc.apply(this, arguments)
-                                watcher.digest()
-                            }
-                        })(fnc)
+                        fnc.handle = wrapFn(fnc)
 
-                        var fn = fnc.handle
+                        fn = fnc.handle
+
                         if (sel === 'self') {
                             el.on(type, fn, this)
                         } else if (sel === 'window') {
@@ -82,14 +87,15 @@ KISSY.add('brix/core/bx-event', function(S) {
 
         bxUndelegateMap: function(eventsMap) {
             var el = this.get('el')
-            var bxEvents = this.get('bx-events')
+            //var bxEvents = this.get('bx-events')
             var Event = S.Event
+            var fn
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 //if (typeof events !== 'function') {
                     for (var type in events) {
-                        var fn = events[type].handle
+                        fn = events[type].handle
 
                         if (sel === 'self') {
                             el.detach(type, fn, this)
@@ -102,7 +108,8 @@ KISSY.add('brix/core/bx-event', function(S) {
                         } else {
                             el.undelegate(type, sel, fn, this)
                         }
-                        fn = null
+
+                        fn = null;
                         delete events[type].handle
                     }
                 // } else {
@@ -113,6 +120,7 @@ KISSY.add('brix/core/bx-event', function(S) {
                 //         }
                 //     }
                 // }
+
             }
         }
     }

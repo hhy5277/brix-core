@@ -13,6 +13,7 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 				var watcher = self.get('watcher');
 				watcher.digest()
 			})	
+
 		}
 	}, {
 		ATTRS: {
