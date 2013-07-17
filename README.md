@@ -261,8 +261,6 @@ app.config({
 - Brix 2 风格的局部刷新
 - （暂未）AngularJS 风格，但是暂时还很弱的，局部刷新
 
-<<<<<<< HEAD
-=======
 ## Brix Core 自身部署
 
 此代码仓库只做部署用，因为集团资源文件发布接口的要求，需要此仓库满足如下要求：
@@ -311,4 +309,3 @@ $ git config --global user.email 'yicai.cyj@taobao.com'
 ### 其他
 
 请看 [资源文件本地发布方案](http://docs.alibaba-inc.com/pages/viewpage.action?spm=0.0.0.0.oUqpYK&pageId=109216022)
->>>>>>> 837f5ce2006c49501ff8b27f2823cdf21f8fee99
