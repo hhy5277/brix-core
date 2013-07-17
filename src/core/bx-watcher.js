@@ -8,7 +8,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                 /*jshint -W054 */
 
                 //fn = memo[expression] = new Function('context', 'locals', 'with(context){ return ' + expression + '; }')
-                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(S.isUndefined(' + expression + ')){return}else{ return ' + expression + '}}')
+                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(typeof ' + expression + ' ==="undefined"){return}else{return ' + expression + '}}')
             }
 
             return fn
