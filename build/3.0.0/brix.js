@@ -768,13 +768,22 @@ KISSY.add("brix/base",
         },
         /**
          * 运行fn后增加数据dirty checking
-         * @param  {Function} fn 需要执行的方法    
+         * @param  {Function|String} fn 需要执行的方法    
          */
         dirtyCheck:function(fn){
             var self = this
             var watcher = self.get('watcher')
-            fn.apply(self,Array.prototype.slice.call(arguments,1))
-            watcher.digest()
+
+            if(typeof fn !== 'function'){
+                fn = self[fn];
+            }
+            if(fn){
+                fn.apply(self,Array.prototype.slice.call(arguments,1))
+                watcher.digest()
+            }
+            else{
+                throw new Error('没有找到对应的函数')
+            }
         }
     }, {
         ATTRS: S.mix({
@@ -791,7 +800,7 @@ KISSY.add("brix/base",
              * @cfg {Object}
              */
             data: {
-                value: null
+                value: {}
             },
 
             /**
@@ -1134,6 +1143,7 @@ KISSY.add('brix/core/bx-event', function(S) {
         },
 
         bxDelegateMap: function(eventsMap) {
+            var self = this
             var el = this.get('el')
             var watcher = this.get('watcher')
             //var bxEvents = this.get('bx-events')
@@ -1143,6 +1153,9 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             function wrapFn(fnc) {
                 return function() {
+                    //增加brixData，方便外部直接获取
+                    arguments[0].brixData = self.get('data')
+                    
                     fnc.apply(this, arguments)
                     watcher.digest()
                 }

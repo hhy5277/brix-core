@@ -18,6 +18,7 @@ KISSY.add('brix/core/bx-event', function(S) {
         },
 
         bxDelegateMap: function(eventsMap) {
+            var self = this
             var el = this.get('el')
             var watcher = this.get('watcher')
             //var bxEvents = this.get('bx-events')
@@ -27,6 +28,9 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             function wrapFn(fnc) {
                 return function() {
+                    //增加brixData，方便外部直接获取
+                    arguments[0].brixData = self.get('data')
+                    
                     fnc.apply(this, arguments)
                     watcher.digest()
                 }

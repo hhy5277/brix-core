@@ -10,6 +10,7 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 			var q = self.get('el').one('#q')
 			if(q){
 				q.on('valuechange',function(e){
+					//自己注册的方法，需要从ATTRS中获取data，并执行watcher的digest方法
 					var data = self.get('data')
 					data.text = e.currentTarget.value
 					data.src = 'http://a.tbcdn.cn/s/kissy/'+e.currentTarget.value+'.png'
@@ -32,8 +33,9 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 		EVENTS: {
 			'.input31': {
 				click: function(e) {
-					var self = this;
-					var data = self.get('data')
+					var self = this
+					//直接从e对象中获取data
+					var data = e.brixData
 					data.text = '我改变了'
 
 					self.fire(WatcherFoo.FIRES.customEvent, {
