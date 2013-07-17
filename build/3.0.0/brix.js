@@ -1749,7 +1749,7 @@ KISSY.add('brix/interface/index', function(S) {
                 self.bxIBuildStoreTpls(tpl)
                 self.set('tpl', tpl)
                 tempTpl = self.bxIBuildBrickTpls(tpl)
-                
+
 
             } else {
                 var brickTpl = self.get('brickTpl')
@@ -1757,7 +1757,7 @@ KISSY.add('brix/interface/index', function(S) {
                     tempTpl = self.bxIBuildBrickTpls(brickTpl)
                 }
             }
-            if(tempTpl){
+            if (tempTpl) {
                 self.bxISelfCloseTag(tempTpl)
                 self.bxIBuildSubTpls(tempTpl)
             }
@@ -1790,16 +1790,16 @@ KISSY.add('brix/interface/index', function(S) {
             self.on('afterRefreshTpl', function(e) {
                 self.bxHandleName(
                     e.node, function renderedCheck() {
-                    if (--needRenderCounter === 0) {
-                        self.setInternal('rendered', true)
-                        self.fire('rendered')
-                    }
-                }, function activatedCheck() {
-                    if (--needActivateCounter === 0) {
-                        self.setInternal('activated', true)
-                        self.fire('ready')
-                    }
-                })
+                        if (--needRenderCounter === 0) {
+                            self.setInternal('rendered', true)
+                            self.fire('rendered')
+                        }
+                    }, function activatedCheck() {
+                        if (--needActivateCounter === 0) {
+                            self.setInternal('activated', true)
+                            self.fire('ready')
+                        }
+                    })
             })
         },
 
@@ -1828,8 +1828,8 @@ KISSY.add('brix/interface/index', function(S) {
         bxITag: function(tpl) {
             return tpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
                 .replace(/(bx-name=["'][^"']+["'])/ig, function(match) {
-                return match + ' bx-tag="brix_tag_' + S.guid() + '"'
-            })
+                    return match + ' bx-tag="brix_tag_' + S.guid() + '"'
+                })
         },
 
         /**
@@ -1840,8 +1840,8 @@ KISSY.add('brix/interface/index', function(S) {
         bxISubTpl: function(tpl) {
             return tpl.replace(/(bx-subtpl=["'][^"']+["'])/ig, '')
                 .replace(/(bx-datakey=["'][^"']+["'])/ig, function(match) {
-                return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
-            })
+                    return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
+                })
         },
 
         bxIBuildBrickTpls: function(tpl) {
@@ -1865,6 +1865,47 @@ KISSY.add('brix/interface/index', function(S) {
             })
             return tpl
         },
+        /**
+         * 获取属性模板
+         * @param  {String} str 模板
+         * @return {Object}   存储对象
+         * @private
+         */
+        bxIStoreAttrs: function(str) {
+            var attrs = {}
+            var storeAttr = function(all, attr, tpl) {
+                attrs[attr] = tpl;
+            }
+            str.replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig, storeAttr)
+            return attrs;
+        },
+        /**
+         * 添加数据监听
+         * @param  {String} datakey 监听的key字符串"key1,key2"
+         * @private
+         */
+        bxIAddWatch: function(datakey) {
+            var self = this
+            var watcher = self.get('watcher')
+            var data = self.get('data')
+
+            var watch = function(key) {
+                watcher.watch(data, key, function() {
+                    self.bxIRefreshTpl([key], self.get('data'), 'html')
+                })
+            }
+
+            if (data) {
+                var temparr = datakey.split(',')
+                for (var i = 0; i < temparr.length; i++) {
+                    var key = temparr[i]
+                    if (!self.bxWatcherKeys[key]) {
+                        self.bxWatcherKeys[key] = true;
+                        watch(key);
+                    }
+                }
+            }
+        },
 
         /**
          * 对节点中的bx-tpl和bx-datakey解析，构建模板和数据配置
@@ -1876,12 +1917,8 @@ KISSY.add('brix/interface/index', function(S) {
             var subTpls = self.get('subTpls')
             var brickTpls = self.get('brickTpls')
             var level = self.get('level')
-            var watcher = self.get('watcher')
-            var data = self.get('data')
 
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-
-
             while (level--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
             }
@@ -1893,37 +1930,16 @@ KISSY.add('brix/interface/index', function(S) {
                 var o = brickTpls[bx]
                 return o.start + o.middle + o.end
             }
-            function watch(key) {
-                watcher.watch(data, key, function() {
-                    self.bxIRefreshTpl([key], self.get('data'), 'html')
-                })
-            }
-            var attrs
-            var storeAttr = function(all,attr,tmpl){
-                    attrs[attr] = tmpl;
-                }
-
-
 
             while ((m = reg.exec(tpl)) !== null) {
-                attrs = {};
-                m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,storeAttr)
+                var datakey = m[4]
                 subTpls.push({
                     name: m[3],
-                    datakey: m[4],
+                    datakey: datakey,
                     tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-                    attrs : attrs
+                    attrs: self.bxIStoreAttrs(m[1])
                 })
-                if (data) {
-                    var temparr = m[4].split(',')
-                    for (var i = 0; i < temparr.length; i++) {
-                        var key = temparr[i]
-                        if (!self.bxWatcherKeys[key]) {
-                            self.bxWatcherKeys[key] = true;
-                            watch(key);
-                        }
-                    }
-                }
+                self.bxIAddWatch(datakey)
                 //递归编译子模板
                 self.bxIBuildSubTpls(m[5])
             }
@@ -1942,42 +1958,21 @@ KISSY.add('brix/interface/index', function(S) {
          * 子闭合标间的处理
          * @param  {String} tpl 模板
          */
-        bxISelfCloseTag:function(tpl){
+        bxISelfCloseTag: function(tpl) {
             var self = this
             var subTpls = self.get('subTpls')
-            var watcher = self.get('watcher')
-            var data = self.get('data')
+
             var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
             var reg = new RegExp(r, "ig")
             var m
-            function watch(key) {
-                watcher.watch(data, key, function() {
-                    self.bxIRefreshTpl([key], self.get('data'), 'html')
-                })
-            }
-            var attrs
-            var storeAttr = function(all,attr,tmpl){
-                    attrs[attr] = tmpl;
-                }
             while ((m = reg.exec(tpl)) !== null) {
-                attrs = {};
-                m[1].replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig,storeAttr)
+                var datakey = m[4]
                 subTpls.push({
                     name: m[3],
-                    datakey: m[4],
-                    tpl: '',
-                    attrs : attrs
+                    datakey: datakey,
+                    attrs: self.bxIStoreAttrs(m[1])
                 })
-                if (data) {
-                    var temparr = m[4].split(',')
-                    for (var i = 0; i < temparr.length; i++) {
-                        var key = temparr[i]
-                        if (!self.bxWatcherKeys[key]) {
-                            self.bxWatcherKeys[key] = true;
-                            watch(key);
-                        }
-                    }
-                }
+                self.bxIAddWatch(datakey)
             }
         },
 
@@ -2021,10 +2016,6 @@ KISSY.add('brix/interface/index', function(S) {
                     }
 
                     nodes.each(function(node) {
-                        self.fire('beforeRefreshTpl', {
-                            node: node,
-                            renderType: renderType
-                        })
                         var newData = {}
                         S.each(datakeys, function(item) {
                             var tempdata = data,
@@ -2044,34 +2035,37 @@ KISSY.add('brix/interface/index', function(S) {
                             }
                         })
 
-                        //重新设置局部内容
-                        if(S.trim(o.tpl)){
+                        if (o.tpl) {
+                            self.fire('beforeRefreshTpl', {
+                                node: node,
+                                renderType: renderType
+                            })
+
+                            //重新设置局部内容
+
                             if (renderType == 'html') {
                                 node.empty();
                             }
                             node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
-                         }
-                        
-                        S.each(o.attrs,function(v,k){
+
+                            /**
+                             * @event afterRefreshTpl
+                             * 局部刷新后触发
+                             * @param {KISSY.Event.CustomEventObject} e
+                             */
+                            self.fire('afterRefreshTpl', {
+                                node: node,
+                                renderType: renderType
+                            })
+                        }
+
+                        S.each(o.attrs, function(v, k) {
                             var val = S.trim(self.bxRenderTpl(v, newData))
-                            if(k=="value"){
+                            if (node[0].tagName.toUpperCase == 'INPUT' && k == "value") {
                                 node.val(val)
+                            } else {
+                                node.attr(k, val)
                             }
-                            else{
-                                node.attr(k,val)
-                            }
-                        })
-                        
-
-
-                        /**
-                         * @event afterRefreshTpl
-                         * 局部刷新后触发
-                         * @param {KISSY.Event.CustomEventObject} e
-                         */
-                        self.fire('afterRefreshTpl', {
-                            node: node,
-                            renderType: renderType
                         })
                     })
                 }
