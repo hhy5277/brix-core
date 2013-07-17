@@ -33,6 +33,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             else {
                 var klasses = []
                 var naked
+                var name
                 var renderedCheck = function() {
                     if (++renderedCounter === total) renderedFn()
                 }
@@ -43,11 +44,23 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 for (i = 0; i < total; i++) {
                     node = Node(nodes[i])
                     naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+                    name = node.attr('bx-name')
 
-                    if (naked === 'js' || naked === 'all')
+                    if (naked === 'js' || naked === 'all') {
                         klasses[i] = 'brix/base'
-                    else
-                        klasses[i] = node.attr('bx-name').replace(/\/?$/, '/index')
+                    }
+                    // might be
+                    //
+                    // - mosaics/wangwang/
+                    // - mosaics/dropdown/large
+                    // - mosaics/calendar/twin
+                    //
+                    else if (name.split('/').length > 2) {
+                        klasses[i] = name
+                    }
+                    else {
+                        klasses[i] = name + '/index'
+                    }
                 }
 
                 KISSY.use(klasses.join(','), function(S) {
