@@ -1,32 +1,33 @@
 KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 
 	var WatcherFoo = Brick.extend({
-		dirtyCheckFoo:function(firstName,lastName){
+		dirtyCheckFoo: function(firstName, lastName) {
 			var data = this.get('data')
-			data.text = firstName+'_'+lastName
+			data.text = firstName + '_' + lastName
 		},
-		bind:function(){
+		bind: function() {
 			var self = this
 			var q = self.get('el').one('#q')
-			if(q){
-				q.on('valuechange',function(e){
+			if (q) {
+				q.on('valuechange', function(e) {
 					//自己注册的方法，需要从ATTRS中获取data，并执行watcher的digest方法
 					var data = self.get('data')
 					data.text = e.currentTarget.value
-					data.src = 'http://a.tbcdn.cn/s/kissy/'+e.currentTarget.value+'.png'
+					data.image.src = 'http://a.tbcdn.cn/s/kissy/' + e.currentTarget.value + '.png'
 					var watcher = self.get('watcher');
 					watcher.digest()
 				})
 			}
-				
+
 
 		}
 	}, {
 		ATTRS: {
-			data:{
-				value:{
-					text: '我是test3',
-					src:'http://img01.taobaocdn.com/bao/uploaded/i1/13713024047600610/T1MB93XwdaXXXXXXXX_!!0-item_pic.jpg_160x160.jpg'
+			data: {
+				value: {
+					image: {
+						src: 'http://img01.taobaocdn.com/bao/uploaded/i1/13713024047600610/T1MB93XwdaXXXXXXXX_!!0-item_pic.jpg_160x160.jpg'
+					}
 				}
 			}
 		},
@@ -44,7 +45,7 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 				}
 			}
 		},
-		FIRES:{
+		FIRES: {
 			customEvent: 'barEvent'
 		}
 	}, 'WatcherFoo')

@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-watcher', function() {
+KISSY.add('brix/core/bx-watcher', function(S, JSON) {
     var memo = {}
 
         function parse(expression) {
@@ -8,7 +8,7 @@ KISSY.add('brix/core/bx-watcher', function() {
                 /*jshint -W054 */
 
                 //fn = memo[expression] = new Function('context', 'locals', 'with(context){ return ' + expression + '; }')
-                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(typeof ' + expression + ' ==="undefined"){return}else{ return ' + expression + '}}')
+                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(S.isUndefined(' + expression + ')){return}else{ return ' + expression + '}}')
             }
 
             return fn
@@ -30,19 +30,24 @@ KISSY.add('brix/core/bx-watcher', function() {
         }
 
     Watcher.prototype.watch = function(context, expression, callback) {
-        var value, watcher
+        var watcher
 
-            value = typeof expression === 'function' ? function() {
+        var value = typeof expression === 'function' ? function() {
                 return expression(context)
-            } : parse(expression)
+            } : parse(expression);
 
-            watcher = {
-                value: value,
-                context: context,
-                last: value(context),
-                callback: callback,
-                expression: expression
-            };
+        var last = value(context)
+
+        if (S.isArray(last) || S.isObject(last)) {
+            last = JSON.stringify(last)
+        }
+        watcher = {
+            value: value,
+            context: context,
+            last: last,
+            callback: callback,
+            expression: expression
+        };
         this.watchers.push(watcher)
 
         return unwatch(watcher, this.watchers)
@@ -65,9 +70,13 @@ KISSY.add('brix/core/bx-watcher', function() {
             while (++index < length) {
                 watcher = this.watchers[index]
                 value = watcher.value(watcher.context)
+                var last = value
+                if (S.isArray(last) || S.isObject(last)) {
+                    last = JSON.stringify(last)
+                }
                 if (value !== watcher.last) {
                     watcher.callback(value, watcher.last)
-                    watcher.last = value
+                    watcher.last = last
                     clean = false
                 }
             }
@@ -82,4 +91,6 @@ KISSY.add('brix/core/bx-watcher', function() {
 
     Watcher.parse = parse
     return Watcher
+}, {
+    requires: ['json']
 });
