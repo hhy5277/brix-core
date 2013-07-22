@@ -22,7 +22,7 @@ KISSY.add("brix/base",
         //                 digest();
         //             }
         //         }
-                
+
         //     }
         // },
         initializer: function() {
@@ -262,7 +262,9 @@ KISSY.add("brix/base",
 
             // 根据模板引擎，选择渲染方式
             if (typeof TplEngine === 'function') {
-                return new TplEngine(tpl).render(data)
+                var commands = self.get('commands')
+
+                return new TplEngine(tpl, { commands: commands || {} }).render(data)
             }
             else {
                 return TplEngine.render(tpl, data)
@@ -465,7 +467,7 @@ KISSY.add("brix/base",
         },
         /**
          * 运行fn后增加数据dirty checking
-         * @param  {Function} fn 需要执行的方法    
+         * @param  {Function} fn 需要执行的方法
          */
         dirtyCheck:function(fn){
             var self = this
