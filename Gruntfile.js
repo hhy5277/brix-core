@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
 
-  var PORT = 5000
+  var PORT = 5050
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),

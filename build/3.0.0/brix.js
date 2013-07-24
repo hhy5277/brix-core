@@ -325,7 +325,7 @@ KISSY.add("brix/base",
         //                 digest();
         //             }
         //         }
-                
+
         //     }
         // },
         initializer: function() {
@@ -565,7 +565,9 @@ KISSY.add("brix/base",
 
             // 根据模板引擎，选择渲染方式
             if (typeof TplEngine === 'function') {
-                return new TplEngine(tpl).render(data)
+                var commands = self.get('commands')
+
+                return new TplEngine(tpl, { commands: commands || {} }).render(data)
             }
             else {
                 return TplEngine.render(tpl, data)
@@ -768,7 +770,7 @@ KISSY.add("brix/base",
         },
         /**
          * 运行fn后增加数据dirty checking
-         * @param  {Function|String} fn 需要执行的方法    
+         * @param  {Function|String} fn 需要执行的方法
          */
         dirtyCheck:function(fn){
             var self = this
@@ -1642,13 +1644,12 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var base = S.config('packages')[ns].base
 
             var components = app.config('components')
-
             var imports = app.config('imports')
 
-            // S.config('ignorePackageNameInUri')
-            if (!(new RegExp(ns + '\\/?$')).test(base)) {
-                parts.push(ns)
-            }
+            var pkgs = S.config('packages')
+            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
+
+            if (!pkgsIgnore) parts.push(ns)
 
             parts.push(name)
 
@@ -1911,9 +1912,11 @@ KISSY.add('brix/interface/index', function(S) {
         bxIStoreAttrs: function(str) {
             var attrs = {}
             var storeAttr = function(all, attr, tpl) {
-                attrs[attr] = tpl;
+                if(tpl.indexOf('{{')>-1&&tpl.indexOf('}}')>0){
+                    attrs[attr] = tpl
+                }
             }
-            str.replace(/([^\s]+)?=["'](\{{2,3}[^\}]+\}{2,3})["']/ig, storeAttr)
+            str.replace(/([^\s]+)?=["']([^'"]+)["']/ig, storeAttr)
             return attrs;
         },
         /**
@@ -2053,24 +2056,24 @@ KISSY.add('brix/interface/index', function(S) {
                     }
 
                     nodes.each(function(node) {
-                        var newData = {}
-                        S.each(datakeys, function(item) {
-                            var tempdata = data,
-                                temparr = item.split('.'),
-                                length = temparr.length,
-                                i = 0
-                            while (i !== length) {
-                                tempdata = tempdata[temparr[i]]
-                                i++
-                            }
-                            newData[temparr[length - 1]] = tempdata
-                            tempdata = null
-                        })
-                        S.each(data, function(d, k) {
-                            if (S.isFunction(d)) {
-                                newData[k] = d
-                            }
-                        })
+                        // var newData = {}
+                        // S.each(datakeys, function(item) {
+                        //     var tempdata = data,
+                        //         temparr = item.split('.'),
+                        //         length = temparr.length,
+                        //         i = 0
+                        //     while (i !== length) {
+                        //         tempdata = tempdata[temparr[i]]
+                        //         i++
+                        //     }
+                        //     newData[temparr[length - 1]] = tempdata
+                        //     tempdata = null
+                        // })
+                        // S.each(data, function(d, k) {
+                        //     if (S.isFunction(d)) {
+                        //         newData[k] = d
+                        //     }
+                        // })
 
                         if (o.tpl) {
                             self.fire('beforeRefreshTpl', {
@@ -2083,7 +2086,7 @@ KISSY.add('brix/interface/index', function(S) {
                             if (renderType == 'html') {
                                 node.empty();
                             }
-                            node[renderType](S.trim(self.bxRenderTpl(o.tpl, newData)))
+                            node[renderType](S.trim(self.bxRenderTpl(o.tpl, data)))
 
                             /**
                              * @event afterRefreshTpl
@@ -2097,7 +2100,7 @@ KISSY.add('brix/interface/index', function(S) {
                         }
 
                         S.each(o.attrs, function(v, k) {
-                            var val = S.trim(self.bxRenderTpl(v, newData))
+                            var val = S.trim(self.bxRenderTpl(v, data))
                             if (node[0].tagName.toUpperCase == 'INPUT' && k == "value") {
                                 node.val(val)
                             } else {

@@ -325,7 +325,7 @@ KISSY.add("brix/base",
         //                 digest();
         //             }
         //         }
-                
+
         //     }
         // },
         initializer: function() {
@@ -565,7 +565,9 @@ KISSY.add("brix/base",
 
             // 根据模板引擎，选择渲染方式
             if (typeof TplEngine === 'function') {
-                return new TplEngine(tpl).render(data)
+                var commands = self.get('commands')
+
+                return new TplEngine(tpl, { commands: commands || {} }).render(data)
             }
             else {
                 return TplEngine.render(tpl, data)
@@ -768,7 +770,7 @@ KISSY.add("brix/base",
         },
         /**
          * 运行fn后增加数据dirty checking
-         * @param  {Function|String} fn 需要执行的方法    
+         * @param  {Function|String} fn 需要执行的方法
          */
         dirtyCheck:function(fn){
             var self = this
@@ -1642,13 +1644,12 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var base = S.config('packages')[ns].base
 
             var components = app.config('components')
-
             var imports = app.config('imports')
 
-            // S.config('ignorePackageNameInUri')
-            if (!(new RegExp(ns + '\\/?$')).test(base)) {
-                parts.push(ns)
-            }
+            var pkgs = S.config('packages')
+            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
+
+            if (!pkgsIgnore) parts.push(ns)
 
             parts.push(name)
 

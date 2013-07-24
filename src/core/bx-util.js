@@ -9,13 +9,12 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var base = S.config('packages')[ns].base
 
             var components = app.config('components')
-
             var imports = app.config('imports')
 
-            // S.config('ignorePackageNameInUri')
-            if (!(new RegExp(ns + '\\/?$')).test(base)) {
-                parts.push(ns)
-            }
+            var pkgs = S.config('packages')
+            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
+
+            if (!pkgsIgnore) parts.push(ns)
 
             parts.push(name)
 
