@@ -1605,11 +1605,20 @@ KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
         },
 
         bxRemoteTpl: function(mod, callback) {
+            // The mod value shall be something like `mosaics/dropdown/tpl'
             if (app.config('debug')) {
+                // In debug mode, we use XHR to get the template file.
                 this.bxXhrTpl(mod, callback)
             }
             else {
-                S.use(mod, function(S, tpl) {
+                // In production mode, XHR is futile because the origin tpl.html
+                // file will quite prossibly be different that the original server.
+                //
+                // We use KISSY.use to workaround this.
+                //
+                // bx-remote has the same strategy. So to avoid name collision.
+                // We named the wrapped template js file with an affix `.tpl`.
+                S.use(mod + '.tpl', function(S, tpl) {
                     callback(tpl)
                 })
             }
