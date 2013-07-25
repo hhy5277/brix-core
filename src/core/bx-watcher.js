@@ -74,7 +74,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                 if (S.isArray(last) || S.isObject(last)) {
                     last = JSON.stringify(last)
                 }
-                if (value !== watcher.last) {
+                if (last !== watcher.last) {
                     watcher.callback(value, watcher.last)
                     watcher.last = last
                     clean = false

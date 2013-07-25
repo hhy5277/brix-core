@@ -38,7 +38,7 @@ module.exports = function(grunt) {
         footer: ';\n',
         process: function(src, fpath) {
           // remove the placeholder object
-          if ('src/interface/index' === fpath) return
+          if ('src/interface/index.js' === fpath) return
 
           // rename corresponding interface module
           if (fpath.indexOf('src/interface/if') === 0) {

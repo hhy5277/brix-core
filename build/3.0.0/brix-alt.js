@@ -1748,7 +1748,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                 if (S.isArray(last) || S.isObject(last)) {
                     last = JSON.stringify(last)
                 }
-                if (value !== watcher.last) {
+                if (last !== watcher.last) {
                     watcher.callback(value, watcher.last)
                     watcher.last = last
                     clean = false
@@ -1804,20 +1804,4 @@ KISSY.add('brix/interface/index', function() {
 
     return exports
 });
-KISSY.add('brix/interface/index', function(S, app, IZuomo, IYicai) {
-
-    var INTERFACE_MAP = {
-        zuomo: IZuomo,
-        yicai: IYicai
-    }
-    var name = 'zuomo'  // or yicai
-
-    return INTERFACE_MAP[name]
-
-}, {
-    requires: [
-        'brix/app/config',
-        'brix/interface/if-zuomo',
-        'brix/interface/if-yicai'
-    ]
-});
+;
