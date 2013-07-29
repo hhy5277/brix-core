@@ -126,6 +126,9 @@ KISSY.add('brix/app/config', function(S) {
             }
 
             this.config('namespace', namespace)
+
+            this.bxPackageComponents()
+            this.bxMapComponents()
         },
 
         bxResolveImports: function() {
@@ -138,6 +141,9 @@ KISSY.add('brix/app/config', function(S) {
                     bricks[name] = new Declaration(bricks[name])
                 }
             }
+
+            this.bxPackageImports()
+            this.bxMapImports()
         },
 
         bxMapImports: function() {

@@ -14,7 +14,7 @@ describe('brix/app tagged', function() {
 
     it('can be tagged with timestamp', function(done) {
       app.config({
-        namespace: 'thx.tagged',
+        components: 'thx.tagged',
         timestamp: '20130627'
       })
       app.boot().on('ready', function() {

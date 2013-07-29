@@ -58,7 +58,7 @@ describe('brix/app', function() {
     it('use [bx-app] as default el', function() {
       expect(brick.get('el').hasAttr('bx-app')).to.be(true)
     })
-    
+
     it('fires ready when... ready', function(done) {
       brick.on('ready', function() {
         expect(this).to.be.a(Brick)
@@ -67,7 +67,7 @@ describe('brix/app', function() {
         done()
       })
     })
-    
+
     it('goes into the children of app', function() {
       expect(S.indexOf(brick, app.get('children'))).to.not.be.below(0)
     })
@@ -77,5 +77,46 @@ describe('brix/app', function() {
     })
 
     // For more testcases on Brick, see test.base.js
+  })
+
+  // In magix apps, the app.boot might be used in some kind of misplaced way.
+  // Given HTML like this:
+  //
+  //     <div id="dialog">
+  //       <div bx-name="mux.nb/toppanel"></div>
+  //     </div>
+  //
+  // The #dialog itself is booted by app, so it's gonna be a child of app.
+  // Then the content of #dialog is booted app also. Because the content is
+  // prepared by magix framework, and the latter will call something like:
+  //
+  //     app.boot('[bx-name="mux.nb/toppanel"]')
+  //
+  // Well, logically the brick mux.nb/toppanel should be children of #dialog.
+  // Hence the second app.boot is a misplaced boot. The boot process shall be
+  // started by the brick #dialog itself.
+  //
+  // But we shall support this usage because changing magix logic requires a lot
+  // of work.
+  describe('misplaced #boot', function() {
+    it('shall be children of app regardless of the DOM structure', function() {
+      app.config('components', 'thx.test')
+      app.boot('#fixture2').on('ready', function() {
+        this.get('el').html('<div id="fixture2-vframe"></div>')
+        app.boot({
+          el: '#fixture2-vframe',
+          tpl: '<div bx-name="thx.test/app-foo"></div>'
+        }).on('ready', function() {
+          expect(this.get('children').length).to.be(1)
+
+          var children = app.get('children')
+          var ids = ['fixture1', 'fixture2', 'fixture2-vframe']
+
+          for (var i = 0; i < children.length; i++) {
+            expect(children[i].get('id')).to.be.equal(ids[i])
+          }
+        })
+      })
+    })
   })
 })

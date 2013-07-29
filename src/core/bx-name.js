@@ -168,16 +168,24 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
          */
         bxDirectChildren: function(root, selector) {
             var arr = []
-            var parentName = this.get('name')
+
+            function walk(node) {
+                var children = node.children()
+
+                for (var i = 0; i < children.length; i++) {
+                    var child = children.item(i)
+
+                    if (child.test(selector)) {
+                        arr.push(child)
+                    }
+                    else {
+                        walk(child)
+                    }
+                }
+            }
 
             selector = selector || '[bx-name]'
-            root.all(selector).each(function(ele) {
-                var parent = ele.parent('[bx-name]')
-
-                if (!parent || parent.attr('bx-name') === parentName) {
-                    arr.push(ele)
-                }
-            })
+            walk(root)
 
             return arr
         },

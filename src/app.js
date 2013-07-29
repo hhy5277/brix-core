@@ -6,32 +6,15 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
 
     S.extend(BxApp, S.Base)
 
-    BxApp.ATTRS = {
-        prepared: false
-    }
+    BxApp.ATTRS = {}
 
     S.augment(BxApp, appConfig, {
         boot: function() {
-            this.prepare()
-
             return Brick.boot.apply(this, arguments)
         },
 
         bootStyle: function(fn) {
-            this.prepare()
-
             S.use(this.bxComboStyle().join(','), fn)
-        },
-
-        prepare: function() {
-            // prepare only once.
-            if (!this.get('prepared')) {
-                this.bxMapImports()
-                this.bxMapComponents()
-                this.bxPackageImports()
-                this.bxPackageComponents()
-                this.set('prepared', true)
-            }
         }
     })
 
