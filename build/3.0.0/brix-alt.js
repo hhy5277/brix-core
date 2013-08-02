@@ -11,32 +11,15 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
 
     S.extend(BxApp, S.Base)
 
-    BxApp.ATTRS = {
-        prepared: false
-    }
+    BxApp.ATTRS = {}
 
     S.augment(BxApp, appConfig, {
         boot: function() {
-            this.prepare()
-
             return Brick.boot.apply(this, arguments)
         },
 
         bootStyle: function(fn) {
-            this.prepare()
-
             S.use(this.bxComboStyle().join(','), fn)
-        },
-
-        prepare: function() {
-            // prepare only once.
-            if (!this.get('prepared')) {
-                this.bxMapImports()
-                this.bxMapComponents()
-                this.bxPackageImports()
-                this.bxPackageComponents()
-                this.set('prepared', true)
-            }
         }
     })
 
@@ -178,6 +161,9 @@ KISSY.add('brix/app/config', function(S) {
             }
 
             this.config('namespace', namespace)
+
+            this.bxPackageComponents()
+            this.bxMapComponents()
         },
 
         bxResolveImports: function() {
@@ -190,6 +176,9 @@ KISSY.add('brix/app/config', function(S) {
                     bricks[name] = new Declaration(bricks[name])
                 }
             }
+
+            this.bxPackageImports()
+            this.bxMapImports()
         },
 
         bxMapImports: function() {
@@ -338,6 +327,8 @@ KISSY.add("brix/base",
             if (!self.get('name')) {
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
+            //实例化数据监听器
+            self.set('watcher',new Watcher());
 
             var d = new Promise.Defer()
             var promise = d.promise
@@ -952,14 +943,15 @@ KISSY.add("brix/base",
              */
             parent: {
                 value: false
-            },
+            }
+            // ,
             /**
              * 数据监听器
              * @type {Watcher}
              */
-            watcher:{
-                value : new Watcher()
-            }
+            // watcher:{
+            //     value : new Watcher()
+            // }
         }, Interface.ATTRS)
     }, 'Brick')
 
@@ -1285,9 +1277,9 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var activatedCounter = 0
             var self = this
             var total = nodes.length
-
             if (total === 0) {
                 S.later(function() {
+                    //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
@@ -1297,6 +1289,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 var naked
                 var name
                 var renderedCheck = function() {
+                    //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
                     if (++renderedCounter === total) renderedFn()
                 }
                 var activatedCheck = activatedFn && function() {
@@ -1347,11 +1340,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
 
             if (!S.isFunction(Klass)) {
+
                 // no need to initialize anything.
                 bothFn()
                 return
             }
             if (!(el && DOM.contains(document, el[0]))) {
+                //S.log(parent.get('name')+'_bothFn:')
                 // el is gone
                 bothFn()
                 return
@@ -1403,6 +1398,10 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
+                //如果组件在实例化过程中被销毁了
+                inst.once('destroy',function(){
+                    bothFn();
+                })
             }
             else {
                 bothFn()
@@ -1430,16 +1429,24 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
          */
         bxDirectChildren: function(root, selector) {
             var arr = []
-            var parentName = this.get('name')
+
+            function walk(node) {
+                var children = node.children()
+
+                for (var i = 0; i < children.length; i++) {
+                    var child = children.item(i)
+
+                    if (child.test(selector)) {
+                        arr.push(child)
+                    }
+                    else {
+                        walk(child)
+                    }
+                }
+            }
 
             selector = selector || '[bx-name]'
-            root.all(selector).each(function(ele) {
-                var parent = ele.parent('[bx-name]')
-
-                if (!parent || parent.attr('bx-name') === parentName) {
-                    arr.push(ele)
-                }
-            })
+            walk(root)
 
             return arr
         },
