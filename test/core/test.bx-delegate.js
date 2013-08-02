@@ -31,45 +31,45 @@ describe('brix/base', function() {
       }
     })
 
-    // it('by id', function(done) {
-    //   app
-    //     .boot({
-    //       el: '#fixture1',
-    //       destroyAction: 'none'
-    //     })
-    //     .on('ready', function() {
-    //       var firedCount = 0
+    it('by id', function(done) {
+      app
+        .boot({
+          el: '#fixture1',
+          destroyAction: 'none'
+        })
+        .on('ready', function() {
+          var firedCount = 0
 
-    //       this.delegate('#fixture1-foo', 'fooEvent', function(){
-    //         firedCount++
-    //       })
+          this.delegate('#fixture1-foo', 'fooEvent', function(){
+            firedCount++
+          })
 
-    //       this.find('#fixture1-foo').fire('fooEvent')
+          this.find('#fixture1-foo').fire('fooEvent')
 
-    //       expect(firedCount).to.equal(1)
-    //       done()
-    //     })
-    // })
+          expect(firedCount).to.equal(1)
+          done()
+        })
+    })
 
-    // it('by name', function(done) {
-    //   app
-    //     .boot({
-    //       el: '#fixture2',
-    //       destroyAction: 'none'
-    //     })
-    //     .on('ready', function() {
-    //       var firedCount = 0
+    it('by name', function(done) {
+      app
+        .boot({
+          el: '#fixture2',
+          destroyAction: 'none'
+        })
+        .on('ready', function() {
+          var firedCount = 0
 
-    //       this.delegate('thx.test/delegate-bar', 'barEvent',  function() {
-    //         firedCount++
-    //       })
+          this.delegate('thx.test/delegate-bar', 'barEvent',  function() {
+            firedCount++
+          })
 
-    //       // both #child2 and #grandChild are instances of thx.test/delegate-bar
-    //       this.find('thx.test/delegate-bar').fire('barEvent')
-    //       expect(firedCount).to.equal(1)
-    //       done()
-    //     })
-    // })
+          // both #child2 and #grandChild are instances of thx.test/delegate-bar
+          this.find('thx.test/delegate-bar').fire('barEvent')
+          expect(firedCount).to.equal(1)
+          done()
+        })
+    })
 
     it('complicated', function(done) {
       app

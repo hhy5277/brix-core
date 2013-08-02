@@ -43,7 +43,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
-                S.log('beforeRefreshTpl_'+needRenderCounter)
+                //S.log('beforeRefreshTpl_'+needRenderCounter)
                 needRenderCounter++
                 needActivateCounter++
                 //debugger
@@ -60,11 +60,11 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             })
 
             self.on('afterRefreshTpl', function(e) {
-                 S.log('afterRefreshTpl_xx')
+                //S.log('afterRefreshTpl_xx')
                 self.bxHandleName(
                     e.node, function renderedCheck() {
                         //debugger
-                        S.log('afterRefreshTpl_'+needRenderCounter)
+                        //S.log('afterRefreshTpl_'+needRenderCounter)
                         if (--needRenderCounter === 0) {
                             self.setInternal('rendered', true)
                             self.fire('rendered')

@@ -25,7 +25,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var total = nodes.length
             if (total === 0) {
                 S.later(function() {
-                    S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
+                    //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
@@ -35,7 +35,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 var naked
                 var name
                 var renderedCheck = function() {
-                    S.log(self.get('name')+'_'+renderedCounter+'_'+total)
+                    //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
                     if (++renderedCounter === total) renderedFn()
                 }
                 var activatedCheck = activatedFn && function() {
@@ -92,7 +92,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 return
             }
             if (!(el && DOM.contains(document, el[0]))) {
-                S.log(parent.get('name')+'_bothFn:')
+                //S.log(parent.get('name')+'_bothFn:')
                 // el is gone
                 bothFn()
                 return
