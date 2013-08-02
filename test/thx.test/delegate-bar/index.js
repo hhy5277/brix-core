@@ -12,8 +12,8 @@ KISSY.add("thx.test/delegate-bar/index", function(S, Brick) {
 			'.input31': {
 				click: function(e) {
 					var self = this
-
-					self.setChunkData({ text: '我改变了' + S.guid() })
+					e.brixData.text = '我改变了' + S.guid()
+					//self.setChunkData({ text: '我改变了' + S.guid() })
 
 					self.fire(DelegateBar.FIRES.customEvent, {
 						fireName: 'myfire3'

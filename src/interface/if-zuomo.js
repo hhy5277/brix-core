@@ -9,6 +9,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             var tpl = self.get('tpl')
             //临时存储监听的数据key
             self.bxWatcherKeys = {}
+            //延迟刷新存储的key
+            self.bxRefreshKeys = []
             var tempTpl
             if (tpl) {
                 tpl = self.bxITag(tpl)
@@ -41,23 +43,28 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
+                S.log('beforeRefreshTpl_'+needRenderCounter)
                 needRenderCounter++
                 needActivateCounter++
-
+                //debugger
+                
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
                     for (var i = 0; i < children.length; i++) {
                         var brick = self.find('#' + children[i].attr('id'))
-
+                        //这个组件如果没有触发rendered和ready事件，移除会有问题
                         if (brick) brick.destroy()
                     }
                 }
             })
 
             self.on('afterRefreshTpl', function(e) {
+                 S.log('afterRefreshTpl_xx')
                 self.bxHandleName(
                     e.node, function renderedCheck() {
+                        //debugger
+                        S.log('afterRefreshTpl_'+needRenderCounter)
                         if (--needRenderCounter === 0) {
                             self.setInternal('rendered', true)
                             self.fire('rendered')
@@ -161,7 +168,20 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             var watch = function(key) {
                 watcher.watch(data, key, function() {
-                    self.bxIRefreshTpl([key], self.get('data'), 'html')
+                    if(!S.inArray(key,self.bxRefreshKeys)){
+                        self.bxRefreshKeys.push(key)
+                    }
+                    //这个再看，不知道为什么，这个会引起ready事件的触发出错
+                    if(self.bxLaterTimer){
+                        self.bxLaterTimer.cancel();
+                        delete self.bxLaterTimer
+                    }
+                    self.bxLaterTimer = S.later(function(){
+                        //debugger
+                        self.bxIRefreshTpl(self.bxRefreshKeys, self.get('data'), 'html')
+                        self.bxRefreshKeys = [];
+                    })
+                    
                 })
             }
 

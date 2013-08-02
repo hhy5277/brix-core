@@ -23,9 +23,9 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var activatedCounter = 0
             var self = this
             var total = nodes.length
-
             if (total === 0) {
                 S.later(function() {
+                    S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
@@ -35,6 +35,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 var naked
                 var name
                 var renderedCheck = function() {
+                    S.log(self.get('name')+'_'+renderedCounter+'_'+total)
                     if (++renderedCounter === total) renderedFn()
                 }
                 var activatedCheck = activatedFn && function() {
@@ -85,11 +86,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
 
             if (!S.isFunction(Klass)) {
+
                 // no need to initialize anything.
                 bothFn()
                 return
             }
             if (!(el && DOM.contains(document, el[0]))) {
+                S.log(parent.get('name')+'_bothFn:')
                 // el is gone
                 bothFn()
                 return
@@ -141,6 +144,10 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
+                //如果组件在实例化过程中被销毁了
+                inst.once('destroy',function(){
+                    bothFn();
+                })
             }
             else {
                 bothFn()

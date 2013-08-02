@@ -35,19 +35,28 @@ describe('brix/base', function() {
 
           //selector
           child.get('el').one('.input31').fire('click')
-          expect(showEl.html()).to.equal('我改变了')
+          S.later(function() {
+            expect(showEl.html()).to.equal('我改变了')
 
-          //function
-          var q = self.get('el').one('#q')
-          q.val('logo')
-          q.fire('valuechange')
-          expect(showEl.html()).to.equal('logo')
+            //function
+            var q = self.get('el').one('#q')
+            q.val('logo')
+            q.fire('valuechange')
+            S.later(function() {
+              expect(showEl.html()).to.equal('logo')
 
-          //dirtyCheck
-          child.dirtyCheck("dirtyCheckFoo",'my','test')
-          expect(showEl.html()).to.equal('my_test')
+              //dirtyCheck
+              child.dirtyCheck("dirtyCheckFoo", 'my', 'test')
+              S.later(function() {
+                expect(showEl.html()).to.equal('my_test')
 
-          done()
+                done()
+              })
+
+            })
+
+          })
+
         })
     })
 

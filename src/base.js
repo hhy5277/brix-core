@@ -35,6 +35,8 @@ KISSY.add("brix/base",
             if (!self.get('name')) {
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
+            //实例化数据监听器
+            self.set('watcher',new Watcher());
 
             var d = new Promise.Defer()
             var promise = d.promise
@@ -649,14 +651,15 @@ KISSY.add("brix/base",
              */
             parent: {
                 value: false
-            },
+            }
+            // ,
             /**
              * 数据监听器
              * @type {Watcher}
              */
-            watcher:{
-                value : new Watcher()
-            }
+            // watcher:{
+            //     value : new Watcher()
+            // }
         }, Interface.ATTRS)
     }, 'Brick')
 
