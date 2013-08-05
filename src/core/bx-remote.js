@@ -5,10 +5,6 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
         bxHandleRemote: function(callback) {
             var self = this
             var el = self.get('el')
-            var data = self.get('data')
-
-            if (data) return callback(data)
-
             var remote = el.attr('bx-remote')
 
             if (/^http/.test(remote)) {
