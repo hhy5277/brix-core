@@ -101,11 +101,8 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleTpl(function(tpl) {
-                d.resolve(tpl)
-            })
-
-            d.promise.then(function(tpl) {
                 self.set('tpl', tpl)
+                d.resolve(tpl)
             })
 
             return d.promise
@@ -119,12 +116,9 @@ KISSY.add("brix/base",
             // fn 留作扩展使用
             var fn = self.fire('getTpl', {
                 next: function(tpl) {
+                    self.set('tpl', tpl)
                     d.resolve(tpl)
                 }
-            })
-
-            d.promise.then(function(tpl) {
-                self.set('tpl', tpl)
             })
 
             if (fn) return d.promise
@@ -142,11 +136,8 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleRemote(function(data) {
-                d.resolve(data)
-            })
-
-            d.promise.then(function(data) {
                 self.set('data', data)
+                d.resolve(data)
             })
 
             return d.promise
@@ -162,13 +153,10 @@ KISSY.add("brix/base",
             //开发者获取数据后，调用next方法
             //fn 留作扩展使用
             var fn = self.fire('getData', {
-                next: function(data) {
+                next: function(data) { 
+                    self.set('data', data)
                     d.resolve(data)
                 }
-            })
-
-            d.promise.then(function(data) {
-                self.set('data', data)
             })
 
             if (fn) return d.promise
