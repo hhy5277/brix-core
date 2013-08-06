@@ -152,47 +152,4 @@ describe('brix/base', function() {
       })
     })
   })
-
-
-  describe('#find', function() {
-
-    var rootBrick
-
-    before(function(done) {
-      app.prepare('#fixture9').then(function(brick) {
-        rootBrick = brick
-        done()
-      })
-    })
-
-    it('find by #id', function() {
-      var foo = rootBrick.find('#fixture10')
-
-      expect(foo.get('name')).to.equal('thx.test/find-foo')
-    })
-
-    it('find by family/name', function() {
-      var bar = rootBrick.find('thx.test/find-bar')
-
-      expect(bar.get('id')).to.equal('fixture11')
-    })
-  })
-
-  describe('#where', function() {
-
-    var rootBrick
-
-    before(function(done) {
-      app.prepare('#fixture12').then(function(brick) {
-        rootBrick = brick
-        done()
-      })
-    })
-
-    it('where name equals family/name', function() {
-      var bricks = rootBrick.where({ name: 'thx.test/where-foo' })
-
-      expect(bricks.length).to.be(2)
-    })
-  })
 })
