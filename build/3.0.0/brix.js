@@ -3,32 +3,29 @@
  * 
  * http://github.com/thx/brix-core
  */
-KISSY.add('brix/app', function(S, appConfig, Brick) {
+KISSY.add('brix/app', function(S, appConfig, bxBoot, bxFind, Brick, Base) {
 
     function BxApp() {
-        BxApp.superclass.constructor.call(this)
+        BxApp.superclass.constructor.apply(this, arguments)
     }
 
-    S.extend(BxApp, S.Base)
-
-    BxApp.ATTRS = {}
-
-    S.augment(BxApp, appConfig, {
-        boot: function() {
-            return Brick.boot.apply(this, arguments)
-        },
-
+    S.extend(BxApp, Base)
+    S.augment(BxApp, appConfig, bxBoot, bxFind, {
         bootStyle: function(fn) {
             S.use(this.bxComboStyle().join(','), fn)
         }
     })
 
-    var app = new BxApp()
+    var app = new BxApp({})
+
+    app.config('Brick', Brick)
 
     return app
 }, {
     requires: [
         'brix/app/config',
+        'brix/core/bx-boot',
+        'brix/core/bx-find',
         'brix/base',
         'base'
     ]
@@ -292,7 +289,8 @@ KISSY.add('brix/app/config', function(S) {
 });
 KISSY.add("brix/base",
           function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Watcher, Promise, RichBase, XTemplate) {
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
+                      Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
@@ -301,35 +299,21 @@ KISSY.add("brix/base",
     var DESTROY_ACTIONS = ['remove', 'empty']
 
     var Brick = RichBase.extend({
-        // constructor:function(){
-        //     var self = this;
-        //     //显示的调用父类的构造函数，这句很重要。
-        //     Brick.superclass.constructor.apply(self, arguments)
-        //     var scope = {};
-        //     var constt = self.constructor
-        //     for(var key in constt){
-        //         if(constt.hasOwnProperty(key)&&typeof self[key] === 'function'){
-        //             scope[key] = function(){
-        //                 self[key]();
-        //                 digest();
-        //             }
-        //         }
-
-        //     }
-        // },
         initializer: function() {
             var self = this
-            //这里是否考虑同步执行？
             var el = self.get('el')
 
-            //id和名称都用采用静默更新
+            // id 和 name 都用采用静默更新
             self.set('id', el.attr('id'), { silent : true })
             if (!self.get('name')) {
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
-            //实例化数据监听器
-            self.set('watcher',new Watcher());
 
+            self.bxIgnite()
+        },
+
+        bxIgnite: function() {
+            var self = this
             var d = new Promise.Defer()
             var promise = d.promise
 
@@ -355,6 +339,7 @@ KISSY.add("brix/base",
                 .then(function() {
                     return self.bxRender()
                 })
+                .fail(function(err) { throw err })
 
             if (!self.get('passive')) {
                 promise.then(function() {
@@ -374,6 +359,8 @@ KISSY.add("brix/base",
             S.later(function() {
                 d.resolve(true)
             }, 0)
+
+            return self
         },
 
         bind: noop,
@@ -393,11 +380,10 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleTpl(function(tpl) {
+                if(tpl){
+                   self.set('tpl', tpl)
+                }
                 d.resolve(tpl)
-            })
-
-            d.promise.then(function(tpl) {
-                self.set('tpl', tpl)
             })
 
             return d.promise
@@ -411,12 +397,10 @@ KISSY.add("brix/base",
             // fn 留作扩展使用
             var fn = self.fire('getTpl', {
                 next: function(tpl) {
+                    if(tpl)
+                    self.set('tpl', tpl)
                     d.resolve(tpl)
                 }
-            })
-
-            d.promise.then(function(tpl) {
-                self.set('tpl', tpl)
             })
 
             if (fn) return d.promise
@@ -434,11 +418,11 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleRemote(function(data) {
-                d.resolve(data)
-            })
+                if(data){
+                   self.set('data', data)
+                }
 
-            d.promise.then(function(data) {
-                self.set('data', data)
+                d.resolve(data)
             })
 
             return d.promise
@@ -455,12 +439,9 @@ KISSY.add("brix/base",
             //fn 留作扩展使用
             var fn = self.fire('getData', {
                 next: function(data) {
+                    if (data) self.set('data', data)
                     d.resolve(data)
                 }
-            })
-
-            d.promise.then(function(data) {
-                self.set('data', data)
             })
 
             if (fn) return d.promise
@@ -711,10 +692,6 @@ KISSY.add("brix/base",
             self.set('destroyed', true)
         },
 
-        boot: function() {
-            return this.constructor.boot.apply(this, arguments)
-        },
-
         /**
          * 扩展组件的事件触发，或通知到所有父组件
          * @param  {String}  type       要触发的自定义事件名称
@@ -758,6 +735,8 @@ KISSY.add("brix/base",
             }
 
             self.on(eventType, wrap, context)
+
+            return self
         },
         /**
          * 运行fn后增加数据dirty checking
@@ -765,21 +744,20 @@ KISSY.add("brix/base",
          */
         dirtyCheck:function(fn){
             var self = this
-            var watcher = self.get('watcher')
 
             if(typeof fn !== 'function'){
                 fn = self[fn];
             }
             if(fn){
                 fn.apply(self,Array.prototype.slice.call(arguments,1))
-                watcher.digest()
+                self.digest()
             }
             else{
                 throw new Error('没有找到对应的函数')
             }
         }
     }, {
-        ATTRS: S.mix({
+        ATTRS: S.mix(S.mix({
             /**
              * 模板
              * @cfg {Object}
@@ -944,67 +922,11 @@ KISSY.add("brix/base",
             parent: {
                 value: false
             }
-            // ,
-            /**
-             * 数据监听器
-             * @type {Watcher}
-             */
-            // watcher:{
-            //     value : new Watcher()
-            // }
-        }, Interface.ATTRS)
+        }, Interface.ATTRS),Watcher.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
 
-    S.mix(Brick, {
-        boot: function(el, data) {
-            var options
-
-            if (S.isPlainObject(el)) {
-                // .boot({ el: el, tpl: tpl })
-                if (el.el) {
-                    data = null
-                    options = el
-                }
-                else {
-                    options = {
-                        data: el,
-                        el: '[bx-app]'
-                    }
-                }
-            }
-            else if (S.isString(el)) {
-                options = {
-                    el: el,
-                    data: data
-                }
-            }
-            else {
-                options = {}
-            }
-            el = options.el
-
-            if (!el || S.isString(el)) el = S.one(el || '[bx-app]')
-            if (!el) throw new Error('Cannot find el!')
-
-            options.el = el
-            options.parent = this
-
-            var children = this.get('children')
-
-            if (!children) {
-                children = []
-                this.set('children', children)
-            }
-
-            var brick = new Brick(options)
-
-            children.push(brick)
-
-            return brick
-        }
-    })
 
     return Brick
 }, {
@@ -1018,6 +940,8 @@ KISSY.add("brix/base",
         'brix/core/bx-delegate',
         'brix/core/bx-config',
         'brix/core/bx-remote',
+        'brix/core/bx-boot',
+        'brix/core/bx-find',
         'brix/core/bx-watcher',
         'promise',
         'rich-base',
@@ -1026,6 +950,111 @@ KISSY.add("brix/base",
         'event',
         'sizzle'
     ]
+});
+KISSY.add('brix/core/bx-boot', function(S, Promise) {
+
+    var exports = {
+        bxBootOptions: function(el, data) {
+            var options
+
+            // Boot as child:
+            //
+            //     .boot({ el: el, tpl: tpl, data: data })
+            //
+            // Boot self:
+            //
+            //     .boot({ data: data })
+            //
+            if (S.isPlainObject(el)) {
+                data = null
+                options = el
+            }
+            // .boot('#page')
+            else if (S.isString(el)) {
+                options = {
+                    el: el,
+                    data: data
+                }
+            }
+            // .boot()
+            else {
+                options = {}
+            }
+            el = options.el || '[bx-app]'
+
+            if (S.isString(el)) options.el = el = S.one(el)
+            if (el) options.parent = this
+
+            el = options.el
+
+            // We are booting this brick. There's no reason that it remains deferred.
+            el.removeAttr('bx-defer')
+
+            return options
+        },
+
+        bxBootName: function(el) {
+            var name = el.attr('bx-name')
+            var naked = el.hasAttr('bx-naked') && (el.attr('bx-naked') || 'all')
+
+            if (name && naked !== 'all' && naked !== 'js') {
+                name = name.split('/').length > 2 ? name : (name + '/index')
+            }
+            else {
+                name = 'brix/base'
+            }
+
+            return name
+        },
+
+        bxBoot: function(options, Klass) {
+            var children = this.get('children')
+            var el = options.el
+
+            if (!children) {
+                children = []
+                this.set('children', children)
+            }
+
+            var brick = this.find('#' + el.attr('id'))
+
+            if (brick) brick.destroy()
+
+            brick = new Klass(options)
+            children.push(brick)
+
+            return brick
+        },
+
+        boot: function(el, data) {
+            var self = this
+            var options = self.bxBootOptions(el, data)
+            var d = new Promise.Defer()
+            var name = this.bxBootName(options.el)
+
+            S.use(name, function(S, Klass) {
+                d.resolve(self.bxBoot(options, Klass))
+            })
+
+            return d.promise
+        },
+
+        prepare: function(el, data) {
+            var d = new Promise.Defer()
+
+            this.boot(el, data).then(function(brick) {
+                brick.once('ready', function() {
+                    d.resolve(this)
+                })
+            })
+
+            return d.promise
+        }
+    }
+
+    return exports
+}, {
+    requires: ['promise']
 });
 KISSY.add('brix/core/bx-config', function(S) {
 
@@ -1139,58 +1168,41 @@ KISSY.add('brix/core/bx-event', function(S) {
         bxDelegateMap: function(eventsMap) {
             var self = this
             var el = this.get('el')
-            var watcher = this.get('watcher')
-            //var bxEvents = this.get('bx-events')
             var Event = S.Event
             var fnc
-            var fn
+            var fn;
 
             function wrapFn(fnc) {
                 return function() {
                     //增加brixData，方便外部直接获取
                     arguments[0].brixData = self.get('data')
-                    
+
                     fnc.apply(this, arguments)
-                    watcher.digest()
+                    self.digest()
                 }
             }
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
-                //if (typeof events !== 'function') {
-                    for (var type in events) {
-                        fnc = events[type]
-                        fnc.handle = wrapFn(fnc)
+                for (var type in events) {
+                    fnc = events[type]
+                    fnc.handle = wrapFn(fnc)
 
-                        fn = fnc.handle
+                    fn = fnc.handle
 
-                        if (sel === 'self') {
-                            el.on(type, fn, this)
-                        } else if (sel === 'window') {
-                            Event.on(window, type, fn, this)
-                        } else if (sel === 'body') {
-                            Event.on('body', type, fn, this)
-                        } else if (sel === 'document') {
-                            Event.on(document, type, fn, this)
-                        } else {
-                            el.delegate(type, sel, fn, this)
-                        }
+                    if (sel === 'self') {
+                        el.on(type, fn, this)
+                    } else if (sel === 'window') {
+                        Event.on(window, type, fn, this)
+                    } else if (sel === 'body') {
+                        Event.on('body', type, fn, this)
+                    } else if (sel === 'document') {
+                        Event.on(document, type, fn, this)
+                    } else {
+                        el.delegate(type, sel, fn, this)
                     }
-                // } else {
-                //     if (bxEvents[sel]) {
-                //         for (var i = 0; i < bxEvents[sel].length; i++) {
-                //             fnc = events
-                //             fnc.handle = (function(fnc) {
-                //                 return function() {
-                //                     fnc.apply(this, arguments)
-                //                     watcher.digest()
-                //                 }
-                //             })(fnc)
-                //             var fn = fnc.handle
-                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').on(bxEvents[sel][i], fn, this)
-                //         }
-                //     }
-                // }
+                }
+
             }
         },
 
@@ -1210,40 +1222,29 @@ KISSY.add('brix/core/bx-event', function(S) {
 
         bxUndelegateMap: function(eventsMap) {
             var el = this.get('el')
-            //var bxEvents = this.get('bx-events')
             var Event = S.Event
             var fn
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
-                //if (typeof events !== 'function') {
-                    for (var type in events) {
-                        fn = events[type].handle
+                for (var type in events) {
+                    fn = events[type].handle
 
-                        if (sel === 'self') {
-                            el.detach(type, fn, this)
-                        } else if (sel === 'window') {
-                            Event.detach(window, type, fn, this)
-                        } else if (sel === 'body') {
-                            Event.detach('body', type, fn, this)
-                        } else if (sel === 'document') {
-                            Event.detach(document, type, fn, this)
-                        } else {
-                            el.undelegate(type, sel, fn, this)
-                        }
-
-                        fn = null;
-                        delete events[type].handle
+                    if (sel === 'self') {
+                        el.detach(type, fn, this)
+                    } else if (sel === 'window') {
+                        Event.detach(window, type, fn, this)
+                    } else if (sel === 'body') {
+                        Event.detach('body', type, fn, this)
+                    } else if (sel === 'document') {
+                        Event.detach(document, type, fn, this)
+                    } else {
+                        el.undelegate(type, sel, fn, this)
                     }
-                // } else {
-                //     if (bxEvents[sel]) {
-                //         for (var i = 0; i < bxEvents[sel].length; i++) {
-                //             var fn = events.handle
-                //             el.one('[bx-' + bxEvents[sel][i] + '=' + sel + ']').detach(bxEvents[sel][i], fn, this)
-                //         }
-                //     }
-                // }
 
+                    fn = null;
+                    delete events[type].handle
+                }
             }
         }
     }
@@ -1252,32 +1253,73 @@ KISSY.add('brix/core/bx-event', function(S) {
 }, {
     requires: ['event']
 });
+KISSY.add('brix/core/bx-find', function() {
+
+    var exports = {
+        find: function(name) {
+            var children = this.get('children')
+            var id
+
+            if (name.charAt(0) === '#') {
+                id = name.substr(1)
+                name = null
+            }
+
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+
+                if (child.get('id') === id ||
+                    child.get('name') === name) {
+
+                    return child
+                }
+            }
+        },
+
+        where: function(opts) {
+            var children = this.get('children')
+            var result =[]
+            var name = opts.name
+            var selector = opts.selector
+
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+
+                if (child.get('name') === name) result.push(child)
+                if (selector && child.get('el').test(selector)) result.push(child)
+            }
+
+            return result
+        }
+    }
+
+    return exports
+});
 KISSY.add('brix/core/bx-name', function(S, Node) {
 
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
-            var children = this.get('children') || []
-            var i, j
-            var node
+            var self = this
 
-            // Some of the child nodes might be instantiated already.
-            // Remove them out of the nodes array that will be processed.
-            for (i = nodes.length - 1; i >= 0; i--) {
-                node = nodes[i]
+            for (var i = nodes.length - 1; i >= 0; i--) {
+                var node = nodes[i]
 
-                for (j = 0; j < children.length; j++) {
-                    if (children[j].get('id') === node.attr('id')) {
-                        nodes.splice(i, 1)
-                    }
+                // If the node is deferred, do not instantiate it.
+                if (node.hasAttr('bx-defer')) {
+                    nodes.splice(i, 1)
+                }
+                else {
+                    // Some of the child nodes might be instantiated already.
+                    // Remove them out of the nodes array that will be processed.
+                    var brick = self.find('#' + node.attr('id'))
+
+                    if (brick) nodes.splice(i, 1)
                 }
             }
-            var renderedCounter = 0
-            var activatedCounter = 0
-            var self = this
-            var total = nodes.length
-            if (total === 0) {
+
+            if (nodes.length === 0) {
                 S.later(function() {
                     //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
@@ -1285,50 +1327,57 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 }, 0)
             }
             else {
-                var klasses = []
-                var naked
-                var name
-                var renderedCheck = function() {
-                    //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
-                    if (++renderedCounter === total) renderedFn()
-                }
-                var activatedCheck = activatedFn && function() {
-                    if (++activatedCounter === total) activatedFn()
-                }
-
-                for (i = 0; i < total; i++) {
-                    node = Node(nodes[i])
-                    naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
-                    name = node.attr('bx-name')
-
-                    if (naked === 'js' || naked === 'all') {
-                        klasses[i] = 'brix/base'
-                    }
-                    // might be
-                    //
-                    // - mosaics/wangwang/
-                    // - mosaics/dropdown/large
-                    // - mosaics/calendar/twin
-                    //
-                    else if (name.split('/').length > 2) {
-                        klasses[i] = name
-                    }
-                    else {
-                        klasses[i] = name + '/index'
-                    }
-                }
-
-                KISSY.use(klasses.join(','), function(S) {
-                    var Klasses = S.makeArray(arguments)
-
-                    // remove the S in the arguments array
-                    Klasses.shift()
-
-                    for (var i = 0; i < Klasses.length; i++) {
-                        self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
-                    }
-                })
+                self.bxUseModules(nodes, renderedFn, activatedFn)
             }
+        },
+
+        bxUseModules: function(nodes, renderedFn, activatedFn) {
+            var self = this
+            var renderedCounter = 0
+            var activatedCounter = 0
+            var total = nodes.length
+            var klasses = []
+            var renderedCheck = function() {
+                //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
+                if (++renderedCounter === total) renderedFn()
+            }
+            var activatedCheck = activatedFn && function() {
+                if (++activatedCounter === total) activatedFn()
+            }
+
+            for (var i = 0; i < total; i++) {
+                var node = Node(nodes[i])
+                var naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+                var name = node.attr('bx-name')
+
+                if (naked === 'js' || naked === 'all') {
+                    klasses[i] = 'brix/base'
+                }
+                // the name might be
+                //
+                // - mosaics/wangwang
+                // - mosaics/wangwang/
+                // - mosaics/dropdown/large
+                // - mosaics/calendar/twin
+                //
+                else if (name.split('/').length > 2) {
+                    klasses[i] = name
+                }
+                else {
+                    klasses[i] = name + '/index'
+                }
+            }
+
+            KISSY.use(klasses.join(','), function(S) {
+                var Klasses = S.makeArray(arguments)
+
+                // remove the S in the arguments array
+                Klasses.shift()
+
+                for (var i = 0; i < Klasses.length; i++) {
+                    self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
+                }
+            })
         },
 
         bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
@@ -1340,16 +1389,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
 
             if (!S.isFunction(Klass)) {
-
                 // no need to initialize anything.
-                bothFn()
-                return
+                return bothFn()
             }
             if (!(el && DOM.contains(document, el[0]))) {
                 //S.log(parent.get('name')+'_bothFn:')
                 // el is gone
-                bothFn()
-                return
+                return bothFn()
             }
             var opts = parent.bxHandleConfig(el, Klass)
             var tag = el.attr('bx-tag')
@@ -1398,10 +1444,8 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
-                //如果组件在实例化过程中被销毁了
-                inst.once('destroy',function(){
-                    bothFn();
-                })
+                // 如果组件在实例化过程中被销毁了
+                inst.once('destroy', bothFn)
             }
             else {
                 bothFn()
@@ -1449,21 +1493,6 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             walk(root)
 
             return arr
-        },
-
-        find: function(name) {
-            var children = this.get('children')
-            var isName = name.indexOf('/') > 0
-            var isId = name.charAt(0) === '#'
-
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i]
-
-                if (isName && child.get('name') === name)
-                    return child
-                else if (isId && '#' + child.get('id') === name)
-                    return child
-            }
         }
     }
 
@@ -1483,10 +1512,6 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
         bxHandleRemote: function(callback) {
             var self = this
             var el = self.get('el')
-            var data = self.get('data')
-
-            if (data) return callback(data)
-
             var remote = el.attr('bx-remote')
 
             if (/^http/.test(remote)) {
@@ -1509,7 +1534,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 }
             }
             else {
-                return callback()
+                return callback(self.get('data'))
             }
         },
 
@@ -1689,97 +1714,101 @@ KISSY.add('brix/core/bx-util', function(S, app) {
     ]
 });
 KISSY.add('brix/core/bx-watcher', function(S, JSON) {
-    var memo = {}
+    var memo = {};
 
-        function parse(expression) {
-            var fn = memo[expression]
+    function parse(expression) {
+        var fn = memo[expression]
 
-            if (!fn) {
-                /*jshint -W054 */
+        if (!fn) {
+            /*jshint -W054 */
 
-                //fn = memo[expression] = new Function('context', 'locals', 'with(context){ return ' + expression + '; }')
-                fn = memo[expression] = new Function('context', 'locals', 'with(context){if(typeof ' + expression + ' ==="undefined"){return}else{return ' + expression + '}}')
-            }
-
-            return fn
+            //fn = memo[expression] = new Function('context', 'locals', 'with(context){ return ' + expression + '; }')
+            fn = memo[expression] = new Function('context', 'locals', 'with(context){if(typeof ' + expression + ' ==="undefined"){return}else{return ' + expression + '}}')
         }
 
-        function unwatch(watcher, watchers) {
-            return function() {
-                var index = watchers.indexOf(watcher)
-
-                if (index > -1) {
-                    watchers.splice(index, 1)
-                }
-            }
-        }
-
-        function Watcher() {
-            this.watchers = []
-            this.checking = false
-        }
-
-    Watcher.prototype.watch = function(context, expression, callback) {
-        var watcher
-
-        var value = typeof expression === 'function' ? function() {
-                return expression(context)
-            } : parse(expression);
-
-        var last = value(context)
-
-        if (S.isArray(last) || S.isObject(last)) {
-            last = JSON.stringify(last)
-        }
-        watcher = {
-            value: value,
-            context: context,
-            last: last,
-            callback: callback,
-            expression: expression
-        };
-        this.watchers.push(watcher)
-
-        return unwatch(watcher, this.watchers)
-    };
-
-    Watcher.prototype.digest = function() {
-        var clean, index, length, watcher, value, iterations = 10
-
-        if (this.checking) {
-            throw new Error('Digest phase is already started')
-        }
-
-        this.checking = true
-
-        do {
-            clean = true
-            index = -1
-            length = this.watchers.length
-
-            while (++index < length) {
-                watcher = this.watchers[index]
-                value = watcher.value(watcher.context)
-                var last = value
-                if (S.isArray(last) || S.isObject(last)) {
-                    last = JSON.stringify(last)
-                }
-                if (last !== watcher.last) {
-                    watcher.callback(value, watcher.last)
-                    watcher.last = last
-                    clean = false
-                }
-            }
-        } while (!clean && iterations--)
-
-        if (!iterations) {
-            throw new Error('Too much iterations per digest');
-        }
-
-        this.checking = false
+        return fn
     }
 
-    Watcher.parse = parse
+    function unwatch(watcher, watchers) {
+        return function() {
+            var index = watchers.indexOf(watcher)
+
+            if (index > -1) {
+                watchers.splice(index, 1)
+            }
+        }
+    }
+    var Watcher = {
+        watch: function(context, expression, callback) {
+            var watcher
+            var watchers = this.get('watchers');
+
+            var value = typeof expression === 'function' ? function() {
+                    return expression(context)
+                } : parse(expression);
+
+            var last = value(context)
+
+            if (S.isArray(last) || S.isObject(last)) {
+                last = JSON.stringify(last)
+            }
+            watcher = {
+                value: value,
+                context: context,
+                last: last,
+                callback: callback,
+                expression: expression
+            };
+            watchers.push(watcher)
+
+            return unwatch(watcher, watchers)
+        },
+        digest: function() {
+            //临时状态标识
+            if (this.bxWatcherChecking) {
+                throw new Error('Digest phase is already started')
+            }
+            this.bxWatcherChecking = true
+            var clean, index, length, watcher, value, iterations = 10
+            var watchers = this.get('watchers');
+            do {
+                clean = true
+                index = -1
+                length = watchers.length
+
+                while (++index < length) {
+                    watcher = watchers[index]
+                    value = watcher.value(watcher.context)
+                    var last = value
+                    //是否object或者array的标识
+                    var flg = false
+                    if (S.isArray(last) || S.isObject(last)) {
+                        last = JSON.stringify(last)
+                        flg = true;
+                    }
+                    if (last !== watcher.last) {
+                        //watcher.callback(value, watcher.last)
+                        watcher.callback(value)
+                        watcher.last = last
+                        clean = false
+                    }
+                }
+            } while (!clean && iterations--)
+
+            if (!iterations) {
+                throw new Error('Too much iterations per digest');
+            }
+
+            delete this.bxWatcherChecking;
+        },
+        parse: parse
+    }
+
+    Watcher.ATTRS = {
+        watchers: {
+            value: []
+        }
+    }
     return Watcher
 }, {
     requires: ['json']
@@ -1949,11 +1978,10 @@ KISSY.add('brix/interface/index', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var watcher = self.get('watcher')
             var data = self.get('data')
 
             var watch = function(key) {
-                watcher.watch(data, key, function() {
+                self.watch(data, key, function() {
                     if(!S.inArray(key,self.bxRefreshKeys)){
                         self.bxRefreshKeys.push(key)
                     }
