@@ -48,15 +48,11 @@ describe('brix/app', function() {
     var brick
 
     before(function() {
-      brick = app.boot()
+      brick = app.boot('#fixture1')
     })
 
     it('return a new brick', function() {
       expect(brick).to.be.a(Brick)
-    })
-
-    it('use [bx-app] as default el', function() {
-      expect(brick.get('el').hasAttr('bx-app')).to.be(true)
     })
 
     it('fires ready when... ready', function(done) {
@@ -110,12 +106,51 @@ describe('brix/app', function() {
           expect(this.get('children').length).to.be(1)
 
           var children = app.get('children')
-          var ids = ['fixture1', 'fixture2', 'fixture2-vframe']
+          var ids = ['fixture1', 'fixture2', 'fixture3', 'fixture2-vframe']
 
           for (var i = 0; i < children.length; i++) {
-            expect(children[i].get('id')).to.be.equal(ids[i])
+            expect(ids).to.contain(children[i].get('id'))
           }
         })
+      })
+    })
+  })
+
+  // Sometimes we need to boot nodes likes this:
+  //
+  //     <div id="page1" bx-name="thx.test/app-boot-async"></div>
+  //
+  // which has a corresponding constructor extended from Brick. In this case,
+  // We shall boot this node until the KISSY module `thx.test/app-boot-async/index`
+  // is ready.
+  //
+  //     KISSY.use('thx.test/app-boo-async/index', function(S, AsyncBrick) {
+  //         app.boot('#page1')
+  //     })
+  //
+  // brix/app solves this problem by returning an promise via app.bootAsync call.
+  //
+  //     app.bootAsync('#page1').then(function(page) {
+  //         // now you've got the page, which is an instance of class thx.test/app-boot-async
+  //     })
+  //
+  describe('#bootAsync', function() {
+    var brick
+
+    before(function(done) {
+      app.config('components', 'thx.test')
+      app.bootAsync('#fixture3').then(function(b) {
+        brick = b
+        done()
+      })
+    })
+
+    it('shall prepare the constructor of the brick before booting', function(done) {
+      expect(brick.get('name')).to.equal('thx.test/app-boot-async')
+      brick.on('ready', function() {
+        expect(this.get('id')).to.equal('fixture3')
+        expect(this.get('foo')).to.equal(1)
+        done()
       })
     })
   })

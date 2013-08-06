@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -6,16 +7,28 @@
 </head>
 <body>
   <div id="mocha"></div>
-  <div id="fixture0"></div>
-  <div id="fixture1"></div>
-  <div id="fixture2"></div>
-  <div id="fixture3"></div>
-  <div id="fixture4" style="display:none"></div>
+  <div id="fixture0">
+    <div id="fixture1"></div>
+    <div id="fixture2"></div>
+    <div id="fixture3"></div>
+    <div id="fixture4" style="display:none"></div>
+  </div>
   <div id="fixture5"></div>
   <div id="fixture6">
     <div bx-name="thx.test/promise-foo">
       <div bx-name="thx.test/promise-bar" bx-naked></div>
     </div>
+  </div>
+  <div id="fixture7">
+    <div id="fixture8" bx-name="thx.test/base-boot-async" bx-defer></div>
+  </div>
+  <div id="fixture9">
+    <div id="fixture10" bx-name="thx.test/find-foo" bx-naked></div>
+    <div id="fixture11" bx-name="thx.test/find-bar" bx-naked></div>
+  </div>
+  <div id="fixture12">
+    <div bx-name="thx.test/where-foo" bx-naked></div>
+    <div bx-name="thx.test/where-foo" bx-naked></div>
   </div>
   <script src="http://a.tbcdn.cn/s/kissy/1.3.0/seed.js"></script>
   <script src="expect.js"></script>

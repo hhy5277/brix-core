@@ -4,26 +4,25 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
         bxHandleName: function(root, renderedFn, activatedFn) {
             root = Node(root)
             var nodes = this.bxDirectChildren(root)
-            var children = this.get('children') || []
-            var i, j
-            var node
+            var self = this
 
-            // Some of the child nodes might be instantiated already.
-            // Remove them out of the nodes array that will be processed.
-            for (i = nodes.length - 1; i >= 0; i--) {
-                node = nodes[i]
+            for (var i = nodes.length - 1; i >= 0; i--) {
+                var node = nodes[i]
 
-                for (j = 0; j < children.length; j++) {
-                    if (children[j].get('id') === node.attr('id')) {
-                        nodes.splice(i, 1)
-                    }
+                // If the node is deferred, do not instantiate it.
+                if (node.hasAttr('bx-defer')) {
+                    nodes.splice(i, 1)
+                }
+                else {
+                    // Some of the child nodes might be instantiated already.
+                    // Remove them out of the nodes array that will be processed.
+                    var brick = self.find('#' + node.attr('id'))
+
+                    if (brick) nodes.splice(i, 1)
                 }
             }
-            var renderedCounter = 0
-            var activatedCounter = 0
-            var self = this
-            var total = nodes.length
-            if (total === 0) {
+
+            if (nodes.length === 0) {
                 S.later(function() {
                     //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
@@ -31,50 +30,57 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 }, 0)
             }
             else {
-                var klasses = []
-                var naked
-                var name
-                var renderedCheck = function() {
-                    //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
-                    if (++renderedCounter === total) renderedFn()
-                }
-                var activatedCheck = activatedFn && function() {
-                    if (++activatedCounter === total) activatedFn()
-                }
-
-                for (i = 0; i < total; i++) {
-                    node = Node(nodes[i])
-                    naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
-                    name = node.attr('bx-name')
-
-                    if (naked === 'js' || naked === 'all') {
-                        klasses[i] = 'brix/base'
-                    }
-                    // might be
-                    //
-                    // - mosaics/wangwang/
-                    // - mosaics/dropdown/large
-                    // - mosaics/calendar/twin
-                    //
-                    else if (name.split('/').length > 2) {
-                        klasses[i] = name
-                    }
-                    else {
-                        klasses[i] = name + '/index'
-                    }
-                }
-
-                KISSY.use(klasses.join(','), function(S) {
-                    var Klasses = S.makeArray(arguments)
-
-                    // remove the S in the arguments array
-                    Klasses.shift()
-
-                    for (var i = 0; i < Klasses.length; i++) {
-                        self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
-                    }
-                })
+                self.bxUseModules(nodes, renderedFn, activatedFn)
             }
+        },
+
+        bxUseModules: function(nodes, renderedFn, activatedFn) {
+            var self = this
+            var renderedCounter = 0
+            var activatedCounter = 0
+            var total = nodes.length
+            var klasses = []
+            var renderedCheck = function() {
+                //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
+                if (++renderedCounter === total) renderedFn()
+            }
+            var activatedCheck = activatedFn && function() {
+                if (++activatedCounter === total) activatedFn()
+            }
+
+            for (var i = 0; i < total; i++) {
+                var node = Node(nodes[i])
+                var naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+                var name = node.attr('bx-name')
+
+                if (naked === 'js' || naked === 'all') {
+                    klasses[i] = 'brix/base'
+                }
+                // the name might be
+                //
+                // - mosaics/wangwang
+                // - mosaics/wangwang/
+                // - mosaics/dropdown/large
+                // - mosaics/calendar/twin
+                //
+                else if (name.split('/').length > 2) {
+                    klasses[i] = name
+                }
+                else {
+                    klasses[i] = name + '/index'
+                }
+            }
+
+            KISSY.use(klasses.join(','), function(S) {
+                var Klasses = S.makeArray(arguments)
+
+                // remove the S in the arguments array
+                Klasses.shift()
+
+                for (var i = 0; i < Klasses.length; i++) {
+                    self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
+                }
+            })
         },
 
         bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
@@ -86,16 +92,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             }
 
             if (!S.isFunction(Klass)) {
-
                 // no need to initialize anything.
-                bothFn()
-                return
+                return bothFn()
             }
             if (!(el && DOM.contains(document, el[0]))) {
                 //S.log(parent.get('name')+'_bothFn:')
                 // el is gone
-                bothFn()
-                return
+                return bothFn()
             }
             var opts = parent.bxHandleConfig(el, Klass)
             var tag = el.attr('bx-tag')
@@ -144,10 +147,8 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
-                //如果组件在实例化过程中被销毁了
-                inst.once('destroy',function(){
-                    bothFn();
-                })
+                // 如果组件在实例化过程中被销毁了
+                inst.once('destroy', bothFn)
             }
             else {
                 bothFn()
@@ -199,17 +200,38 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
         find: function(name) {
             var children = this.get('children')
-            var isName = name.indexOf('/') > 0
-            var isId = name.charAt(0) === '#'
+            var id
+
+            if (name.charAt(0) === '#') {
+                id = name.substr(1)
+                name = null
+            }
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                if (isName && child.get('name') === name)
+                if (child.get('id') === id ||
+                    child.get('name') === name) {
+
                     return child
-                else if (isId && '#' + child.get('id') === name)
-                    return child
+                }
             }
+        },
+
+        where: function(opts) {
+            var children = this.get('children')
+            var result =[]
+            var name = opts.name
+            var selector = opts.selector
+
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+
+                if (child.get('name') === name) result.push(child)
+                if (selector && child.get('el').test(selector)) result.push(child)
+            }
+
+            return result
         }
     }
 
