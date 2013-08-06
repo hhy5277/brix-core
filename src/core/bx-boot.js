@@ -1,6 +1,4 @@
-KISSY.add('brix/core/bx-boot', function(S, Promise, app) {
-
-    var Brick
+KISSY.add('brix/core/bx-boot', function(S, Promise) {
 
     var exports = {
         bxBootOptions: function(el, data) {
@@ -29,12 +27,31 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, app) {
             else {
                 options = {}
             }
-            el = options.el
+            el = options.el || '[bx-app]'
 
             if (S.isString(el)) options.el = el = S.one(el)
             if (el) options.parent = this
 
+            el = options.el
+
+            // We are booting this brick. There's no reason that it remains deferred.
+            el.removeAttr('bx-defer')
+
             return options
+        },
+
+        bxBootName: function(el) {
+            var name = el.attr('bx-name')
+            var naked = el.hasAttr('bx-naked') && (el.attr('bx-naked') || 'all')
+
+            if (name && naked !== 'all' && naked !== 'js') {
+                name = name.split('/').length > 2 ? name : (name + '/index')
+            }
+            else {
+                name = 'brix/base'
+            }
+
+            return name
         },
 
         bxBoot: function(options, Klass) {
@@ -48,10 +65,10 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, app) {
 
             var brick = this.find('#' + el.attr('id'))
 
-            if (!brick) {
-                brick = new Klass(options)
-                children.push(brick)
-            }
+            if (brick) brick.destroy()
+
+            brick = new Klass(options)
+            children.push(brick)
 
             return brick
         },
@@ -59,40 +76,23 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, app) {
         boot: function(el, data) {
             var self = this
             var options = self.bxBootOptions(el, data)
-
-            if (options.el) {
-                return self.bxBoot(options, Brick || app.config('Brick'))
-            }
-            else if (self.get('defer')) {
-                return self.bxIgnite()
-            }
-            else {
-                return self
-            }
-        },
-
-        bootAsync: function(el, data) {
-            var self = this
-            var options = this.bxBootOptions(el, data)
             var d = new Promise.Defer()
-
-            el = options.el
-
-            // We are booting this brick. There's no reason that it remains deferred.
-            el.removeAttr('bx-defer')
-
-            var name = el.attr('bx-name')
-            var naked = el.hasAttr('bx-naked') && (el.attr('bx-naked') || 'all')
-
-            if (name && naked !== 'all' && naked !== 'js') {
-                name = name.split('/').length > 2 ? name : (name + '/index')
-            }
-            else {
-                name = 'brix/base'
-            }
+            var name = this.bxBootName(options.el)
 
             S.use(name, function(S, Klass) {
                 d.resolve(self.bxBoot(options, Klass))
+            })
+
+            return d.promise
+        },
+
+        prepare: function(el, data) {
+            var d = new Promise.Defer()
+
+            this.boot(el, data).then(function(brick) {
+                brick.once('ready', function() {
+                    d.resolve(this)
+                })
             })
 
             return d.promise
@@ -101,5 +101,5 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, app) {
 
     return exports
 }, {
-    requires: ['promise', 'brix/app/config']
+    requires: ['promise']
 })

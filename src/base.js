@@ -1,6 +1,6 @@
 KISSY.add("brix/base",
           function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot,
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
                       Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
@@ -20,7 +20,7 @@ KISSY.add("brix/base",
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
 
-            if (!self.get('defer')) self.bxIgnite()
+            self.bxIgnite()
         },
 
         bxIgnite: function() {
@@ -50,6 +50,7 @@ KISSY.add("brix/base",
                 .then(function() {
                     return self.bxRender()
                 })
+                .fail(function(err) { throw err })
 
             if (!self.get('passive')) {
                 promise.then(function() {
@@ -402,10 +403,6 @@ KISSY.add("brix/base",
             self.set('destroyed', true)
         },
 
-        boot: function() {
-            return this.constructor.boot.apply(this, arguments)
-        },
-
         /**
          * 扩展组件的事件触发，或通知到所有父组件
          * @param  {String}  type       要触发的自定义事件名称
@@ -449,6 +446,8 @@ KISSY.add("brix/base",
             }
 
             self.on(eventType, wrap, context)
+
+            return self
         },
         /**
          * 运行fn后增加数据dirty checking
@@ -637,7 +636,7 @@ KISSY.add("brix/base",
         }, Interface.ATTRS),Watcher.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, Watcher, Interface.METHODS)
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
 
 
     return Brick
@@ -653,6 +652,7 @@ KISSY.add("brix/base",
         'brix/core/bx-config',
         'brix/core/bx-remote',
         'brix/core/bx-boot',
+        'brix/core/bx-find',
         'brix/core/bx-watcher',
         'promise',
         'rich-base',

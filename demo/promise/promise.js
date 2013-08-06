@@ -26,32 +26,32 @@ KISSY.use('brix/app,brix/base', function(S, app) {
 
 
     function bootstrap() {
-        app
-            .boot({
-                el: '#container',
-                tpl: '#tpl',
-                config: {
-                    brixtest2: {
-                        data: {
-                            a: 'aa',
-                            b: 'bb',
-                            c: 'cc'
-                        }
-                    },
-                    brixtest4: {
-                        listeners: {
-                            getTpl: function(e) {
-                                return S.later(function() {
-                                    var tpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tpl="text" bx-datakey="text">hahah{{text}}</span>'
+        app.boot({
+            el: '#container',
+            tpl: '#tpl',
+            config: {
+                brixtest2: {
+                    data: {
+                        a: 'aa',
+                        b: 'bb',
+                        c: 'cc'
+                    }
+                },
+                brixtest4: {
+                    listeners: {
+                        getTpl: function(e) {
+                            return S.later(function() {
+                                var tpl = '<input type="button" class="input31 btn btn-red btn-size25" value="刷新文字"><span bx-tpl="text" bx-datakey="text">hahah{{text}}</span>'
 
-                                    e.next(tpl)
-                                }, 1)
-                            }
+                                e.next(tpl)
+                            }, 1)
                         }
                     }
                 }
-            })
-            .on('getData', function(e) {
+            }
+        })
+        .then(function(brick) {
+            brick.once('getData', function(e) {
                 return S.later(function() {
                     var data = {
                         a: 'a',
@@ -103,6 +103,6 @@ KISSY.use('brix/app,brix/base', function(S, app) {
 
                 this.find('#brixtest').delegate('#brixtest3', 'myfire', fn)
             })
-
+        })
     }
 })

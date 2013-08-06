@@ -33,18 +33,18 @@ describe('brix/base', function() {
 
     it('by id', function(done) {
       app
-        .boot({
+        .prepare({
           el: '#fixture1',
           destroyAction: 'none'
         })
-        .on('ready', function() {
+        .then(function(brick) {
           var firedCount = 0
 
-          this.delegate('#fixture1-foo', 'fooEvent', function(){
+          brick.delegate('#fixture1-foo', 'fooEvent', function(){
             firedCount++
           })
 
-          this.find('#fixture1-foo').fire('fooEvent')
+          brick.find('#fixture1-foo').fire('fooEvent')
 
           expect(firedCount).to.equal(1)
           done()
@@ -53,19 +53,19 @@ describe('brix/base', function() {
 
     it('by name', function(done) {
       app
-        .boot({
+        .prepare({
           el: '#fixture2',
           destroyAction: 'none'
         })
-        .on('ready', function() {
+        .then(function(brick) {
           var firedCount = 0
 
-          this.delegate('thx.test/delegate-bar', 'barEvent',  function() {
+          brick.delegate('thx.test/delegate-bar', 'barEvent',  function() {
             firedCount++
           })
 
           // both #child2 and #grandChild are instances of thx.test/delegate-bar
-          this.find('thx.test/delegate-bar').fire('barEvent')
+          brick.find('thx.test/delegate-bar').fire('barEvent')
           expect(firedCount).to.equal(1)
           done()
         })
@@ -73,21 +73,21 @@ describe('brix/base', function() {
 
     it('complicated', function(done) {
       app
-        .boot({
+        .prepare({
           el: '#fixture3',
           destroyAction: 'none'
         })
-        .on('ready', function() {
+        .then(function(brick) {
           var firedCount = 0
 
-          this.delegate('thx.test/delegate-foo', 'fooEvent', function(){
+          brick.delegate('thx.test/delegate-foo', 'fooEvent', function(){
             firedCount++
           })
-          this.delegate('#grandChild', 'barEvent', function() {
+          brick.delegate('#grandChild', 'barEvent', function() {
             firedCount++
           })
 
-          var child1 = this.find('thx.test/delegate-foo')
+          var child1 = brick.find('thx.test/delegate-foo')
           var child2 = child1.find('#grandChild')
 
           child1.fire('fooEvent')

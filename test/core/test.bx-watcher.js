@@ -25,11 +25,11 @@ describe('brix/base', function() {
 
     it('watcher selector function dirtyCheck', function(done) {
       app
-        .boot({
+        .prepare({
           el: '#fixture1'
         })
-        .on('ready', function() {
-          var self = this
+        .then(function(brick) {
+          var self = brick
           var child = self.find('#fixture1-foo')
           var showEl = child.get('el').one('#show')
 

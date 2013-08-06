@@ -1,17 +1,17 @@
-KISSY.add('brix/app', function(S, appConfig, Brick) {
+KISSY.add('brix/app', function(S, appConfig, bxBoot, bxFind, Brick, Base) {
 
-    var BxApp = Brick.extend({
+    function BxApp() {
+        BxApp.superclass.constructor.apply(this, arguments)
+    }
+
+    S.extend(BxApp, Base)
+    S.augment(BxApp, appConfig, bxBoot, bxFind, {
         bootStyle: function(fn) {
             S.use(this.bxComboStyle().join(','), fn)
         }
     })
 
-    S.augment(BxApp, appConfig)
-
-    var app = new BxApp({
-        el: S.one('[bx-app]') || S.one('body'),
-        defer: true
-    })
+    var app = new BxApp({})
 
     app.config('Brick', Brick)
 
@@ -19,6 +19,8 @@ KISSY.add('brix/app', function(S, appConfig, Brick) {
 }, {
     requires: [
         'brix/app/config',
+        'brix/core/bx-boot',
+        'brix/core/bx-find',
         'brix/base',
         'base'
     ]

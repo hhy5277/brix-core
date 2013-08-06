@@ -1,5 +1,6 @@
 var app
 var Brick
+var Promise
 
 var S = KISSY
 
@@ -12,9 +13,10 @@ describe('brix/app', function() {
   // 所以最方便的解决办法，就是把执行铺平，利用 before 支持异步风格的特性。
 
   before(function(done) {
-    KISSY.use('brix/app,brix/base', function(S, _app, _Brick) {
+    KISSY.use('brix/app,brix/base,promise', function(S, _app, _Brick, _Promise) {
       app = _app
       Brick = _Brick
+      Promise = _Promise
       done()
     })
   })
@@ -43,33 +45,39 @@ describe('brix/app', function() {
 
   })
 
-  describe('#boot', function() {
+  describe('#prepare', function() {
 
-    var brick
+    var promise
 
     before(function() {
-      brick = app.boot('#fixture1')
+      promise = app.prepare('#fixture1')
     })
 
-    it('return a new brick', function() {
-      expect(brick).to.be.a(Brick)
+    it('returns a promise', function() {
+      expect(promise).to.be.a(Promise)
     })
 
-    it('fires ready when... ready', function(done) {
-      brick.on('ready', function() {
-        expect(this).to.be.a(Brick)
-        expect(this.get('rendered')).to.be(true)
-        expect(this.get('activated')).to.be(true)
+    it('resolved when ready', function() {
+      promise.then(function(brick) {
+        expect(brick).to.be.a(Brick)
+        expect(brick.get('rendered')).to.be(true)
+        expect(brick.get('activated')).to.be(true)
         done()
       })
     })
 
-    it('goes into the children of app', function() {
-      expect(S.indexOf(brick, app.get('children'))).to.not.be.below(0)
+    it('goes into the children of app', function(done) {
+      promise.then(function(brick) {
+        expect(S.indexOf(brick, app.get('children'))).to.not.be.below(0)
+        done()
+      })
     })
 
-    it('has it\'s parent point to app', function() {
-      expect(brick.get('parent')).to.equal(app)
+    it('has it\'s parent point to app', function(done) {
+      promise.then(function(brick) {
+        expect(brick.get('parent')).to.equal(app)
+        done()
+      })
     })
 
     // For more testcases on Brick, see test.base.js
@@ -94,15 +102,15 @@ describe('brix/app', function() {
   //
   // But we shall support this usage because changing magix logic requires a lot
   // of work.
-  describe('misplaced #boot', function() {
+  describe('misplaced #prepare', function() {
     it('shall be children of app regardless of the DOM structure', function() {
       app.config('components', 'thx.test')
-      app.boot('#fixture2').on('ready', function() {
+      app.prepare('#fixture2').then(function() {
         this.get('el').html('<div id="fixture2-vframe"></div>')
-        app.boot({
+        app.prepare({
           el: '#fixture2-vframe',
           tpl: '<div bx-name="thx.test/app-foo"></div>'
-        }).on('ready', function() {
+        }).then(function() {
           expect(this.get('children').length).to.be(1)
 
           var children = app.get('children')
@@ -134,12 +142,12 @@ describe('brix/app', function() {
   //         // now you've got the page, which is an instance of class thx.test/app-boot-async
   //     })
   //
-  describe('#bootAsync', function() {
+  describe('#boot', function() {
     var brick
 
     before(function(done) {
       app.config('components', 'thx.test')
-      app.bootAsync('#fixture3').then(function(b) {
+      app.boot('#fixture3').then(function(b) {
         brick = b
         done()
       })

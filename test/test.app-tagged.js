@@ -17,8 +17,8 @@ describe('brix/app tagged', function() {
         components: 'thx.tagged',
         timestamp: '20130627'
       })
-      app.boot().on('ready', function() {
-        var foo = this.find('thx.tagged/foo')
+      app.prepare().then(function(brick) {
+        var foo = brick.find('thx.tagged/foo')
 
         expect(foo.get('name')).to.equal('thx.tagged/foo')
         done()

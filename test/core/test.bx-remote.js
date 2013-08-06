@@ -22,16 +22,16 @@ describe('brix/base', function() {
   describe('#bxGetData', function() {
 
     it('via jsonp', function(done) {
-      app.boot('#fixture1').on('ready', function() {
-        expect(this.get('data').columns).to.eql(['ds_title', 'ds_clickurl', 'ds_hot'])
+      app.prepare('#fixture1').then(function(brick) {
+        expect(brick.get('data').columns).to.eql(['ds_title', 'ds_clickurl', 'ds_hot'])
         done()
       })
     })
 
     if (/^http/.test(location.href)) {
       it('via xhr in debug mode', function(done) {
-        app.boot('#fixture2').on('ready', function() {
-          expect(this.get('data').books.length).to.equal(3)
+        app.prepare('#fixture2').then(function(brick) {
+          expect(brick.get('data').books.length).to.equal(3)
           done()
         })
       })
@@ -39,8 +39,8 @@ describe('brix/base', function() {
 
     it('via kissy module in prod', function(done) {
       app.config('debug', false)
-      app.boot('#fixture3').on('ready', function() {
-        expect(this.get('data').players).to.eql(['Kobe Bryant', 'Tracy McGrady'])
+      app.prepare('#fixture3').then(function(brick) {
+        expect(brick.get('data').players).to.eql(['Kobe Bryant', 'Tracy McGrady'])
         done()
       })
     })

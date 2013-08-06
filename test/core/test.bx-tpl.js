@@ -24,27 +24,27 @@ describe('brix/base', function() {
   describe('#bxGetTemplate', function() {
     it('from parameter', function(done) {
       app
-        .boot({
+        .prepare({
           el: '#fixture1',
           tpl: '<div class="foo"></div>'
         })
-        .on('ready', function() {
-          expect(this.get('tpl')).to.equal('<div class="foo"></div>')
+        .then(function(brick) {
+          expect(brick.get('tpl')).to.equal('<div class="foo"></div>')
           done()
         })
     })
 
     it('from script tag', function(done) {
-      app.boot('#fixture2').on('ready', function() {
-        expect(S.Node(this.get('tpl')).hasClass('foo-tpl')).to.equal(true)
+      app.prepare('#fixture2').then(function(brick) {
+        expect(S.Node(brick.get('tpl')).hasClass('foo-tpl')).to.equal(true)
         done()
       })
     })
 
     if (/^http/.test(location.href)) {
       it('from xhr', function(done) {
-        app.boot('#fixture3').on('ready', function() {
-          expect(this.get('tpl')).to.equal('<div class="egg"></div>')
+        app.prepare('#fixture3').then(function(brick) {
+          expect(brick.get('tpl')).to.equal('<div class="egg"></div>')
           done()
         })
       })
@@ -53,9 +53,9 @@ describe('brix/base', function() {
     it('from module', function(done) {
       app
         .config('debug', false)
-        .boot('#fixture4')
-        .on('ready', function() {
-          expect(this.get('tpl')).to.equal('<div class="ham"></div>')
+        .prepare('#fixture4')
+        .then(function(brick) {
+          expect(brick.get('tpl')).to.equal('<div class="ham"></div>')
           done()
         })
     })

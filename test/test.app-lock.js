@@ -21,9 +21,9 @@ describe('brix/app locked', function() {
         }
       })
 
-      app.boot().on('ready', function() {
-        var foo = this.find('thx.prod/foo')
-        var bar = this.find('thx.prod/bar')
+      app.prepare().then(function(brick) {
+        var foo = brick.find('thx.prod/foo')
+        var bar = brick.find('thx.prod/bar')
 
         expect(foo.get('name')).to.equal('thx.prod/foo')
         expect(bar.get('name')).to.equal('thx.prod/bar')
@@ -31,7 +31,7 @@ describe('brix/app locked', function() {
       })
     })
 
-    it('can specify components with or without css.', function() {
+    it('can specify components with or without css.', function(done) {
       app.config('components', {
         'thx.prod': {
           foo: '0.1.0/js',
@@ -40,7 +40,10 @@ describe('brix/app locked', function() {
       })
 
       app.bootStyle(function() {
-        app.boot()
+        app.boot().then(function() {
+          expect(true).to.be(true)
+          done()
+        })
       })
     })
   })
