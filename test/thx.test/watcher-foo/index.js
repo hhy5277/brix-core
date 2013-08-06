@@ -14,8 +14,7 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 					var data = self.get('data')
 					data.text = e.currentTarget.value
 					data.image.src = 'http://a.tbcdn.cn/s/kissy/' + e.currentTarget.value + '.png'
-					var watcher = self.get('watcher');
-					watcher.digest()
+					self.digest()
 				})
 			}
 

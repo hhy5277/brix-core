@@ -9,22 +9,6 @@ KISSY.add("brix/base",
     var DESTROY_ACTIONS = ['remove', 'empty']
 
     var Brick = RichBase.extend({
-        // constructor:function(){
-        //     var self = this;
-        //     //显示的调用父类的构造函数，这句很重要。
-        //     Brick.superclass.constructor.apply(self, arguments)
-        //     var scope = {};
-        //     var constt = self.constructor
-        //     for(var key in constt){
-        //         if(constt.hasOwnProperty(key)&&typeof self[key] === 'function'){
-        //             scope[key] = function(){
-        //                 self[key]();
-        //                 digest();
-        //             }
-        //         }
-
-        //     }
-        // },
         initializer: function() {
             var self = this
             //这里是否考虑同步执行？
@@ -35,8 +19,6 @@ KISSY.add("brix/base",
             if (!self.get('name')) {
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
-            //实例化数据监听器
-            self.set('watcher',new Watcher());
 
             var d = new Promise.Defer()
             var promise = d.promise
@@ -101,7 +83,9 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleTpl(function(tpl) {
-                self.set('tpl', tpl)
+                if(tpl){
+                   self.set('tpl', tpl) 
+                }
                 d.resolve(tpl)
             })
 
@@ -116,6 +100,7 @@ KISSY.add("brix/base",
             // fn 留作扩展使用
             var fn = self.fire('getTpl', {
                 next: function(tpl) {
+                    if(tpl)
                     self.set('tpl', tpl)
                     d.resolve(tpl)
                 }
@@ -136,7 +121,10 @@ KISSY.add("brix/base",
             var self = this
 
             self.bxHandleRemote(function(data) {
-                self.set('data', data)
+                if(data){
+                   self.set('data', data) 
+                }
+                
                 d.resolve(data)
             })
 
@@ -153,8 +141,10 @@ KISSY.add("brix/base",
             //开发者获取数据后，调用next方法
             //fn 留作扩展使用
             var fn = self.fire('getData', {
-                next: function(data) { 
-                    self.set('data', data)
+                next: function(data) {
+                    if(data){
+                        self.set('data', data)
+                    }
                     d.resolve(data)
                 }
             })
@@ -461,21 +451,20 @@ KISSY.add("brix/base",
          */
         dirtyCheck:function(fn){
             var self = this
-            var watcher = self.get('watcher')
 
             if(typeof fn !== 'function'){
                 fn = self[fn];
             }
             if(fn){
                 fn.apply(self,Array.prototype.slice.call(arguments,1))
-                watcher.digest()
+                self.digest()
             }
             else{
                 throw new Error('没有找到对应的函数')
             }
         }
     }, {
-        ATTRS: S.mix({
+        ATTRS: S.mix(S.mix({
             /**
              * 模板
              * @cfg {Object}
@@ -640,18 +629,10 @@ KISSY.add("brix/base",
             parent: {
                 value: false
             }
-            // ,
-            /**
-             * 数据监听器
-             * @type {Watcher}
-             */
-            // watcher:{
-            //     value : new Watcher()
-            // }
-        }, Interface.ATTRS)
+        }, Interface.ATTRS),Watcher.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote,Watcher, Interface.METHODS)
 
     S.mix(Brick, {
         boot: function(el, data) {

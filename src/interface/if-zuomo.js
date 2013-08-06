@@ -163,11 +163,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var watcher = self.get('watcher')
             var data = self.get('data')
 
             var watch = function(key) {
-                watcher.watch(data, key, function() {
+                self.watch(data, key, function() {
                     if(!S.inArray(key,self.bxRefreshKeys)){
                         self.bxRefreshKeys.push(key)
                     }
