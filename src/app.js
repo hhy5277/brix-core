@@ -1,24 +1,19 @@
 KISSY.add('brix/app', function(S, appConfig, Brick) {
 
-    function BxApp() {
-        BxApp.superclass.constructor.call(this)
-    }
-
-    S.extend(BxApp, S.Base)
-
-    BxApp.ATTRS = {}
-
-    S.augment(BxApp, appConfig, {
-        boot: function() {
-            return Brick.boot.apply(this, arguments)
-        },
-
+    var BxApp = Brick.extend({
         bootStyle: function(fn) {
             S.use(this.bxComboStyle().join(','), fn)
         }
     })
 
-    var app = new BxApp()
+    S.augment(BxApp, appConfig)
+
+    var app = new BxApp({
+        el: S.one('[bx-app]') || S.one('body'),
+        defer: true
+    })
+
+    app.config('Brick', Brick)
 
     return app
 }, {

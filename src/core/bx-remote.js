@@ -27,7 +27,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 }
             }
             else {
-                return callback()
+                return callback(self.get('data'))
             }
         },
 

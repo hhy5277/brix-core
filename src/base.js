@@ -1,6 +1,7 @@
 KISSY.add("brix/base",
           function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Watcher, Promise, RichBase, XTemplate) {
+                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot,
+                      Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
 
@@ -27,16 +28,22 @@ KISSY.add("brix/base",
         // },
         initializer: function() {
             var self = this
-            //这里是否考虑同步执行？
             var el = self.get('el')
 
-            //id和名称都用采用静默更新
+            // id 和 name 都用采用静默更新
             self.set('id', el.attr('id'), { silent : true })
             if (!self.get('name')) {
                 self.set('name', el.attr('bx-name'), { silent : true })
             }
+
+            if (!self.get('defer')) self.bxIgnite()
+        },
+
+        bxIgnite: function() {
+            var self = this
+
             //实例化数据监听器
-            self.set('watcher',new Watcher());
+            self.set('watcher', new Watcher());
 
             var d = new Promise.Defer()
             var promise = d.promise
@@ -82,6 +89,8 @@ KISSY.add("brix/base",
             S.later(function() {
                 d.resolve(true)
             }, 0)
+
+            return self
         },
 
         bind: noop,
@@ -153,7 +162,7 @@ KISSY.add("brix/base",
             //开发者获取数据后，调用next方法
             //fn 留作扩展使用
             var fn = self.fire('getData', {
-                next: function(data) { 
+                next: function(data) {
                     self.set('data', data)
                     d.resolve(data)
                 }
@@ -651,56 +660,7 @@ KISSY.add("brix/base",
         }, Interface.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, Interface.METHODS)
-
-    S.mix(Brick, {
-        boot: function(el, data) {
-            var options
-
-            if (S.isPlainObject(el)) {
-                // .boot({ el: el, tpl: tpl })
-                if (el.el) {
-                    data = null
-                    options = el
-                }
-                else {
-                    options = {
-                        data: el,
-                        el: '[bx-app]'
-                    }
-                }
-            }
-            else if (S.isString(el)) {
-                options = {
-                    el: el,
-                    data: data
-                }
-            }
-            else {
-                options = {}
-            }
-            el = options.el
-
-            if (!el || S.isString(el)) el = S.one(el || '[bx-app]')
-            if (!el) throw new Error('Cannot find el!')
-
-            options.el = el
-            options.parent = this
-
-            var children = this.get('children')
-
-            if (!children) {
-                children = []
-                this.set('children', children)
-            }
-
-            var brick = new Brick(options)
-
-            children.push(brick)
-
-            return brick
-        }
-    })
+    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, Interface.METHODS)
 
     return Brick
 }, {
@@ -714,6 +674,7 @@ KISSY.add("brix/base",
         'brix/core/bx-delegate',
         'brix/core/bx-config',
         'brix/core/bx-remote',
+        'brix/core/bx-boot',
         'brix/core/bx-watcher',
         'promise',
         'rich-base',

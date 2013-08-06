@@ -66,8 +66,38 @@ describe('brix/base', function() {
           done()
         })
     })
-
   })
+
+
+  describe('#bootAsync', function() {
+    var rootBrick
+
+    before(function(done) {
+      app.boot('#fixture7').on('ready', function() {
+        rootBrick = this
+        done()
+      })
+    })
+
+    it('shall boot bricks that require async module loading', function(done) {
+      expect(rootBrick.get('children')).to.be.empty()
+      rootBrick
+        .bootAsync({
+          el: '#fixture8',
+          bar: true
+        })
+        .then(function(brick) {
+          expect(brick.get('name')).to.equal('thx.test/base-boot-async')
+          expect(brick.get('bar')).to.be(true)
+          return brick
+        })
+        .then(function(brick) {
+          expect(rootBrick.get('children')[0]).to.equal(brick)
+          done()
+        })
+    })
+  })
+
 
   describe('promise', function() {
     it('supports async procedures in event listeners', function() {
@@ -110,6 +140,49 @@ describe('brix/base', function() {
 
           done()
         })
+    })
+  })
+
+
+  describe('#find', function() {
+
+    var rootBrick
+
+    before(function(done) {
+      app.boot('#fixture9').on('ready', function() {
+        rootBrick = this
+        done()
+      })
+    })
+
+    it('find by #id', function() {
+      var foo = rootBrick.find('#fixture10')
+
+      expect(foo.get('name')).to.equal('thx.test/find-foo')
+    })
+
+    it('find by family/name', function() {
+      var bar = rootBrick.find('thx.test/find-bar')
+
+      expect(bar.get('id')).to.equal('fixture11')
+    })
+  })
+
+  describe('#where', function() {
+
+    var rootBrick
+
+    before(function(done) {
+      app.boot('#fixture12').on('ready', function() {
+        rootBrick = this
+        done()
+      })
+    })
+
+    it('where name equals family/name', function() {
+      var bricks = rootBrick.where({ name: 'thx.test/where-foo' })
+
+      expect(bricks.length).to.be(2)
     })
   })
 })
