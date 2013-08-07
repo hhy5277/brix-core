@@ -101,9 +101,10 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
             var opts = parent.bxHandleConfig(el, Klass)
             var inst
             var ancestor = parent
+            var overrides
             if (S.isArray(opts)) {
                 while (ancestor) {
-                    var overrides = ancestor.get('config')
+                    overrides = ancestor.get('config')
 
                     if (overrides) {
                         Util.bxMixArgument(opts, overrides[el.attr('id')])
@@ -131,7 +132,7 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 })
 
                 while (ancestor) {
-                    var overrides = ancestor.get('config')
+                    overrides = ancestor.get('config')
 
                     if (overrides) {
                         S.mix(opts, overrides[el.attr('id')])
@@ -142,7 +143,6 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 }
                 inst = new Klass(opts)
             } else {
-                debugger
                 inst = new Klass(opts)
             }
 
