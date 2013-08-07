@@ -25,8 +25,8 @@ describe('brix/app locked', function() {
         var foo = brick.find('thx.prod/foo')
         var bar = brick.find('thx.prod/bar')
 
-        expect(foo.get('name')).to.equal('thx.prod/foo')
-        expect(bar.get('name')).to.equal('thx.prod/bar')
+        expect(foo.bxName).to.equal('thx.prod/foo')
+        expect(bar.bxName).to.equal('thx.prod/bar')
         done()
       })
     })

@@ -34,13 +34,13 @@ describe('brix/base', function() {
     it('find by #id', function() {
       var foo = rootBrick.find('#fixture1')
 
-      expect(foo.get('name')).to.equal('thx.test/find-foo')
+      expect(foo.bxName).to.equal('thx.test/find-foo')
     })
 
     it('find by family/name', function() {
       var bar = rootBrick.find('thx.test/find-bar')
 
-      expect(bar.get('id')).to.equal('fixture2')
+      expect(bar.bxId).to.equal('fixture2')
     })
   })
 
@@ -76,12 +76,12 @@ describe('brix/base', function() {
     it('one by name', function() {
       var brick = rootBrick.one('thx.test/one-foo')
 
-      expect(brick.get('id')).to.equal('fixture8')
+      expect(brick.bxId).to.equal('fixture8')
     })
     it('one by #id', function() {
       var brick = rootBrick.one('#fixture9')
 
-      expect(brick.get('name')).to.equal('thx.test/one-foo')
+      expect(brick.bxName).to.equal('thx.test/one-foo')
     })
   })
 

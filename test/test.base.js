@@ -92,7 +92,7 @@ describe('brix/base', function() {
           bar: true
         })
         .then(function(brick) {
-          expect(brick.get('name')).to.equal('thx.test/base-boot-async')
+          expect(brick.bxName).to.equal('thx.test/base-boot-async')
           expect(brick.get('bar')).to.be(true)
           return brick
         })

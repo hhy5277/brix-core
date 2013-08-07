@@ -20,7 +20,7 @@ describe('brix/app tagged', function() {
       app.prepare().then(function(brick) {
         var foo = brick.find('thx.tagged/foo')
 
-        expect(foo.get('name')).to.equal('thx.tagged/foo')
+        expect(foo.bxName).to.equal('thx.tagged/foo')
         done()
       })
     })

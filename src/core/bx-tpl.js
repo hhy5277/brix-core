@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
+KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -80,13 +80,14 @@ KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
                 throw Error('Cannot load tpl via xhr in current mode.')
             }
 
-            IO.get(this.bxResolveModule(mod, '.html'), callback)
+            IO.get(Util.bxResolveModule(mod, '.html'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'node',

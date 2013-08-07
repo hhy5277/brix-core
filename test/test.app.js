@@ -117,7 +117,7 @@ describe('brix/app', function() {
           var ids = ['fixture1', 'fixture2', 'fixture3', 'fixture2-vframe']
 
           for (var i = 0; i < children.length; i++) {
-            expect(ids).to.contain(children[i].get('id'))
+            expect(ids).to.contain(children[i].bxId)
           }
         })
       })
@@ -154,9 +154,9 @@ describe('brix/app', function() {
     })
 
     it('shall prepare the constructor of the brick before booting', function(done) {
-      expect(brick.get('name')).to.equal('thx.test/app-boot-async')
+      expect(brick.bxName).to.equal('thx.test/app-boot-async')
       brick.on('ready', function() {
-        expect(this.get('id')).to.equal('fixture3')
+        expect(this.bxId).to.equal('fixture3')
         expect(this.get('foo')).to.equal(1)
         done()
       })

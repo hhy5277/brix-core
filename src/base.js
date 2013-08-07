@@ -1,6 +1,6 @@
 KISSY.add("brix/base",
-          function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
+          function(S, Util, app, Interface,
+                    bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
                       Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
@@ -14,11 +14,9 @@ KISSY.add("brix/base",
             var self = this
             var el = self.get('el')
 
-            // id 和 name 都用采用静默更新
-            self.set('id', el.attr('id'), { silent : true })
-            if (!self.get('name')) {
-                self.set('name', el.attr('bx-name'), { silent : true })
-            }
+
+            self.bxId = el.attr('id')
+            self.bxName = el.attr('bx-name')
 
             self.bxIgnite()
         },
@@ -299,9 +297,14 @@ KISSY.add("brix/base",
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-
-                child.once('ready', check)
-                child.bxActivate()
+                if(!child.bxRender){
+                    check()
+                }   
+                else{
+                    child.once('ready', check)
+                    child.bxActivate() 
+                }
+                
             }
 
             if (!children || children.length === 0) {
@@ -376,10 +379,10 @@ KISSY.add("brix/base",
             // 如果存在父组件，则移除
             if (parent) {
                 var siblings = parent.get('children')
-                var id = self.get('id')
+                var id = self.bxId
 
                 for (i = siblings.length - 1; i >= 0; i--) {
-                    if (siblings[i].get('id') === id) {
+                    if (siblings[i].bxId === id) {
                         siblings.splice(i, 1)
                         break
                     }
@@ -418,8 +421,8 @@ KISSY.add("brix/base",
             if (parent) {
                 context = context || this;
                 if (context === this) {
-                    var eventTypeId = '#' + context.get('id') + '_' + eventType
-                    var eventTypeName = context.get('name') + '_' + eventType
+                    var eventTypeId = '#' + context.bxId + '_' + eventType
+                    var eventTypeName = context.bxName + '_' + eventType
 
                     parent.fire(eventTypeId, eventData, context)
                     parent.fire(eventTypeName, eventData, context)
@@ -510,41 +513,11 @@ KISSY.add("brix/base",
                     if (S.isString(s)) {
                         s = S.one(s)
                     }
-
                     return s
                 },
-
                 setter: function(el) {
-                    if (S.isString(el)) {
-                        el = S.one(el)
-                    }
-                    if (!el.attr('id')) {
-                        var id
-
-                        // 判断页面id是否存在，如果存在继续随机。
-                        while ((id = S.guid('brix-brick-')) && S.one('#' + id)) {}
-
-                        el.attr('id', id)
-                    }
-
-                    return '#' + el.attr('id')
+                    return '#' + Util.bxUniqueId(el)
                 }
-            },
-
-            /**
-             * 组件的id
-             * @type {String}
-             */
-            id:{
-                value: null
-            },
-
-            /**
-             * 组件名称
-             * @type {String}
-             */
-            name: {
-                value: null
             },
 
             /**
@@ -636,15 +609,15 @@ KISSY.add("brix/base",
         }, Interface.ATTRS),Watcher.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
+    S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
 
 
     return Brick
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'brix/interface/index',
-        'brix/core/bx-util',
         'brix/core/bx-tpl',
         'brix/core/bx-name',
         'brix/core/bx-event',

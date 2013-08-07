@@ -1,5 +1,5 @@
-KISSY.add('brix/core/bx-name', function(S, Node) {
-
+KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
+    
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
             root = Node(root)
@@ -24,7 +24,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (nodes.length === 0) {
                 S.later(function() {
-                    //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
+                    //S.log(self.bxName+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
@@ -41,7 +41,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var total = nodes.length
             var klasses = []
             var renderedCheck = function() {
-                //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
+                //S.log(self.bxName+'_'+renderedCounter+'_'+total)
                 if (++renderedCounter === total) renderedFn()
             }
             var activatedCheck = activatedFn && function() {
@@ -96,45 +96,50 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 return bothFn()
             }
             if (!(el && DOM.contains(document, el[0]))) {
-                //S.log(parent.get('name')+'_bothFn:')
+                //S.log(parent.bxName+'_bothFn:')
                 // el is gone
                 return bothFn()
             }
+            Util.bxUniqueId(el)
             var opts = parent.bxHandleConfig(el, Klass)
-            var tag = el.attr('bx-tag')
+            var inst
+            if(S.isArray(opts)){
+                inst = Util.bxConstruct(Klass ,opts)
+            }
+            else{
+                var tag = el.attr('bx-tag')
 
-            S.mix(opts, {
-                el: el,
-                name: el.attr('bx-name'),
-                parent: parent,
+                S.mix(opts, {
+                    el: el,
+                    name: el.attr('bx-name'),
+                    parent: parent,
 
-                // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
-                passive: !activatedFn,
+                    // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                    passive: !activatedFn,
 
-                // the tag and brickTpl attribute is required for interface/zuomo
-                tag: tag,
-                brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
-            })
+                    // the tag and brickTpl attribute is required for interface/zuomo
+                    tag: tag,
+                    brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
+                })
 
-            var ancestor = parent
+                var ancestor = parent
 
-            while (ancestor) {
-                var overrides = ancestor.get('config')
+                while (ancestor) {
+                    var overrides = ancestor.get('config')
 
-                if (overrides) {
-                    S.mix(opts, overrides[el.attr('id')])
-                    S.mix(opts, overrides[el.attr('name')])
+                    if (overrides) {
+                        S.mix(opts, overrides[el.attr('id')])
+                        S.mix(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = ancestor.get('parent')
                 }
-
-                ancestor = ancestor.get('parent')
+                inst = new Klass(opts)
             }
 
-            // 对父类的 listeners 的处理还没加进来，原代码见：
-            // https://github.com/thx/brix-core/blob/bfa78a0b2b4dcfea4c24220e54850381140c7516/src/base.js#L606
-            //
-            // @keyapril 这里的使用场景得补充一下。
+            inst.bxId = el.attr('id')
+            inst.bxName = el.attr('bx-name')
 
-            var inst = new Klass(opts)
             var children = parent.get('children')
 
             if (!children) {
@@ -203,6 +208,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
 }, {
     requires: [
+        'brix/tool/util',
         'node',
         'sizzle',
         'event'

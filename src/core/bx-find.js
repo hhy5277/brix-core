@@ -15,8 +15,8 @@ KISSY.add('brix/core/bx-find', function() {
             }
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-                if (child.get('id') === selector ||
-                    child.get('name') === selector) {
+                if (child.bxId === selector ||
+                    child.bxName === selector) {
                     return child
                 } else if (isRecursive) {
                     var result = this.bxOne(selector, child.get('children') || [], isRecursive)
@@ -45,8 +45,8 @@ KISSY.add('brix/core/bx-find', function() {
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                if (child.get('id') === selector ||
-                    child.get('name') === selector) {
+                if (child.bxId === selector ||
+                    child.bxName === selector) {
                     result.push(child)
                 }
                 if (isRecursive) {
