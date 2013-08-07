@@ -33,6 +33,25 @@ KISSY.add('brix/tool/util', function(S, app) {
 
             return el.attr('id')
         },
+        /**
+         * 合并数组参数
+         * @param  {Array} receiver 参数数组
+         * @param  {Array} supplier 配置的参数数组
+         */
+        bxMixArgument: function(receiver, supplier) {
+            if (supplier) {
+                S.each(supplier, function(o, i) {
+                    if (o !== null) {
+                        if (S.isPlainObject(o)) {
+                            receiver[i] = receiver[i] || {}
+                            S.mix(receiver[i], o)
+                        } else {
+                            receiver[i] = o;
+                        }
+                    }
+                })
+            }
+        },
         bxResolveModule: function(mod, ext) {
             var parts = mod.split('/')
             var ns = parts.shift()

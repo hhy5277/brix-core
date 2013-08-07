@@ -1,5 +1,5 @@
-KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
-    
+KISSY.add('brix/core/bx-name', function(S, Util, Node) {
+
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
             root = Node(root)
@@ -12,8 +12,7 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                 // If the node is deferred, do not instantiate it.
                 if (node.hasAttr('bx-defer')) {
                     nodes.splice(i, 1)
-                }
-                else {
+                } else {
                     // Some of the child nodes might be instantiated already.
                     // Remove them out of the nodes array that will be processed.
                     var brick = self.find('#' + node.attr('id'))
@@ -28,8 +27,7 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
-            }
-            else {
+            } else {
                 self.bxUseModules(nodes, renderedFn, activatedFn)
             }
         },
@@ -45,8 +43,8 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                 if (++renderedCounter === total) renderedFn()
             }
             var activatedCheck = activatedFn && function() {
-                if (++activatedCounter === total) activatedFn()
-            }
+                    if (++activatedCounter === total) activatedFn()
+                }
 
             for (var i = 0; i < total; i++) {
                 var node = Node(nodes[i])
@@ -65,8 +63,7 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                 //
                 else if (name.split('/').length > 2) {
                     klasses[i] = name
-                }
-                else {
+                } else {
                     klasses[i] = name + '/index'
                 }
             }
@@ -103,10 +100,21 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
             Util.bxUniqueId(el)
             var opts = parent.bxHandleConfig(el, Klass)
             var inst
-            if(S.isArray(opts)){
-                inst = Util.bxConstruct(Klass ,opts)
-            }
-            else{
+            var ancestor = parent
+            if (S.isArray(opts)) {
+                while (ancestor) {
+                    var overrides = ancestor.get('config')
+
+                    if (overrides) {
+                        Util.bxMixArgument(opts, overrides[el.attr('id')])
+                        Util.bxMixArgument(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = ancestor.get('parent')
+                }
+
+                inst = Util.bxConstruct(Klass, opts)
+            } else if (S.isPlainObject(opts)) {
                 var tag = el.attr('bx-tag')
 
                 S.mix(opts, {
@@ -122,8 +130,6 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                     brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
                 })
 
-                var ancestor = parent
-
                 while (ancestor) {
                     var overrides = ancestor.get('config')
 
@@ -134,6 +140,9 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
 
                     ancestor = ancestor.get('parent')
                 }
+                inst = new Klass(opts)
+            } else {
+                debugger
                 inst = new Klass(opts)
             }
 
@@ -154,8 +163,7 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
                 if (activatedFn) inst.once('ready', activatedFn)
                 // 如果组件在实例化过程中被销毁了
                 inst.once('destroy', bothFn)
-            }
-            else {
+            } else {
                 bothFn()
             }
             el = children = null
@@ -182,20 +190,19 @@ KISSY.add('brix/core/bx-name', function(S, Util ,Node) {
         bxDirectChildren: function(root, selector) {
             var arr = []
 
-            function walk(node) {
-                var children = node.children()
+                function walk(node) {
+                    var children = node.children()
 
-                for (var i = 0; i < children.length; i++) {
-                    var child = children.item(i)
+                    for (var i = 0; i < children.length; i++) {
+                        var child = children.item(i)
 
-                    if (child.test(selector)) {
-                        arr.push(child)
-                    }
-                    else {
-                        walk(child)
+                        if (child.test(selector)) {
+                            arr.push(child)
+                        } else {
+                            walk(child)
+                        }
                     }
                 }
-            }
 
             selector = selector || '[bx-name]'
             walk(root)
