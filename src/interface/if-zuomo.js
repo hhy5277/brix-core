@@ -1,4 +1,4 @@
-KISSY.add('brix/interface/if-zuomo', function(S) {
+KISSY.add('brix/interface/if-zuomo', function(S, Util) {
     //var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
 
     var exports = {}
@@ -13,6 +13,13 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             self.bxRefreshKeys = []
             var tempTpl
             if (tpl) {
+                var data = self.get('data');
+                if (!data) {
+                    //有模板必然有数据
+                    self.set('data', {}, {
+                        silent: true
+                    });
+                }
                 tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
                 //存储模板
@@ -47,7 +54,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 needRenderCounter++
                 needActivateCounter++
                 //debugger
-                
+
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
@@ -149,7 +156,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         bxIStoreAttrs: function(str) {
             var attrs = {}
             var storeAttr = function(all, attr, tpl) {
-                if(tpl.indexOf('{{')>-1&&tpl.indexOf('}}')>0){
+                if (tpl.indexOf('{{') > -1 && tpl.indexOf('}}') > 0) {
                     attrs[attr] = tpl
                 }
             }
@@ -163,33 +170,33 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var data = self.get('data')
-
-            var watch = function(key) {
-                self.watch(data, key, function() {
-                    if(!S.inArray(key,self.bxRefreshKeys)){
-                        self.bxRefreshKeys.push(key)
-                    }
-                    //这个再看，不知道为什么，这个会引起ready事件的触发出错
-                    if(self.bxLaterTimer){
-                        self.bxLaterTimer.cancel();
-                        delete self.bxLaterTimer
-                    }
-                    self.bxLaterTimer = S.later(function(){
-                        //debugger
-                        self.bxIRefreshTpl(self.bxRefreshKeys, self.get('data'), 'html')
-                        self.bxRefreshKeys = [];
-                    })
-                    
-                })
-            }
-
+            var obj = Util.bxGetAncestor(self)
+            var data = obj.data
+            var ancestor = obj.ancestor
             if (data) {
+                var watch = function(key) {
+                    ancestor.watch(data, key, function() {
+                        if (!S.inArray(key, ancestor.bxRefreshKeys)) {
+                            ancestor.bxRefreshKeys.push(key)
+                        }
+                        //这个再看，不知道为什么，这个会引起ready事件的触发出错
+                        if (ancestor.bxLaterTimer) {
+                            ancestor.bxLaterTimer.cancel();
+                            delete ancestor.bxLaterTimer
+                        }
+                        ancestor.bxLaterTimer = S.later(function() {
+                            //debugger
+                            ancestor.bxIRefreshTpl(ancestor.bxRefreshKeys, data, 'html')
+                            ancestor.bxRefreshKeys = [];
+                        })
+
+                    })
+                }
                 var temparr = datakey.split(',')
                 for (var i = 0; i < temparr.length; i++) {
                     var key = temparr[i]
-                    if (!self.bxWatcherKeys[key]) {
-                        self.bxWatcherKeys[key] = true;
+                    if (!ancestor.bxWatcherKeys[key]) {
+                        ancestor.bxWatcherKeys[key] = true;
                         watch(key);
                     }
                 }
@@ -305,25 +312,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     }
 
                     nodes.each(function(node) {
-                        // var newData = {}
-                        // S.each(datakeys, function(item) {
-                        //     var tempdata = data,
-                        //         temparr = item.split('.'),
-                        //         length = temparr.length,
-                        //         i = 0
-                        //     while (i !== length) {
-                        //         tempdata = tempdata[temparr[i]]
-                        //         i++
-                        //     }
-                        //     newData[temparr[length - 1]] = tempdata
-                        //     tempdata = null
-                        // })
-                        // S.each(data, function(d, k) {
-                        //     if (S.isFunction(d)) {
-                        //         newData[k] = d
-                        //     }
-                        // })
-
                         if (o.tpl) {
                             self.fire('beforeRefreshTpl', {
                                 node: node,
@@ -392,19 +380,9 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var newData
-            var parent = self
-
-            while (parent) {
-                if ((newData = parent.get('data')) && newData) {
-                    break
-                }
-                parent = parent.get('parent')
-            }
-            if (!newData) {
-                newData = {}
-                parent = self
-            }
+            var obj = Util.bxGetAncestor(self)
+            var newData = obj.data || {}
+            var ancestor = obj.ancestor
             var keys = []
             if (S.isObject(datakey)) {
                 for (var key in datakey) {
@@ -425,10 +403,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     delete opts.renderType
                 }
             }
-            parent.set('data', newData, opts)
+            ancestor.set('data', newData, opts)
 
             if (!opts || !opts.silent) {
-                self.bxIRefreshTpl(keys, newData, renderType)
+                ancestor.bxIRefreshTpl(keys, newData, renderType)
             }
         }
     }
@@ -482,4 +460,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
     }
 
     return exports
+}, {
+    requires: ['brix/tool/util']
 })

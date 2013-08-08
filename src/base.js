@@ -161,26 +161,7 @@ KISSY.add("brix/base",
          * @param  {Objcet} data 数据
          */
         bxBuildData: function() {
-            var self = this
-            var data = self.get('data')
-
-            if (data) {
-                return true
-            }
-            else {
-                // 是否需要拷贝父亲的数据
-                // if (self.get('tpl')) {
-                //     var parent = self
-                //     var newData
-                //     while (parent) {
-                //         if (newData = parent.get('data')) {
-                //             self.setInternal('data', newData)
-                //             break
-                //         }
-                //         parent = parent.get('parent')
-                //     }
-                // }
-            }
+            return true
         },
 
         /**
@@ -485,7 +466,7 @@ KISSY.add("brix/base",
              * @cfg {Object}
              */
             data: {
-                value: {}
+                value: null
             },
 
             /**

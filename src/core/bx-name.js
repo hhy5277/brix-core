@@ -81,7 +81,7 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
         },
 
         bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
-            var parent = this
+            var self = this
             var DOM = S.DOM
             var bothFn = function() {
                 renderedFn()
@@ -98,9 +98,9 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 return bothFn()
             }
             Util.bxUniqueId(el)
-            var opts = parent.bxHandleConfig(el, Klass)
+            var opts = self.bxHandleConfig(el, Klass)
             var inst
-            var ancestor = parent
+            var ancestor = self
             var overrides
             if (S.isArray(opts)) {
                 while (ancestor) {
@@ -121,14 +121,14 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 S.mix(opts, {
                     el: el,
                     name: el.attr('bx-name'),
-                    parent: parent,
+                    parent: self,
 
                     // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
                     passive: !activatedFn,
 
                     // the tag and brickTpl attribute is required for interface/zuomo
                     tag: tag,
-                    brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
+                    brickTpl: tag ? self.get('brickTpls')[tag].middle : null
                 })
 
                 while (ancestor) {
@@ -149,11 +149,11 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
             inst.bxId = el.attr('id')
             inst.bxName = el.attr('bx-name')
 
-            var children = parent.get('children')
+            var children = self.get('children')
 
             if (!children) {
                 children = []
-                parent.set('children', children)
+                self.set('children', children)
             }
             children.push(inst)
 

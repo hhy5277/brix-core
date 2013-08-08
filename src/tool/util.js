@@ -78,6 +78,29 @@ KISSY.add('brix/tool/util', function(S, app) {
             parts.push(file + ext)
 
             return base + parts.join('/')
+        },
+        /**
+         * 获取实例的数据
+         * @param  {Objcet} context 实例
+         * @return {Object}          对象
+         */
+        bxGetAncestor: function(context) {
+            var data
+            var ancestor = context
+            while (ancestor) {
+                if ((data = ancestor.get('data')) && data) {
+                    break;
+                }
+                ancestor = ancestor.get('parent')
+            }
+
+            if(!data){
+                ancestor = context
+            }
+            return {
+                data: data,
+                ancestor: ancestor
+            }
         }
     }
 }, {
