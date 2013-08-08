@@ -39,6 +39,7 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 						c: 'ccc' + S.guid()
 					});
 					self.fire(BrixTest2.FIRES.myfire);
+					return false;
 				}
 			},
 			'#input22': {
@@ -47,6 +48,7 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 					self.setChunkData('b', 'bbb' + S.guid(), {
 						renderType: 'prepend'
 					});
+					return false
 				}
 			},
 			'#input23': {
@@ -55,6 +57,7 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 					self.setChunkData('c', 'ccc' + S.guid(), {
 						renderType: 'append'
 					});
+					return false
 				}
 			},
 			'#input24': {

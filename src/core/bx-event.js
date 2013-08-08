@@ -36,8 +36,11 @@ KISSY.add('brix/core/bx-event', function(S,Util) {
                     else{
                         ancestor = self;
                     }
-                    fnc.apply(this, arguments)
-                    ancestor.digest()
+                    var ret = fnc.apply(this, arguments)
+                    if(ret!==false){
+                        ancestor.digest()
+                    }
+                    
                 }
             }
 

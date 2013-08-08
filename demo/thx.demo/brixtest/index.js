@@ -25,20 +25,22 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			'#input1': {
 				click: function(e) {
 					var self = this;
-					self.get('parent').setChunkData({
+					self.setChunkData({
 						a: 'aaaa' + S.guid(),
 						c: 'ccc' + S.guid()
 					});
 					self.fire(BrixTest.FIRES.myfire);
+					return false
 				}
 			},
 			'#input2': {
 				click: function(e) {
 					var self = this;
 
-					self.get('parent').setChunkData('b', 'bbb' + S.guid(), {
+					self.setChunkData('b', 'bbb' + S.guid(), {
 						renderType: 'prepend'
 					});
+					return false
 				}
 			},
 			'#input3': {
@@ -47,6 +49,7 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 					self.setChunkData('c', 'ccc' + S.guid(), {
 						renderType: 'append'
 					});
+					return false
 				}
 			},
 			'#input4': {
@@ -97,14 +100,17 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			'document': {
 				click: function() {
 					S.log('点击了document');
+					return false
 				}
 			},
 			'window': {
 				scroll: function() {
-					// S.log(S.guid('scroll-'));
+					 S.log(S.guid('scroll-'));
+					 return false
 				},
 				resize: function() {
-					// S.log(S.guid('resize-'));
+					 S.log(S.guid('resize-'));
+					 return false
 				}
 			}
 		},

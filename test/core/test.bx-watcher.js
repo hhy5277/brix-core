@@ -51,12 +51,9 @@ describe('brix/base', function() {
                 expect(showEl.html()).to.equal('my_test')
 
                 done()
-              })
-
-            })
-
-          })
-
+              },200)
+            },200)
+          },200)
         })
     })
 

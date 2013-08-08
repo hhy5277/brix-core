@@ -7,7 +7,7 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
         bxIBuildTpl: function() {
             var self = this
             var tpl = self.get('tpl')
-            //临时存储监听的数据key
+            //存储监听的数据key
             self.bxWatcherKeys = {}
             //延迟刷新存储的key
             self.bxRefreshKeys = []
@@ -38,9 +38,6 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                 self.bxISelfCloseTag(tempTpl)
                 self.bxIBuildSubTpls(tempTpl)
             }
-
-            //删除临时监听
-            delete self.bxWatcherKeys
         },
 
         bxIActivate: function() {
@@ -181,15 +178,15 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                         }
                         //这个再看，不知道为什么，这个会引起ready事件的触发出错
                         if (ancestor.bxLaterTimer) {
+                            S.log('bxLaterTimer_'+S.guid())
                             ancestor.bxLaterTimer.cancel();
                             delete ancestor.bxLaterTimer
                         }
                         ancestor.bxLaterTimer = S.later(function() {
-                            //debugger
+                            S.log('bxIRefreshTpl_'+S.guid())
                             ancestor.bxIRefreshTpl(ancestor.bxRefreshKeys, data, 'html')
                             ancestor.bxRefreshKeys = [];
-                        })
-
+                        },100)
                     })
                 }
                 var temparr = datakey.split(',')
