@@ -1,7 +1,5 @@
 KISSY.add("brix/base",
-    function(S, app, Interface,
-        bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
-        bxWatcher, bxUtil, Promise, RichBase, XTemplate) {
+    function(S, Interface, Core, Promise, RichBase, XTemplate) {
 
         var noop = S.noop
 
@@ -295,7 +293,7 @@ KISSY.add("brix/base",
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!self.bxGetClass(child)) {
+                    if (!self.bxIsBrickInstance(child)) {
                         child.bxListionReady(check)
                     } else {
                         child.once('ready', check)
@@ -460,50 +458,10 @@ KISSY.add("brix/base",
                     throw new Error('没有找到对应的函数')
                 }
             },
-            boot: function(el, data) {
-                return this.bxBoot(el, data)
-            },
-
-            prepare: function(el, data) {
-                return this.bxPrepare(el, data)
-            },
-            /**
-             * 递归查找当前组件下的子组件
-             * @param  {String} selector 选择器，目前支持id和bx-name
-             * @return {Brick}
-             */
-            one: function(selector) {
-                return this.bxOne(selector)
-            },
-            /**
-             * 查找当前组件下的子组件
-             * @param  {Object} opts 查找条件，name和selector只能任选其一
-             * @param  {String} opts.name 组件名称bx-name
-             * @param  {String} opts.selector el节点选择器
-             * @return {Array}  符合过滤条件的实例数组
-             */
-            all: function(selector) {
-                return this.bxAll(selector);
-            },
-            /**
-             * 查找当前组件下的子组件
-             * @param  {String} selector 选择器，目前支持id和bx-name
-             * @return {Brick}
-             */
-            find: function(selector) {
-                return this.bxFind(selector)
-            },
-            /**
-             * 查找当前组件下的子组件
-             * @param  {String} selector 选择器，目前支持id和bx-name
-             * @return {Array}  符合过滤条件的实例数组
-             */
-            where: function(selector) {
-                return this.bxWhere(selector)
-            },
             bxDestroy: function() {
                 this.destroy()
             }
+
         }, {
             NAME: 'Brick',
             ATTRS: S.mix(S.mix({
@@ -619,27 +577,17 @@ KISSY.add("brix/base",
                 parent: {
                     value: false
                 }
-            }, Interface.ATTRS), bxWatcher.ATTRS)
+            }, Interface.ATTRS), Core.ATTRS)
         }, 'Brick')
 
-        S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, bxWatcher, bxUtil, Interface.METHODS)
+        S.augment(Brick, Core, Interface.METHODS)
 
 
         return Brick
     }, {
         requires: [
-            'brix/app/config',
             'brix/interface/index',
-            'brix/core/bx-tpl',
-            'brix/core/bx-name',
-            'brix/core/bx-event',
-            'brix/core/bx-delegate',
-            'brix/core/bx-config',
-            'brix/core/bx-remote',
-            'brix/core/bx-boot',
-            'brix/core/bx-find',
-            'brix/core/bx-watcher',
-            'brix/core/bx-util',
+            'brix/core/index',
             'promise',
             'rich-base',
             'xtemplate',

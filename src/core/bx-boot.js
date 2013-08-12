@@ -1,5 +1,5 @@
-KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
-    var bxThird
+KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise,DOM) {
+    var Third
     var exports = {
 
         bxBootOptions: function(el, data) {
@@ -98,7 +98,6 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
         },
         bxIBoot: function(el, options, Klass, renderedFn, activatedFn) {
             var self = this
-            var DOM = S.DOM
             var bothFn = function() {
                 if (renderedFn) renderedFn()
                 if (activatedFn) activatedFn()
@@ -126,7 +125,7 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
             children.push(inst)
 
 
-            if (self.bxGetClass(inst)) {
+            if (self.bxIsBrickInstance(inst)) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 if (renderedFn) inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
@@ -134,8 +133,8 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
                 inst.once('destroy', bothFn)
             } else {
                 //这里mix Brix的方法，实现组件的局部刷新等功能
-                bxThird = bxThird || appConfig.config('bxThird')
-                S.mix(inst, bxThird)
+                Third = Third || appConfig.config('Third')
+                S.mix(inst, Third)
                 inst.bxEl = el;
                 inst.bxInit(renderedFn, activatedFn)
             }
@@ -191,5 +190,5 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
 
     return exports
 }, {
-    requires: ['brix/app/config', 'promise']
+    requires: ['brix/app/config', 'promise','dom']
 })

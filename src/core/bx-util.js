@@ -1,5 +1,4 @@
-KISSY.add('brix/core/bx-util', function(S, app) {
-    var Brick
+KISSY.add('brix/core/bx-util', function(S, appConfig) {
     return {
         /**
          * 动态传参数实例类
@@ -60,8 +59,8 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             var file = parts.shift()
             var base = S.config('packages')[ns].base
 
-            var components = app.config('components')
-            var imports = app.config('imports')
+            var components = appConfig.config('components')
+            var imports = appConfig.config('imports')
 
             var pkgs = S.config('packages')
             var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
@@ -105,7 +104,7 @@ KISSY.add('brix/core/bx-util', function(S, app) {
         },
         bxGetBrickAncestor: function(ancestor) {
             while (ancestor) {
-                if (!this.bxGetClass(ancestor)) {
+                if (!this.bxIsBrickInstance(ancestor)) {
                     ancestor = ancestor.bxParent
                 } else {
                     return ancestor
@@ -117,21 +116,15 @@ KISSY.add('brix/core/bx-util', function(S, app) {
          * @param  {Object} context 实例
          * @return {Function}       Class
          */
-        bxGetClass: function(context) {
+        bxIsBrickInstance: function(context) {
             var c = context.constructor
             while (c) {
                 if (c.NAME == 'Brick') {
-                    return c;
+                    return true
                 }
                 c = c.superclass ? c.superclass.constructor : null
             }
-        },
-        bxGetBrickClass: function() {
-            Brick = Brick || app.config('Brick')
-            return Brick
-        },
-        bxGet: function(s) {
-            return this['bx' + S.ucfist(s)] || this.get(s)
+            return false
         }
     }
 }, {

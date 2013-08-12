@@ -1,4 +1,4 @@
-KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind, bxUtil, bxConfig) {
+KISSY.add('brix/third/index', function(S, bxThird) {
 
     var Third = {
         bxInit: function(renderedFn, activatedFn) {
@@ -13,7 +13,6 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind, bxUtil, bxConf
             S.later(function() {
                 self.bxRender()
             })
-
         },
         bxRender: function() {
             var self = this
@@ -70,7 +69,7 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind, bxUtil, bxConf
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-                if (!self.bxGetClass(child)) {
+                if (!self.bxIsBrickInstance(child)) {
                     check()
                 } else {
                     child.once('ready', check)
@@ -117,16 +116,10 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind, bxUtil, bxConf
         }
     }
 
-    S.mix(Third, bxBoot)
-    S.mix(Third, bxName)
-    S.mix(Third, bxFind)
-    S.mix(Third, bxUtil)
-    S.mix(Third, bxConfig)
+    S.mix(Third, bxThird)
 
     return Third
 
 }, {
-    requires: ['brix/core/bx-boot', 'brix/core/bx-name', 'brix/core/bx-find', 'brix/core/bx-util',
-        'brix/core/bx-config',
-    ]
+    requires: ['brix/core/bx-third']
 })

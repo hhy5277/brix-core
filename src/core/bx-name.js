@@ -1,8 +1,7 @@
-KISSY.add('brix/core/bx-name', function(S, Node) {
+KISSY.add('brix/core/bx-name', function(S) {
 
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
-            root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var self = this
 
@@ -47,8 +46,8 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 }
 
             for (var i = 0; i < total; i++) {
-                var node = Node(nodes[i])
-                klasses[i] = this.bxBootName(node)
+                var node = nodes[i]
+                klasses[i] = self.bxBootName(node)
             }
 
             this.bxBootUse(klasses, function(Klasses) {
