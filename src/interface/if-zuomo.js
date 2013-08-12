@@ -1,4 +1,4 @@
-KISSY.add('brix/interface/if-zuomo', function(S, Util) {
+KISSY.add('brix/interface/if-zuomo', function(S) {
     //var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
 
     var exports = {}
@@ -166,7 +166,7 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var obj = Util.bxGetAncestor(self)
+            var obj = self.bxGetAncestor(self)
             var data = obj.data
             var ancestor = obj.ancestor
             if (data) {
@@ -175,14 +175,11 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                         if (!S.inArray(key, ancestor.bxRefreshKeys)) {
                             ancestor.bxRefreshKeys.push(key)
                         }
-                        //这个再看，不知道为什么，这个会引起ready事件的触发出错
                         if (ancestor.bxLaterTimer) {
-                            S.log('bxLaterTimer_' + S.guid())
                             ancestor.bxLaterTimer.cancel();
                             delete ancestor.bxLaterTimer
                         }
                         ancestor.bxLaterTimer = S.later(function() {
-                            S.log('bxIRefreshTpl_' + S.guid())
                             ancestor.bxIRefreshTpl(ancestor.bxRefreshKeys, data, 'html')
                             ancestor.bxRefreshKeys = [];
                         }, 100)
@@ -366,7 +363,7 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var obj = Util.bxGetAncestor(self)
+            var obj = self.bxGetAncestor(self)
             var newData = obj.data || {}
             var ancestor = obj.ancestor
             var keys = []
@@ -446,6 +443,4 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
     }
 
     return exports
-}, {
-    requires: ['brix/tool/util']
 })

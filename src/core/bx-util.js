@@ -118,7 +118,8 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             }
         },
         bxGetBrickClass: function() {
-            return Brick = Brick || app.config('Brick')
+            Brick = Brick || app.config('Brick')
+            return Brick
         },
         bxGet: function(s) {
             return this['bx' + S.ucfist(s)] || this.get(s)

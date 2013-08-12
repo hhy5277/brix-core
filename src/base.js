@@ -401,7 +401,7 @@ KISSY.add("brix/base",
             on:function(){
                 Brick.superclass.on.apply(this, arguments)
                 return this;
-            }
+            },
             /**
              * 扩展组件的事件触发，或通知到所有父组件
              * @param  {String}  type       要触发的自定义事件名称
