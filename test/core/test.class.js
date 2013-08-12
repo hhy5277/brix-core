@@ -33,8 +33,6 @@ describe('brix/class', function() {
           },'z']
         }
       }).then(function(brick) {
-
-        debugger
         rootBrick = brick
         done()
       })
@@ -45,16 +43,17 @@ describe('brix/class', function() {
       expect(foo.xx).to.equal('xx')
       expect(foo.yy.b).to.equal(2)
       expect(foo.zz).to.equal('z')
+      expect(foo.bxChildren.length).to.equal(1)
     })
-    // it('class one object arguments', function() {
-    //   var foo = rootBrick.find('#fixture2')
-    //   expect(foo.xx.x).to.equal(1)
-    // })
+    it('class one object arguments', function() {
+      var foo = rootBrick.find('#fixture2')
+      expect(foo.xx.x).to.equal(1)
+    })
 
-    // it('class one simple arguments', function() {
-    //   var foo = rootBrick.find('#fixture3')
-    //   expect(foo.xx).to.equal(1)
-    // })
+    it('class one simple arguments', function() {
+      var foo = rootBrick.find('#fixture3')
+      expect(foo.xx).to.equal(1)
+    })
   })
 
 

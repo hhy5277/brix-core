@@ -1,4 +1,4 @@
-KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig) {
+KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind, bxUtil, bxConfig) {
 
     var Third = {
         bxInit: function(renderedFn, activatedFn) {
@@ -10,10 +10,10 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
             if (activatedFn) {
                 self.bxListionReady(activatedFn)
             }
-            S.later(function(){
+            S.later(function() {
                 self.bxRender()
             })
-            
+
         },
         bxRender: function() {
             var self = this
@@ -30,11 +30,9 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
                 delete self.bxRendering;
                 self.bxRendered = true
                 if (self.bxRenderedFn) {
-                    debugger
                     self.bxRenderedFn();
                     delete self.bxRenderedFn
                 }
-                self.bxActivate();
             })
         },
         bxActivate: function() {
@@ -48,7 +46,9 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
             var children = self.bxChildren
 
             if (children.length === 0) {
-                S.later(activated, 0)
+                S.later(function() {
+                    activated()
+                }, 0)
                 return
             }
             var total = children.length
@@ -62,7 +62,6 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
                     delete self.bxReadyFn;
 
                 }
-
             }
 
             function check() {
@@ -117,7 +116,7 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
             }
         }
     }
-    
+
     S.mix(Third, bxBoot)
     S.mix(Third, bxName)
     S.mix(Third, bxFind)
@@ -127,6 +126,7 @@ KISSY.add('brix/third/index', function(S, bxBoot, bxName, bxFind,bxUtil,bxConfig
     return Third
 
 }, {
-    requires: ['brix/core/bx-boot', 'brix/core/bx-name', 'brix/core/bx-find','brix/core/bx-util',
-        'brix/core/bx-config',]
+    requires: ['brix/core/bx-boot', 'brix/core/bx-name', 'brix/core/bx-find', 'brix/core/bx-util',
+        'brix/core/bx-config',
+    ]
 })

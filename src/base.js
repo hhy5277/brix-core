@@ -274,8 +274,10 @@ KISSY.add("brix/base",
                 var children = self.bxChildren
 
                 if (children.length === 0) {
-                    debugger
-                    S.later(activated, 0)
+                    S.later(
+                        function() {
+                            activated()
+                        }, 0)
                     return
                 }
                 var total = children.length
@@ -288,21 +290,18 @@ KISSY.add("brix/base",
                 }
 
                 function check() {
-                    debugger
                     if (++counter === total) activated()
                 }
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
                     if (!self.bxGetClass(child)) {
-                        debugger
                         child.bxListionReady(check)
                     } else {
                         child.once('ready', check)
                     }
                     child.bxActivate()
                 }
-
             },
 
             bxBind: function() {
