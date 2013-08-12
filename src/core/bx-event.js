@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-event', function(S,Util) {
+KISSY.add('brix/core/bx-event', function(S) {
 
     var exports = {
 
@@ -26,7 +26,7 @@ KISSY.add('brix/core/bx-event', function(S,Util) {
 
             function wrapFn(fnc) {
                 return function() {
-                    var obj = Util.bxGetAncestor(self)
+                    var obj = self.bxGetAncestor(self)
                     var ancestor
                     if(obj.data){
                         //增加brixData，方便外部直接获取
@@ -113,5 +113,5 @@ KISSY.add('brix/core/bx-event', function(S,Util) {
 
     return exports
 }, {
-    requires: ['brix/tool/util','event']
+    requires: ['event']
 })

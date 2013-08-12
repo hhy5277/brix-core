@@ -28,7 +28,7 @@ describe('app and Brick', function() {
         .then(function(brick) {
           // 因为 [bx-name="thx.test/opoa-foo"] 节点已经被干掉了
           expect(brick.find('thx.test/opoa-foo')).to.be(undefined)
-          expect(brick.get('children')).to.be.empty()
+          expect(brick.bxChildren).to.be.empty()
         })
 
         // 5ms 后清空 #fixture1 中的内容，即不再有 thx.test/opoa-foo 组件
@@ -45,14 +45,14 @@ describe('app and Brick', function() {
       app
         .prepare('#fixture2')
         .then(function(brick) {
-          expect(brick.get('children').length).to.be(1)
+          expect(brick.bxChildren.length).to.be(1)
           expect(brick.find('thx.test/opoa-foo')).to.be.a(Brick)
 
           S.one('#fixture2').remove()
 
           brick.destroy()
 
-          expect(brick.get('children')).to.be.empty()
+          expect(brick.bxChildren).to.be.empty()
           expect(brick.get('el')).to.be(null)
 
           // http://stackoverflow.com/questions/5076944/what-is-the-difference-between-null-and-undefined-in-javascript

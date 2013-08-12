@@ -37,7 +37,7 @@ KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
                         break
                     }
                 }
-                var subTpls = self.get('parent').get('subTplsCache')
+                var subTpls = self.bxParent.get('subTplsCache')
 
                 callback(withinEach ? subTpls[0] : subTpls.shift())
             }

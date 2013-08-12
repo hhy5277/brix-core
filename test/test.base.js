@@ -40,8 +40,8 @@ describe('brix/base', function() {
 
     it('the parent of prepared bricks will be different', function(done) {
       rootBrick.prepare('#fixture2').then(function(brick) {
-        expect(brick.get('parent')).to.equal(rootBrick)
-        expect(brick.get('parent').get('parent')).to.equal(app)
+        expect(brick.bxParent).to.equal(rootBrick)
+        expect(brick.bxParent.bxParent).to.equal(app)
         done()
       })
     })
@@ -85,7 +85,7 @@ describe('brix/base', function() {
     })
 
     it('shall boot bricks that require async module loading', function(done) {
-      expect(rootBrick.get('children')).to.be.empty()
+      expect(rootBrick.bxChildren).to.be.empty()
       rootBrick
         .boot({
           el: '#fixture8',
@@ -97,7 +97,7 @@ describe('brix/base', function() {
           return brick
         })
         .then(function(brick) {
-          expect(rootBrick.get('children')[0]).to.equal(brick)
+          expect(rootBrick.bxChildren[0]).to.equal(brick)
           done()
         })
     })

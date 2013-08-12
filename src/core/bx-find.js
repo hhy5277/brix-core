@@ -7,7 +7,7 @@ KISSY.add('brix/core/bx-find', function() {
          * @return {Brick}
          */
         one: function(selector) {
-            return this.bxOne(selector, this.get('children') || [], true)
+            return this.bxOne(selector, this.bxChildren || [], true)
         },
         bxOne: function(selector, children, isRecursive) {
             if (selector.charAt(0) === '#') {
@@ -19,7 +19,7 @@ KISSY.add('brix/core/bx-find', function() {
                     child.bxName === selector) {
                     return child
                 } else if (isRecursive) {
-                    var result = this.bxOne(selector, child.get('children') || [], isRecursive)
+                    var result = this.bxOne(selector, child.bxChildren || [], isRecursive)
                     if (result) {
                         return result
                     }
@@ -35,7 +35,7 @@ KISSY.add('brix/core/bx-find', function() {
          */
         all: function(selector) {
             var result = []
-            this.bxAll(selector, this.get('children') || [], result, true)
+            this.bxAll(selector, this.bxChildren || [], result, true)
             return result;
         },
         bxAll: function(selector, children, result, isRecursive) {
@@ -50,7 +50,7 @@ KISSY.add('brix/core/bx-find', function() {
                     result.push(child)
                 }
                 if (isRecursive) {
-                    this.bxAll(selector, child.get('children') || [], result, isRecursive)
+                    this.bxAll(selector, child.bxChildren || [], result, isRecursive)
                 }
             }
         },
@@ -60,7 +60,7 @@ KISSY.add('brix/core/bx-find', function() {
          * @return {Brick}
          */
         find: function(selector) {
-            return this.bxOne(selector, this.get('children') || [])
+            return this.bxOne(selector, this.bxChildren || [])
         },
         /**
          * 查找当前组件下的子组件
@@ -69,7 +69,7 @@ KISSY.add('brix/core/bx-find', function() {
          */
         where: function(selector) {
             var result = []
-            this.bxAll(selector, this.get('children') || [], result)
+            this.bxAll(selector, this.bxChildren || [], result)
             return result;
         }
     }

@@ -1,7 +1,7 @@
 KISSY.add("brix/base",
-    function(S, Util, app, Interface,
+    function(S, app, Interface,
         bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
-        Watcher, Promise, RichBase, XTemplate) {
+        bxWatcher, bxUtil, Promise, RichBase, XTemplate) {
 
         var noop = S.noop
 
@@ -14,9 +14,10 @@ KISSY.add("brix/base",
                 var self = this
                 var el = self.get('el')
 
-
                 self.bxId = el.attr('id')
                 self.bxName = el.attr('bx-name')
+
+                self.bxParent = self.get('parent')
 
                 self.bxIgnite()
             },
@@ -70,15 +71,14 @@ KISSY.add("brix/base",
                 // 不然如果实例化过程是同步的，来不及监听 ready 事件。
                 //
                 S.later(function() {
-                    try{
+                    try {
                         if (self.get('el')) {
                             d.resolve(true)
                         }
-                    }
-                    catch(e){
+                    } catch (e) {
                         //
                     }
-                    
+
                 }, 0)
 
                 return self
@@ -216,7 +216,7 @@ KISSY.add("brix/base",
 
                     d.resolve()
                 })
-
+                self.bxChildren = [];
                 // 初始化子组件
                 self.bxHandleName(el, function() {
                     self.setInternal("rendered", true)
@@ -276,18 +276,23 @@ KISSY.add("brix/base",
                 // 事件来在添加行为完毕之后做其它操作。
                 self.setInternal('activated', true)
 
-                var children = self.get('children')
+                var children = self.bxChildren
+
+                if (children.length === 0) {
+                    S.later(activated, 0)
+                    return
+                }
                 var total = children.length
-                var counter = 0
+                var counter = 0;
 
-                    function activated() {
-                        self.setInternal('ready', true)
-                        self.fire('ready')
-                    }
+                function activated() {
+                    self.setInternal('ready', true)
+                    self.fire('ready')
+                }
 
-                    function check() {
-                        if (++counter === total) activated()
-                    }
+                function check() {
+                    if (++counter === total) activated()
+                }
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
@@ -297,12 +302,8 @@ KISSY.add("brix/base",
                         child.once('ready', check)
                         child.bxActivate()
                     }
-
                 }
 
-                if (!children || children.length === 0) {
-                    S.later(activated, 0)
-                }
             },
 
             bxBind: function() {
@@ -358,20 +359,19 @@ KISSY.add("brix/base",
                 var self = this
 
                 //需要销毁子组件
-                var children = self.get('children')
+                var children = self.bxChildren
                 var i
-
                 for (i = children.length - 1; i >= 0; i--) {
                     children[i].destroy()
                 }
+                self.bxChildren = [];
+                
 
-                self.set('children', [])
-
-                var parent = self.get('parent')
+                var parent = self.bxParent
 
                 // 如果存在父组件，则移除
                 if (parent) {
-                    var siblings = parent.get('children')
+                    var siblings = parent.bxChildren
                     var id = self.bxId
 
                     for (i = siblings.length - 1; i >= 0; i--) {
@@ -398,7 +398,10 @@ KISSY.add("brix/base",
 
                 self.set('destroyed', true)
             },
-
+            on:function(){
+                Brick.superclass.on.apply(this, arguments)
+                return this;
+            }
             /**
              * 扩展组件的事件触发，或通知到所有父组件
              * @param  {String}  type       要触发的自定义事件名称
@@ -409,7 +412,7 @@ KISSY.add("brix/base",
                 var ret = Brick.superclass.fire.apply(this, arguments)
 
                 //触发父组件的事件
-                var parent = this.get('parent')
+                var parent = this.bxParent
 
                 if (parent) {
                     context = context || this;
@@ -462,6 +465,7 @@ KISSY.add("brix/base",
                 }
             }
         }, {
+            NAME: 'Brick',
             ATTRS: S.mix(S.mix({
                 /**
                  * 模板
@@ -510,7 +514,7 @@ KISSY.add("brix/base",
                         return s
                     },
                     setter: function(el) {
-                        return '#' + Util.bxUniqueId(el)
+                        return '#' + this.bxUniqueId(el)
                     }
                 },
 
@@ -584,15 +588,6 @@ KISSY.add("brix/base",
                 events: {
 
                 },
-
-                /**
-                 * 存储所有子组件
-                 * @type {Array}
-                 */
-                children: {
-                    value: []
-                },
-
                 /**
                  * 组件的父组件实例对象
                  * @cfg {Object}
@@ -600,16 +595,15 @@ KISSY.add("brix/base",
                 parent: {
                     value: false
                 }
-            }, Interface.ATTRS), Watcher.ATTRS)
+            }, Interface.ATTRS), bxWatcher.ATTRS)
         }, 'Brick')
 
-        S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
+        S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, bxWatcher, bxUtil, Interface.METHODS)
 
 
         return Brick
     }, {
         requires: [
-            'brix/tool/util',
             'brix/app/config',
             'brix/interface/index',
             'brix/core/bx-tpl',
@@ -621,6 +615,7 @@ KISSY.add("brix/base",
             'brix/core/bx-boot',
             'brix/core/bx-find',
             'brix/core/bx-watcher',
+            'brix/core/bx-util',
             'promise',
             'rich-base',
             'xtemplate',

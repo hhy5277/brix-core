@@ -47,11 +47,10 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
-                //S.log('beforeRefreshTpl_'+needRenderCounter)
+
                 needRenderCounter++
                 needActivateCounter++
-                //debugger
-
+                
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
@@ -178,15 +177,15 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                         }
                         //这个再看，不知道为什么，这个会引起ready事件的触发出错
                         if (ancestor.bxLaterTimer) {
-                            S.log('bxLaterTimer_'+S.guid())
+                            S.log('bxLaterTimer_' + S.guid())
                             ancestor.bxLaterTimer.cancel();
                             delete ancestor.bxLaterTimer
                         }
                         ancestor.bxLaterTimer = S.later(function() {
-                            S.log('bxIRefreshTpl_'+S.guid())
+                            S.log('bxIRefreshTpl_' + S.guid())
                             ancestor.bxIRefreshTpl(ancestor.bxRefreshKeys, data, 'html')
                             ancestor.bxRefreshKeys = [];
-                        },100)
+                        }, 100)
                     })
                 }
                 var temparr = datakey.split(',')
@@ -236,16 +235,6 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                 //递归编译子模板
                 self.bxIBuildSubTpls(m[5])
             }
-            // var bxEvents = self.get('bx-events')
-            // //获取模板中bx-type的对象
-            // var rrr = /bx\-([^=]+)=["\']([^"\'\s]+)["\']/ig
-            // tpl.replace(rrr, function(all, type, fn) {
-            //     if (!S.inArray(type, KEYS)) {
-            //         bxEvents[fn] = bxEvents[fn] || []
-            //         bxEvents[fn].push(type)
-            //     }
-            //     return all
-            // })
         },
         /**
          * 子闭合标间的处理
@@ -345,8 +334,7 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
                 }
             })
 
-            var children = self.get('children')
-
+            var children = self.bxChildren
             // 为什么要这样做？
             // 因为 bxIRefreshTpl 有可能会更改 children 数组的长度
             for (var i = 0; i < children.length; i++) {
@@ -364,6 +352,7 @@ KISSY.add('brix/interface/if-zuomo', function(S, Util) {
             S.each(children, function(child) {
                 child.set('refresh', false)
             })
+
         },
 
         /**

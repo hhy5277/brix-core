@@ -24,10 +24,11 @@ describe('brix/base', function() {
   describe('delegate', function() {
 
     afterEach(function() {
-      var children = app.get('children')
-
-      for (var i = 0; i < children.length; i++) {
-        children[i].destroy()
+      var children = app.bxChildren
+      if(children){
+        for (var i = 0; i < children.length; i++) {
+          children[i].destroy()
+        }
       }
     })
 

@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-remote', function(S, Util, app, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
 
     var exports = {
 
@@ -60,14 +60,13 @@ KISSY.add('brix/core/bx-remote', function(S, Util, app, IO, Uri) {
                 throw Error('Cannot load data.json via xhr in current mode.')
             }
 
-            IO.get(Util.bxResolveModule(mod, '.json'), callback)
+            IO.get(this.bxResolveModule(mod, '.json'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
-        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'uri'

@@ -1,4 +1,5 @@
-KISSY.add('brix/tool/util', function(S, app) {
+KISSY.add('brix/core/bx-util', function(S, app) {
+    var Brick
     return {
         /**
          * 动态传参数实例类
@@ -91,16 +92,36 @@ KISSY.add('brix/tool/util', function(S, app) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = ancestor.get('parent')
+                ancestor = ancestor.bxParent
             }
 
-            if(!data){
+            if (!data) {
                 ancestor = context
             }
             return {
                 data: data,
                 ancestor: ancestor
             }
+        },
+        /**
+         * 获取brick的Class
+         * @param  {Object} context 实例
+         * @return {Function}       Class
+         */
+        bxGetClass: function(context) {
+            var c = context.constructor
+            while (c) {
+                if (c.NAME == 'Brick') {
+                    return c;
+                }
+                c = c.superclass ? c.superclass.constructor : null
+            }
+        },
+        bxGetBrickClass: function() {
+            return Brick = Brick || app.config('Brick')
+        },
+        bxGet: function(s) {
+            return this['bx' + S.ucfist(s)] || this.get(s)
         }
     }
 }, {
