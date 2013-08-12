@@ -22,6 +22,7 @@ KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 					// e.brixData.a =  'aaaa' + S.guid();
 					// e.brixData.c =  'cccc' + S.guid();
 					self.fire(DelegateFoo.FIRES.customEvent)
+					return true
 				}
 			}
 		},

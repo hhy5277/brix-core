@@ -12,18 +12,6 @@ KISSY.add("brix/base",
         var Brick = RichBase.extend({
             initializer: function() {
                 var self = this
-                var el = self.get('el')
-
-                self.bxId = el.attr('id')
-                self.bxName = el.attr('bx-name')
-
-                self.bxParent = self.get('parent')
-
-                self.bxIgnite()
-            },
-
-            bxIgnite: function() {
-                var self = this
                 var d = new Promise.Defer()
                 var promise = d.promise
 
@@ -47,7 +35,13 @@ KISSY.add("brix/base",
                         return self.bxBuildTpl()
                     })
                     .then(function() {
-                        return self.bxRender()
+                        //初始化完成，可以获取组件实例，调用render和active
+                        self.fire('initialized')
+                    })
+                    .then(function() {
+                        if (self.get('autoRender')) {
+                            return self.bxRender()
+                        }
                     })
                     .fail(function(err) {
                         if (err.message !== 'el is removed') {
@@ -55,7 +49,7 @@ KISSY.add("brix/base",
                         }
                     })
 
-                if (!self.get('passive')) {
+                if (!self.get('passive') && self.get('autoActivate')) {
                     promise.then(function() {
                         return self.bxActivate()
                     })
@@ -182,10 +176,10 @@ KISSY.add("brix/base",
             bxRender: function() {
                 var self = this
 
-                if (!self.get('autoRender') || self.get("rendered")) {
+                if (self.bxRendering || self.bxRendered) {
                     return
                 }
-
+                self.bxRendering = true
                 var d = new Promise.Defer()
 
                 /**
@@ -219,7 +213,8 @@ KISSY.add("brix/base",
                 self.bxChildren = [];
                 // 初始化子组件
                 self.bxHandleName(el, function() {
-                    self.setInternal("rendered", true)
+                    delete self.bxRendering;
+                    self.bxRendered = true
                     self.fire('rendered')
                 })
 
@@ -255,12 +250,12 @@ KISSY.add("brix/base",
             bxActivate: function() {
                 var self = this
 
-                if (!self.get('autoActivate') || // do not enable automatically
-                    self.get('activated') || // activated before,
-                    !self.get('rendered')) { // or not rendered yet.
+                if (self.bxActivating ||
+                    self.bxActivated || // activated before,
+                    !self.bxRendered) { // or not rendered yet.
                     return
                 }
-
+                self.bxActivating = true;
                 self.bxBind()
                 self.bxSync()
 
@@ -274,11 +269,12 @@ KISSY.add("brix/base",
                 //
                 // 目前是直接拿 activated 来判断是否已调用方法，用 .on('activated')
                 // 事件来在添加行为完毕之后做其它操作。
-                self.setInternal('activated', true)
+
 
                 var children = self.bxChildren
 
                 if (children.length === 0) {
+                    debugger
                     S.later(activated, 0)
                     return
                 }
@@ -286,22 +282,25 @@ KISSY.add("brix/base",
                 var counter = 0;
 
                 function activated() {
-                    self.setInternal('ready', true)
+                    delete self.bxActivating;
+                    self.bxActivated = true
                     self.fire('ready')
                 }
 
                 function check() {
+                    debugger
                     if (++counter === total) activated()
                 }
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!child.bxRender) {
-                        check()
+                    if (!self.bxGetClass(child)) {
+                        debugger
+                        child.bxListionReady(check)
                     } else {
                         child.once('ready', check)
-                        child.bxActivate()
                     }
+                    child.bxActivate()
                 }
 
             },
@@ -362,10 +361,10 @@ KISSY.add("brix/base",
                 var children = self.bxChildren
                 var i
                 for (i = children.length - 1; i >= 0; i--) {
-                    children[i].destroy()
+                    children[i].bxDestroy()
                 }
                 self.bxChildren = [];
-                
+
 
                 var parent = self.bxParent
 
@@ -382,7 +381,7 @@ KISSY.add("brix/base",
                     }
                 }
 
-                if (self.get('rendered')) {
+                if (self.bxRendered) {
                     var el = self.get('el')
 
                     self.bxUndelegate()
@@ -395,10 +394,8 @@ KISSY.add("brix/base",
                         }
                     }
                 }
-
-                self.set('destroyed', true)
             },
-            on:function(){
+            on: function() {
                 Brick.superclass.on.apply(this, arguments)
                 return this;
             },
@@ -412,7 +409,7 @@ KISSY.add("brix/base",
                 var ret = Brick.superclass.fire.apply(this, arguments)
 
                 //触发父组件的事件
-                var parent = this.bxParent
+                var parent = this.bxGetBrickAncestor(this.bxParent)
 
                 if (parent) {
                     context = context || this;
@@ -463,6 +460,50 @@ KISSY.add("brix/base",
                 } else {
                     throw new Error('没有找到对应的函数')
                 }
+            },
+            boot: function(el, data) {
+                return this.bxBoot(el, data)
+            },
+
+            prepare: function(el, data) {
+                return this.bxPrepare(el, data)
+            },
+            /**
+             * 递归查找当前组件下的子组件
+             * @param  {String} selector 选择器，目前支持id和bx-name
+             * @return {Brick}
+             */
+            one: function(selector) {
+                return this.bxOne(selector)
+            },
+            /**
+             * 查找当前组件下的子组件
+             * @param  {Object} opts 查找条件，name和selector只能任选其一
+             * @param  {String} opts.name 组件名称bx-name
+             * @param  {String} opts.selector el节点选择器
+             * @return {Array}  符合过滤条件的实例数组
+             */
+            all: function(selector) {
+                return this.bxAll(selector);
+            },
+            /**
+             * 查找当前组件下的子组件
+             * @param  {String} selector 选择器，目前支持id和bx-name
+             * @return {Brick}
+             */
+            find: function(selector) {
+                return this.bxFind(selector)
+            },
+            /**
+             * 查找当前组件下的子组件
+             * @param  {String} selector 选择器，目前支持id和bx-name
+             * @return {Array}  符合过滤条件的实例数组
+             */
+            where: function(selector) {
+                return this.bxWhere(selector)
+            },
+            bxDestroy: function() {
+                this.destroy()
             }
         }, {
             NAME: 'Brick',
@@ -481,14 +522,6 @@ KISSY.add("brix/base",
                  */
                 data: {
                     value: null
-                },
-
-                /**
-                 * 是否已经渲染
-                 * @type {Boolean}
-                 */
-                rendered: {
-                    value: false
                 },
 
                 /**
@@ -556,14 +589,6 @@ KISSY.add("brix/base",
                  */
                 TplEngine: {
                     value: XTemplate
-                },
-
-                /**
-                 * 是否已经销毁
-                 * @type {Object}
-                 */
-                destroyed: {
-                    value: false
                 },
 
                 /**

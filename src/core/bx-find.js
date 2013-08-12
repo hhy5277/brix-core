@@ -1,15 +1,10 @@
 KISSY.add('brix/core/bx-find', function() {
 
     var exports = {
-        /**
-         * 递归查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Brick}
-         */
-        one: function(selector) {
-            return this.bxOne(selector, this.bxChildren || [], true)
+        bxOne:function(selector){
+            return this.bxIOne(selector, this.bxChildren || [], true)
         },
-        bxOne: function(selector, children, isRecursive) {
+        bxIOne: function(selector, children, isRecursive) {
             if (selector.charAt(0) === '#') {
                 selector = selector.substr(1)
             }
@@ -19,26 +14,19 @@ KISSY.add('brix/core/bx-find', function() {
                     child.bxName === selector) {
                     return child
                 } else if (isRecursive) {
-                    var result = this.bxOne(selector, child.bxChildren || [], isRecursive)
+                    var result = this.bxIOne(selector, child.bxChildren || [], isRecursive)
                     if (result) {
                         return result
                     }
                 }
             }
         },
-        /**
-         * 查找当前组件下的子组件
-         * @param  {Object} opts 查找条件，name和selector只能任选其一
-         * @param  {String} opts.name 组件名称bx-name
-         * @param  {String} opts.selector el节点选择器
-         * @return {Array}  符合过滤条件的实例数组
-         */
-        all: function(selector) {
+        bxAll:function(selector){
             var result = []
-            this.bxAll(selector, this.bxChildren || [], result, true)
+            this.bxIAll(selector, this.bxChildren || [], result, true)
             return result;
         },
-        bxAll: function(selector, children, result, isRecursive) {
+        bxIAll: function(selector, children, result, isRecursive) {
             if (selector.charAt(0) === '#') {
                 selector = selector.substr(1)
             }
@@ -50,29 +38,18 @@ KISSY.add('brix/core/bx-find', function() {
                     result.push(child)
                 }
                 if (isRecursive) {
-                    this.bxAll(selector, child.bxChildren || [], result, isRecursive)
+                    this.bxIAll(selector, child.bxChildren || [], result, isRecursive)
                 }
             }
         },
-        /**
-         * 查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Brick}
-         */
-        find: function(selector) {
-            return this.bxOne(selector, this.bxChildren || [])
+        bxFind:function(selector){
+             return this.bxIOne(selector, this.bxChildren || [])
         },
-        /**
-         * 查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Array}  符合过滤条件的实例数组
-         */
-        where: function(selector) {
+        bxWhere:function(selector){
             var result = []
-            this.bxAll(selector, this.bxChildren || [], result)
+            this.bxIAll(selector, this.bxChildren || [], result)
             return result;
         }
     }
-
     return exports
 })

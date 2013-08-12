@@ -87,12 +87,12 @@ KISSY.add('brix/core/bx-util', function(S, app) {
          */
         bxGetAncestor: function(context) {
             var data
-            var ancestor = context
+            var ancestor = this.bxGetBrickAncestor(context)
             while (ancestor) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = ancestor.bxParent
+                ancestor = this.bxGetBrickAncestor(context)
             }
 
             if (!data) {
@@ -101,6 +101,15 @@ KISSY.add('brix/core/bx-util', function(S, app) {
             return {
                 data: data,
                 ancestor: ancestor
+            }
+        },
+        bxGetBrickAncestor: function(ancestor) {
+            while (ancestor) {
+                if (!this.bxGetClass(ancestor)) {
+                    ancestor = ancestor.bxParent
+                } else {
+                    return ancestor
+                }
             }
         },
         /**

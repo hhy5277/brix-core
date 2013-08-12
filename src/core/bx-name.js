@@ -15,7 +15,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 } else {
                     // Some of the child nodes might be instantiated already.
                     // Remove them out of the nodes array that will be processed.
-                    var brick = self.find('#' + node.attr('id'))
+                    var brick = self.bxFind('#' + node.attr('id'))
 
                     if (brick) nodes.splice(i, 1)
                 }
@@ -59,7 +59,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                         el: el,
                         passive: !activatedCheck
                     })
-                    self.bxBoot(el, options, Klasses[i], renderedCheck, activatedCheck)
+                    self.bxIBoot(el, options, Klasses[i], renderedCheck, activatedCheck)
                 }
             })
         },

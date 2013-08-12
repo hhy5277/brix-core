@@ -1,5 +1,5 @@
-KISSY.add('brix/core/bx-boot', function(S, Promise) {
-    //var WhiteList = ['bxGet','']
+KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise) {
+    var bxThird
     var exports = {
 
         bxBootOptions: function(el, data) {
@@ -24,16 +24,15 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
                 options = {
                     el: el
                 }
-                if(data){
+                if (data) {
                     options.data = data
                 }
             }
-            if(S.isArray(data)){
+            if (S.isArray(data)) {
                 options = data;
                 el = el
-            }
-            else{
-                el = options.el 
+            } else {
+                el = options.el
             }
 
             el = S.one(el || '[bx-app]')
@@ -41,12 +40,12 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
 
             var config = self.bxHandleConfig(el)
 
-            var ancestor = self
+            var ancestor = self.bxGetBrickAncestor(self)
             var overrides
             if (S.isArray(config)) {
                 options = [];
-                self.bxMixArgument(options,config)
-                
+                self.bxMixArgument(options, config)
+
                 while (ancestor) {
                     overrides = ancestor.get('config')
 
@@ -55,22 +54,11 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
                         self.bxMixArgument(config, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent
+                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor).bxParent
                 }
                 options = config
-                options.el = el
             } else if (S.isPlainObject(config)) {
-
-                var tag = el.attr('bx-tag')
-                S.mix(options,config)
-
-                S.mix(options, {
-                    el: el,
-                    name: el.attr('bx-name'),
-                    parent: self,
-                    brickTpl: tag ? self.get('brickTpls')[tag].middle : null
-                })
-
+                S.mix(options, config)
                 while (ancestor) {
                     overrides = ancestor.get('config')
 
@@ -79,15 +67,14 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
                         S.mix(options, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent
+                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor).bxParent
                 }
-            }
-            else{
+            } else {
                 options = config
             }
             // We are booting this brick. There's no reason that it remains deferred.
             el.removeAttr('bx-defer')
-
+            options.el = el
             return options
         },
 
@@ -103,19 +90,18 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
             //
             if (name && naked !== 'all' && naked !== 'js') {
                 name = name.split('/').length > 2 ? name : (name + '/index')
-            }
-            else {
+            } else {
                 name = 'brix/base'
             }
 
             return name
         },
-        bxBoot: function(el, options, Klass, renderedFn, activatedFn) {
+        bxIBoot: function(el, options, Klass, renderedFn, activatedFn) {
             var self = this
             var DOM = S.DOM
             var bothFn = function() {
-                if(renderedFn) renderedFn()
-                if(activatedFn) activatedFn()
+                if (renderedFn) renderedFn()
+                if (activatedFn) activatedFn()
             }
 
             if (!(el && DOM.contains(document, el[0]))) {
@@ -134,6 +120,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
             inst.bxId = el.attr('id')
             inst.bxName = el.attr('bx-name')
             inst.bxChildren = []
+            inst.bxParent = self;
 
             var children = self.bxChildren
             children.push(inst)
@@ -147,51 +134,49 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
                 inst.once('destroy', bothFn)
             } else {
                 //这里mix Brix的方法，实现组件的局部刷新等功能
-                S.mix(inst,self.bxGetBrickClass().prototype)
-                //初始化一些方法
-                bothFn()
+                bxThird = bxThird || appConfig.config('bxThird')
+                S.mix(inst, bxThird)
+                inst.bxEl = el;
+                inst.bxInit(renderedFn, activatedFn)
             }
             return inst;
         },
-
-        bxBootUse:function(klasses,fn){
+        bxBootUse: function(klasses, fn) {
             var self = this;
             KISSY.use(klasses.join(','), function(S) {
                 var Klasses = S.makeArray(arguments)
 
                 // remove the S in the arguments array
                 Klasses.shift()
-                if(fn){
-                    fn.call(self,Klasses)
+                if (fn) {
+                    fn.call(self, Klasses)
                 }
             })
         },
-
-        boot: function(el, data) {
+        bxBoot: function(el, data) {
             var self = this
             var options = self.bxBootOptions(el, data)
             var d = new Promise.Defer()
-            
+
             el = options.el
-            var brick = this.find('#' + el.attr('id'))
-            if(brick){
-                S.later(function(){
+
+            var brick = this.bxFind('#' + el.attr('id'))
+            if (brick) {
+                S.later(function() {
                     d.resolve(brick)
                 })
-            }
-            else{
+            } else {
                 var name = this.bxBootName(el)
-                self.bxBootUse([name],function(Klasses){
-                    var brick = self.bxBoot(el, options, Klasses[0])
+                self.bxBootUse([name], function(Klasses) {
+                    var brick = self.bxIBoot(el, options, Klasses[0])
                     //brick有可能为空
                     d.resolve(brick)
                 })
             }
-            
+
             return d.promise
         },
-
-        prepare: function(el, data) {
+        bxPrepare: function(el, data) {
             var d = new Promise.Defer()
 
             this.boot(el, data).then(function(brick) {
@@ -206,5 +191,5 @@ KISSY.add('brix/core/bx-boot', function(S, Promise) {
 
     return exports
 }, {
-    requires: ['promise']
+    requires: ['brix/app/config', 'promise']
 })
