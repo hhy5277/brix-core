@@ -334,9 +334,9 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                             }
                         })
                     })
-                } else if (o.bxSubTpls.length > 0) {
+                } else if (o.subTpls.length > 0) {
                     //刷新子模板的子模板
-                    self.bxIRefreshTpl(el, o.bxSubTpls, keys, data, renderType)
+                    self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
                 }
             })
         },
