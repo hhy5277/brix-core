@@ -3,29 +3,31 @@
  * 
  * http://github.com/thx/brix-core
  */
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
-    var BxApp = {
-        bootStyle: function(fn) {
-            S.use(appConfig.bxComboStyle.call(appConfig).join(','), fn)
-            return this
-        },
-        bxChildren: []
+KISSY.add('brix/app', function(S, appConfig, bxBoot, bxFind, Brick, Base) {
+
+    function BxApp() {
+        BxApp.superclass.constructor.apply(this, arguments)
     }
-    S.mix(BxApp, appConfig)
-    S.mix(BxApp, bxApi)
-    S.mix(BxApp, bxThird)
 
-    appConfig.config('Third', Third)
-    appConfig.config('Brick', Brick)
+    S.extend(BxApp, Base)
+    S.augment(BxApp, appConfig, bxBoot, bxFind, {
+        bootStyle: function(fn) {
+            S.use(this.bxComboStyle().join(','), fn)
+        }
+    })
 
-    return BxApp
+    var app = new BxApp({})
+
+    app.config('Brick', Brick)
+
+    return app
 }, {
     requires: [
         'brix/app/config',
-        'brix/core/bx-api',
-        'brix/core/bx-third',
-        'brix/third/index',
-        'brix/base'
+        'brix/core/bx-boot',
+        'brix/core/bx-find',
+        'brix/base',
+        'base'
     ]
 });
 KISSY.add('brix/app/config', function(S) {
@@ -286,819 +288,731 @@ KISSY.add('brix/app/config', function(S) {
     return exports
 });
 KISSY.add("brix/base",
-    function(S, Interface, Core, Promise, RichBase, XTemplate) {
+          function(S, Util, app, Interface,
+                    bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
+                      Watcher, Promise, RichBase, XTemplate) {
 
-        var noop = S.noop
+    var noop = S.noop
 
-        var DOM = S.DOM
+    var DOM = S.DOM
 
-        var DESTROY_ACTIONS = ['remove', 'empty']
+    var DESTROY_ACTIONS = ['remove', 'empty']
 
-        var Brick = RichBase.extend({
-            initializer: function() {
-                var self = this
-                var d = new Promise.Defer()
-                var promise = d.promise
-
-                promise = promise
-                    .then(function() {
-                        return self.bxGetData()
-                    })
-                    .then(function() {
-                        return self.bxAfterGetData()
-                    })
-                    .then(function() {
-                        return self.bxBuildData()
-                    })
-                    .then(function() {
-                        return self.bxGetTpl()
-                    })
-                    .then(function() {
-                        return self.bxAfterGetTpl()
-                    })
-                    .then(function() {
-                        return self.bxBuildTpl()
-                    })
-                    .then(function() {
-                        //初始化完成，可以获取组件实例，调用render和active
-                        self.fire('initialized')
-                    })
-                    .then(function() {
-                        if (self.get('autoRender')) {
-                            return self.bxRender()
-                        }
-                    })
-                    .fail(function(err) {
-                        if (err.message !== 'el is removed') {
-                            throw err
-                        }
-                    })
-
-                if (!self.get('passive') && self.get('autoActivate')) {
-                    promise.then(function() {
-                        return self.bxActivate()
-                    })
-                }
+    var Brick = RichBase.extend({
+        initializer: function() {
+            var self = this
+            var el = self.get('el')
 
 
-                // 将初始化过程变成异步，从而允许这样的写法：
-                //
-                //     new Brick({ ... }).on('ready', function() {
-                //         // 监听 ready 事件
-                //     })
-                //
-                // 不然如果实例化过程是同步的，来不及监听 ready 事件。
-                //
-                S.later(function() {
-                    try {
-                        if (self.get('el')) {
-                            d.resolve(true)
-                        }
-                    } catch (e) {
-                        //
-                    }
+            self.bxId = el.attr('id')
+            self.bxName = el.attr('bx-name')
 
-                }, 0)
+            self.bxIgnite()
+        },
 
-                return self
-            },
+        bxIgnite: function() {
+            var self = this
+            var d = new Promise.Defer()
+            var promise = d.promise
 
-            bind: noop,
-
-            /**
-             * 同步属性与用户界面
-             * @protected
-             * @method
-             */
-            sync: noop,
-
-            /**
-             * 获取模板
-             */
-            bxGetTpl: function() {
-                var d = new Promise.Defer()
-                var self = this
-
-                self.bxHandleTpl(function(tpl) {
-                    if (tpl) {
-                        self.set('tpl', tpl)
-                    }
-                    d.resolve(tpl)
+            promise = promise
+                .then(function() {
+                    return self.bxGetData()
                 })
-
-                return d.promise
-            },
-
-            bxAfterGetTpl: function() {
-                var self = this
-                var d = new Promise.Defer()
-
-                // 开发者获取模板后，调用next方法
-                // fn 留作扩展使用
-                var fn = self.fire('getTpl', {
-                    next: function(tpl) {
-                        if (tpl)
-                            self.set('tpl', tpl)
-                        d.resolve(tpl)
-                    }
+                .then(function() {
+                    return self.bxAfterGetData()
                 })
-
-                if (fn) return d.promise
-            },
-
-            /**
-             * 编译模板
-             */
-            bxBuildTpl: function() {
-                if (this.bxIBuildTpl) return this.bxIBuildTpl()
-            },
-
-            bxGetData: function() {
-                var d = new Promise.Defer()
-                var self = this
-
-                self.bxHandleRemote(function(data) {
-                    if (data) {
-                        self.set('data', data)
-                    }
-
-                    d.resolve(data)
+                .then(function() {
+                    return self.bxBuildData()
                 })
-
-                return d.promise
-            },
-
-            /**
-             * 获取数据
-             */
-            bxAfterGetData: function() {
-                var d = new Promise.Defer()
-                var self = this
-
-                //开发者获取数据后，调用next方法
-                //fn 留作扩展使用
-                var fn = self.fire('getData', {
-                    next: function(data) {
-                        if (data) self.set('data', data)
-                        d.resolve(data)
-                    }
+                .then(function() {
+                    return self.bxGetTpl()
                 })
-
-                if (fn) return d.promise
-            },
-
-            /**
-             * 编译数据
-             * @param  {Objcet} data 数据
-             */
-            bxBuildData: function() {
-                return true
-            },
-
-            /**
-             * 将模板渲染到页面
-             */
-            bxRender: function() {
-                var self = this
-
-                if (self.bxRendering || self.bxRendered) {
-                    return
-                }
-                self.bxRendering = true
-                var d = new Promise.Defer()
-
-                /**
-                 * @event beforeRender
-                 * fired when root node is ready
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-                self.fire('beforeRender')
-
-                var tpl = self.get('tpl')
-                var el = self.get('el')
-
-                if (tpl) {
-                    var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
-
-                    el.html(html)
-                }
-
-                self.bxDelegate()
-
-                self.once('rendered', function resolve() {
-                    /**
-                     * @event afterRender
-                     * fired after root node is rendered into dom
-                     * @param {KISSY.Event.CustomEventObject} e
-                     */
-                    self.fire('afterRender')
-
-                    d.resolve()
+                .then(function() {
+                    return self.bxAfterGetTpl()
                 })
-                self.bxChildren = [];
-                // 初始化子组件
-                self.bxHandleName(el, function() {
-                    delete self.bxRendering;
-                    self.bxRendered = true
-                    self.fire('rendered')
+                .then(function() {
+                    return self.bxBuildTpl()
                 })
+                .then(function() {
+                    return self.bxRender()
+                })
+                .fail(function(err) { throw err })
 
-                return d.promise
-            },
-
-
-            /**
-             * 模板和数据渲染成字符串
-             * @param  {Object} data 数据
-             * @return {String} html片段
-             * @private
-             */
-            bxRenderTpl: function(tpl, data) {
-                var self = this
-                var TplEngine = self.get('TplEngine')
-
-                // 根据模板引擎，选择渲染方式
-                if (typeof TplEngine === 'function') {
-                    var commands = self.get('commands')
-
-                    return new TplEngine(tpl, {
-                        commands: commands || {}
-                    }).render(data)
-                } else {
-                    return TplEngine.render(tpl, data)
-                }
-            },
-
-            /**
-             * 给组件添加行为
-             */
-            bxActivate: function() {
-                var self = this
-
-                if (self.bxActivating ||
-                    self.bxActivated || // activated before,
-                    !self.bxRendered) { // or not rendered yet.
-                    return
-                }
-                self.bxActivating = true;
-                self.bxBind()
-                self.bxSync()
-
-                if (self.bxIActivate) self.bxIActivate()
-
-                // bxActivate 过程是否需要支持异步？
-                // 如果支持异步，是否需要两个状态属性，例如：
-                //
-                // - bxActivateCalled 用来标识 bxActivate 方法已被调用
-                // - activated 用来标识已经添加行为成功
-                //
-                // 目前是直接拿 activated 来判断是否已调用方法，用 .on('activated')
-                // 事件来在添加行为完毕之后做其它操作。
-
-
-                var children = self.bxChildren
-
-                if (children.length === 0) {
-                    S.later(
-                        function() {
-                            activated()
-                        }, 0)
-                    return
-                }
-                var total = children.length
-                var counter = 0;
-
-                function activated() {
-                    delete self.bxActivating;
-                    self.bxActivated = true
-                    self.fire('ready')
-                }
-
-                function check() {
-                    if (++counter === total) activated()
-                }
-
-                for (var i = 0; i < children.length; i++) {
-                    var child = children[i]
-                    if (!self.bxIsBrickInstance(child)) {
-                        child.bxListenReady(check)
-                    } else {
-                        child.once('ready', check)
-                    }
-                    child.bxActivate()
-                }
-            },
-
-            bxBind: function() {
-                var self = this
-
-                /**
-                 * @event beforeBind
-                 * fired before component 's internal event is bind.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-                self.fire('beforeBind')
-
-                self.constructor.superclass.bindInternal.call(self)
-
-                self.callMethodByHierarchy("bind", "__bind")
-
-                /**
-                 * @event afterBind
-                 * fired when component 's internal event is bind.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-                self.fire('afterBind')
-            },
-
-            bxSync: function() {
-                var self = this
-
-                /**
-                 * @event beforeSync
-                 * fired before component 's internal state is synchronized.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-                self.fire('beforeSync')
-
-                Brick.superclass.syncInternal.call(self)
-
-                self.callMethodByHierarchy("sync", "__sync")
-
-                /**
-                 * @event afterSync
-                 * fired after component 's internal state is synchronized.
-                 * @param {KISSY.Event.CustomEventObject} e
-                 */
-
-                self.fire('afterSync')
-            },
-
-            /**
-             * 析构函数，销毁资源
-             * @return {[type]} [description]
-             */
-            destructor: function() {
-                var self = this
-
-                //需要销毁子组件
-                var children = self.bxChildren
-                var i
-                for (i = children.length - 1; i >= 0; i--) {
-                    children[i].bxDestroy()
-                }
-                self.bxChildren = [];
-
-
-                var parent = self.bxParent
-
-                // 如果存在父组件，则移除
-                if (parent) {
-                    var siblings = parent.bxChildren
-                    var id = self.bxId
-
-                    for (i = siblings.length - 1; i >= 0; i--) {
-                        if (siblings[i].bxId === id) {
-                            siblings.splice(i, 1)
-                            break
-                        }
-                    }
-                }
-
-                if (self.bxRendered) {
-                    var el = self.get('el')
-
-                    self.bxUndelegate()
-
-                    if (el && DOM.contains(document, el[0])) {
-                        var action = self.get('destroyAction')
-
-                        if (S.inArray(action, DESTROY_ACTIONS)) {
-                            el[action]()
-                        }
-                    }
-                }
-            },
-            on: function() {
-                Brick.superclass.on.apply(this, arguments)
-                return this;
-            },
-            /**
-             * 扩展组件的事件触发，或通知到所有父组件
-             * @param  {String}  type       要触发的自定义事件名称
-             * @param  {Object}  eventData  要混入触发事件对象的数据对象
-             */
-            // 因为用到了 Brick 变量，所以从 core/bx-delegate 搬到这里，有更好的办法么？
-            fire: function(eventType, eventData, context) {
-                var ret = Brick.superclass.fire.apply(this, arguments)
-
-                //触发父组件的事件
-                var parent = this.bxGetBrickAncestor(this.bxParent)
-
-                if (parent) {
-                    context = context || this;
-                    if (context === this) {
-                        var eventTypeId = '#' + context.bxId + '_' + eventType
-                        var eventTypeName = context.bxName + '_' + eventType
-
-                        parent.fire(eventTypeId, eventData, context)
-                        parent.fire(eventTypeName, eventData, context)
-                    } else {
-                        parent.fire(eventType, eventData, context)
-                    }
-                }
-
-                return ret
-            },
-            /**
-             * 事件绑定执行一次
-             * @param  {String}   eventType 事件名称
-             * @param  {Function} fn        事件方法
-             * @param  {Object}   context   当前上下文
-             * @return {[type]}             [description]
-             */
-            once: function(eventType, fn, context) {
-                var self = this
-                var wrap = function() {
-                    self.detach(eventType, wrap)
-                    return fn.apply(this, arguments)
-                }
-
-                self.on(eventType, wrap, context)
-
-                return self
-            },
-            /**
-             * 运行fn后增加数据dirty checking
-             * @param  {Function|String} fn 需要执行的方法
-             */
-            dirtyCheck: function(fn) {
-                var self = this
-
-                if (typeof fn !== 'function') {
-                    fn = self[fn];
-                }
-                if (fn) {
-                    fn.apply(self, Array.prototype.slice.call(arguments, 1))
-                    self.digest()
-                } else {
-                    throw new Error('没有找到对应的函数')
-                }
-            },
-            bxDestroy: function() {
-                this.destroy()
+            if (!self.get('passive')) {
+                promise.then(function() {
+                    return self.bxActivate()
+                })
             }
 
-        }, {
-            NAME: 'Brick',
-            ATTRS: S.mix(S.mix({
-                /**
-                 * 模板
-                 * @cfg {Object}
-                 */
-                tpl: {
-                    value: null
-                },
 
-                /**
-                 * 数据
-                 * @cfg {Object}
-                 */
-                data: {
-                    value: null
-                },
+            // 将初始化过程变成异步，从而允许这样的写法：
+            //
+            //     new Brick({ ... }).on('ready', function() {
+            //         // 监听 ready 事件
+            //     })
+            //
+            // 不然如果实例化过程是同步的，来不及监听 ready 事件。
+            //
+            S.later(function() {
+                d.resolve(true)
+            }, 0)
 
-                /**
-                 * 是否已经添加行为
-                 * @type {Object}
-                 */
-                activated: {
-                    value: false
-                },
-
-                /**
-                 * 组件根节点
-                 * @cfg {Node}
-                 */
-                el: {
-                    getter: function(s) {
-                        if (S.isString(s)) {
-                            s = S.one(s)
-                        }
-                        if (!s) {
-                            throw new Error('el is removed')
-                        }
-                        return s
-                    },
-                    setter: function(el) {
-                        return '#' + this.bxUniqueId(el)
-                    }
-                },
-
-                /**
-                 * 是否自动渲染
-                 * @cfg {Boolean}
-                 */
-                autoRender: {
-                    value: true
-                },
-
-                /**
-                 * 自动添加组件行为
-                 * @cfg {Boolean}
-                 */
-                autoActivate: {
-                    value: true
-                },
-
-                /**
-                 * 被动模式，在父组件渲染时开启，详见 core/bx-name
-                 * @cfg {Boolean}
-                 */
-                passive: {
-                    value: false
-                },
-
-                /**
-                 * brick对子组件的配置增强,示例：{id:{xx:{},yy:{}},name{xx:{},yy:{}}}
-                 * @cfg {Object}
-                 */
-                config: {
-                    value: {}
-                },
-
-                /**
-                 * 模板引擎,默认xTemplate
-                 * @cfg {Object}
-                 */
-                TplEngine: {
-                    value: XTemplate
-                },
-
-                /**
-                 * 销毁操作时候的动作，默认remove。
-                 * 可选none:什么都不做，empty:清空内部html
-                 * @cfg {String}
-                 */
-                destroyAction: {
-                    value: 'none'
-                },
-
-                /**
-                 * 后期事件代理
-                 * {
-                 *     'selector':{
-                 *         eventType:function(){
-                 *         }
-                 *     }
-                 * }
-                 * @type {Object}
-                 */
-                events: {
-
-                },
-                /**
-                 * 组件的父组件实例对象
-                 * @cfg {Object}
-                 */
-                parent: {
-                    value: false
-                }
-            }, Interface.ATTRS), Core.ATTRS)
-        }, 'Brick')
-
-        S.augment(Brick, Core, Interface.METHODS)
-
-        return Brick
-    }, {
-        requires: [
-            'brix/interface/index',
-            'brix/core/index',
-            'promise',
-            'rich-base',
-            'xtemplate',
-            'node',
-            'event',
-            'sizzle'
-        ]
-    });
-KISSY.add('brix/core/bx-api', function() {
-    var exports = {
-        boot: function(el, data) {
-            return this.bxBoot(el, data)
+            return self
         },
 
-        prepare: function(el, data) {
-            return this.bxPrepare(el, data)
-        },
+        bind: noop,
+
         /**
-         * 递归查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Brick}
+         * 同步属性与用户界面
+         * @protected
+         * @method
          */
-        one: function(selector) {
-            return this.bxOne(selector)
-        },
+        sync: noop,
+
         /**
-         * 查找当前组件下的子组件
-         * @param  {Object} opts 查找条件，name和selector只能任选其一
-         * @param  {String} opts.name 组件名称bx-name
-         * @param  {String} opts.selector el节点选择器
-         * @return {Array}  符合过滤条件的实例数组
+         * 获取模板
          */
-        all: function(selector) {
-            return this.bxAll(selector);
-        },
-        /**
-         * 查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Brick}
-         */
-        find: function(selector) {
-            return this.bxFind(selector)
-        },
-        /**
-         * 查找当前组件下的子组件
-         * @param  {String} selector 选择器，目前支持id和bx-name
-         * @return {Array}  符合过滤条件的实例数组
-         */
-        where: function(selector) {
-            return this.bxWhere(selector)
-        }
-    }
-    return exports
-});
-KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
-    var Third
-    var exports = {
-        /**
-         * 处理boot参数
-         * @param  {Node}   el      节点
-         * @param  {Object} data 传入数据
-         * @return {Object|Array|String|Boolean|Number}  处理完后的类的参数
-         */
-        bxBootOptions: function(el,data) {
+        bxGetTpl: function() {
+            var d = new Promise.Defer()
             var self = this
+
+            self.bxHandleTpl(function(tpl) {
+                if(tpl){
+                   self.set('tpl', tpl)
+                }
+                d.resolve(tpl)
+            })
+
+            return d.promise
+        },
+
+        bxAfterGetTpl: function() {
+            var self = this
+            var d = new Promise.Defer()
+
+            // 开发者获取模板后，调用next方法
+            // fn 留作扩展使用
+            var fn = self.fire('getTpl', {
+                next: function(tpl) {
+                    if(tpl)
+                    self.set('tpl', tpl)
+                    d.resolve(tpl)
+                }
+            })
+
+            if (fn) return d.promise
+        },
+
+        /**
+         * 编译模板
+         */
+        bxBuildTpl: function() {
+            if (this.bxIBuildTpl) return this.bxIBuildTpl()
+        },
+
+        bxGetData: function() {
+            var d = new Promise.Defer()
+            var self = this
+
+            self.bxHandleRemote(function(data) {
+                if(data){
+                   self.set('data', data)
+                }
+
+                d.resolve(data)
+            })
+
+            return d.promise
+        },
+
+        /**
+         * 获取数据
+         */
+        bxAfterGetData: function() {
+            var d = new Promise.Defer()
+            var self = this
+
+            //开发者获取数据后，调用next方法
+            //fn 留作扩展使用
+            var fn = self.fire('getData', {
+                next: function(data) {
+                    if (data) self.set('data', data)
+                    d.resolve(data)
+                }
+            })
+
+            if (fn) return d.promise
+        },
+
+        /**
+         * 编译数据
+         * @param  {Objcet} data 数据
+         */
+        bxBuildData: function() {
+            var self = this
+            var data = self.get('data')
+
+            if (data) {
+                return true
+            }
+            else {
+                // 是否需要拷贝父亲的数据
+                // if (self.get('tpl')) {
+                //     var parent = self
+                //     var newData
+                //     while (parent) {
+                //         if (newData = parent.get('data')) {
+                //             self.setInternal('data', newData)
+                //             break
+                //         }
+                //         parent = parent.get('parent')
+                //     }
+                // }
+            }
+        },
+
+        /**
+         * 将模板渲染到页面
+         */
+        bxRender: function() {
+            var self = this
+
+            if (!self.get('autoRender') || self.get("rendered")) {
+                return
+            }
+
+            var d = new Promise.Defer()
+
+            /**
+             * @event beforeRender
+             * fired when root node is ready
+             * @param {KISSY.Event.CustomEventObject} e
+             */
+            self.fire('beforeRender')
+
+            var tpl = self.get('tpl')
+            var el = self.get('el')
+
+            if (tpl) {
+                var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
+
+                el.html(html)
+            }
+
+            self.bxDelegate()
+
+            self.once('rendered', function resolve() {
+                /**
+                 * @event afterRender
+                 * fired after root node is rendered into dom
+                 * @param {KISSY.Event.CustomEventObject} e
+                 */
+                self.fire('afterRender')
+
+                d.resolve()
+            })
+
+            // 初始化子组件
+            self.bxHandleName(el, function() {
+                self.setInternal("rendered", true)
+                self.fire('rendered')
+            })
+
+            return d.promise
+        },
+
+
+        /**
+         * 模板和数据渲染成字符串
+         * @param  {Object} data 数据
+         * @return {String} html片段
+         * @private
+         */
+        bxRenderTpl: function(tpl, data) {
+            var self = this
+            var TplEngine = self.get('TplEngine')
+
+            // 根据模板引擎，选择渲染方式
+            if (typeof TplEngine === 'function') {
+                var commands = self.get('commands')
+
+                return new TplEngine(tpl, { commands: commands || {} }).render(data)
+            }
+            else {
+                return TplEngine.render(tpl, data)
+            }
+        },
+
+        /**
+         * 给组件添加行为
+         */
+        bxActivate: function() {
+            var self = this
+
+            if (!self.get('autoActivate') ||      // do not enable automatically
+                    self.get('activated') ||      // activated before,
+                    !self.get('rendered')) {      // or not rendered yet.
+                return
+            }
+
+            self.bxBind()
+            self.bxSync()
+
+            if (self.bxIActivate) self.bxIActivate()
+
+            // bxActivate 过程是否需要支持异步？
+            // 如果支持异步，是否需要两个状态属性，例如：
+            //
+            // - bxActivateCalled 用来标识 bxActivate 方法已被调用
+            // - activated 用来标识已经添加行为成功
+            //
+            // 目前是直接拿 activated 来判断是否已调用方法，用 .on('activated')
+            // 事件来在添加行为完毕之后做其它操作。
+            self.setInternal('activated', true)
+
+            var children = self.get('children')
+            var total = children.length
+            var counter = 0
+
+            function activated() {
+                self.setInternal('ready', true)
+                self.fire('ready')
+            }
+
+            function check() {
+                if (++counter === total) activated()
+            }
+
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+                if(!child.bxRender){
+                    check()
+                }   
+                else{
+                    child.once('ready', check)
+                    child.bxActivate() 
+                }
+                
+            }
+
+            if (!children || children.length === 0) {
+                S.later(activated, 0)
+            }
+        },
+
+        bxBind: function() {
+            var self = this
+
+            /**
+             * @event beforeBind
+             * fired before component 's internal event is bind.
+             * @param {KISSY.Event.CustomEventObject} e
+             */
+            self.fire('beforeBind')
+
+            self.constructor.superclass.bindInternal.call(self)
+
+            self.callMethodByHierarchy("bind", "__bind")
+
+            /**
+             * @event afterBind
+             * fired when component 's internal event is bind.
+             * @param {KISSY.Event.CustomEventObject} e
+             */
+            self.fire('afterBind')
+        },
+
+        bxSync: function() {
+            var self = this
+
+            /**
+             * @event beforeSync
+             * fired before component 's internal state is synchronized.
+             * @param {KISSY.Event.CustomEventObject} e
+             */
+            self.fire('beforeSync')
+
+            Brick.superclass.syncInternal.call(self)
+
+            self.callMethodByHierarchy("sync", "__sync")
+
+            /**
+             * @event afterSync
+             * fired after component 's internal state is synchronized.
+             * @param {KISSY.Event.CustomEventObject} e
+             */
+
+            self.fire('afterSync')
+        },
+
+        /**
+         * 析构函数，销毁资源
+         * @return {[type]} [description]
+         */
+        destructor: function() {
+            var self = this
+
+            //需要销毁子组件
+            var children = self.get('children')
+            var i
+
+            for (i = children.length - 1; i >= 0; i--) {
+                children[i].destroy()
+            }
+
+            self.set('children', [])
+
+            var parent = self.get('parent')
+
+            // 如果存在父组件，则移除
+            if (parent) {
+                var siblings = parent.get('children')
+                var id = self.bxId
+
+                for (i = siblings.length - 1; i >= 0; i--) {
+                    if (siblings[i].bxId === id) {
+                        siblings.splice(i, 1)
+                        break
+                    }
+                }
+            }
+
+            if (self.get('rendered')) {
+                var el = self.get('el')
+
+                self.bxUndelegate()
+
+                if (el && DOM.contains(document, el[0])) {
+                    var action = self.get('destroyAction')
+
+                    if (S.inArray(action, DESTROY_ACTIONS)) {
+                        el[action]()
+                    }
+                }
+            }
+
+            self.set('destroyed', true)
+        },
+
+        /**
+         * 扩展组件的事件触发，或通知到所有父组件
+         * @param  {String}  type       要触发的自定义事件名称
+         * @param  {Object}  eventData  要混入触发事件对象的数据对象
+         */
+        // 因为用到了 Brick 变量，所以从 core/bx-delegate 搬到这里，有更好的办法么？
+        fire: function(eventType, eventData, context) {
+            var ret = Brick.superclass.fire.apply(this, arguments)
+
+            //触发父组件的事件
+            var parent = this.get('parent')
+
+            if (parent) {
+                context = context || this;
+                if (context === this) {
+                    var eventTypeId = '#' + context.bxId + '_' + eventType
+                    var eventTypeName = context.bxName + '_' + eventType
+
+                    parent.fire(eventTypeId, eventData, context)
+                    parent.fire(eventTypeName, eventData, context)
+                }
+                else {
+                    parent.fire(eventType, eventData, context)
+                }
+            }
+
+            return ret
+        },
+        /**
+         * 事件绑定执行一次
+         * @param  {String}   eventType 事件名称
+         * @param  {Function} fn        事件方法
+         * @param  {Object}   context   当前上下文
+         * @return {[type]}             [description]
+         */
+        once: function(eventType, fn, context) {
+            var self = this
+            var wrap = function() {
+                self.detach(eventType, wrap)
+                fn.apply(this, arguments)
+            }
+
+            self.on(eventType, wrap, context)
+
+            return self
+        },
+        /**
+         * 运行fn后增加数据dirty checking
+         * @param  {Function|String} fn 需要执行的方法
+         */
+        dirtyCheck:function(fn){
+            var self = this
+
+            if(typeof fn !== 'function'){
+                fn = self[fn];
+            }
+            if(fn){
+                fn.apply(self,Array.prototype.slice.call(arguments,1))
+                self.digest()
+            }
+            else{
+                throw new Error('没有找到对应的函数')
+            }
+        }
+    }, {
+        ATTRS: S.mix(S.mix({
+            /**
+             * 模板
+             * @cfg {Object}
+             */
+            tpl: {
+                value: null
+            },
+
+            /**
+             * 数据
+             * @cfg {Object}
+             */
+            data: {
+                value: {}
+            },
+
+            /**
+             * 是否已经渲染
+             * @type {Boolean}
+             */
+            rendered: {
+                value: false
+            },
+
+            /**
+             * 是否已经添加行为
+             * @type {Object}
+             */
+            activated: {
+                value: false
+            },
+
+            /**
+             * 组件根节点
+             * @cfg {Node}
+             */
+            el: {
+                getter: function(s) {
+                    if (S.isString(s)) {
+                        s = S.one(s)
+                    }
+                    return s
+                },
+                setter: function(el) {
+                    return '#' + Util.bxUniqueId(el)
+                }
+            },
+
+            /**
+             * 是否自动渲染
+             * @cfg {Boolean}
+             */
+            autoRender: {
+                value: true
+            },
+
+            /**
+             * 自动添加组件行为
+             * @cfg {Boolean}
+             */
+            autoActivate: {
+                value: true
+            },
+
+            /**
+             * 被动模式，在父组件渲染时开启，详见 core/bx-name
+             * @cfg {Boolean}
+             */
+            passive: {
+                value: false
+            },
+
+            /**
+             * brick对子组件的配置增强,示例：{id:{xx:{},yy:{}},name{xx:{},yy:{}}}
+             * @cfg {Object}
+             */
+            config: {
+                value: {}
+            },
+
+            /**
+             * 模板引擎,默认xTemplate
+             * @cfg {Object}
+             */
+            TplEngine: {
+                value: XTemplate
+            },
+
+            /**
+             * 是否已经销毁
+             * @type {Object}
+             */
+            destroyed: {
+                value: false
+            },
+
+            /**
+             * 销毁操作时候的动作，默认remove。
+             * 可选none:什么都不做，empty:清空内部html
+             * @cfg {String}
+             */
+            destroyAction: {
+                value: 'none'
+            },
+
+            /**
+             * 后期事件代理
+             * {
+             *     'selector':{
+             *         eventType:function(){
+             *         }
+             *     }
+             * }
+             * @type {Object}
+             */
+            events: {
+
+            },
+
+            /**
+             * 存储所有子组件
+             * @type {Array}
+             */
+            children: {
+                value: []
+            },
+
+            /**
+             * 组件的父组件实例对象
+             * @cfg {Object}
+             */
+            parent: {
+                value: false
+            }
+        }, Interface.ATTRS),Watcher.ATTRS)
+    }, 'Brick')
+
+    S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
+
+
+    return Brick
+}, {
+    requires: [
+        'brix/tool/util',
+        'brix/app/config',
+        'brix/interface/index',
+        'brix/core/bx-tpl',
+        'brix/core/bx-name',
+        'brix/core/bx-event',
+        'brix/core/bx-delegate',
+        'brix/core/bx-config',
+        'brix/core/bx-remote',
+        'brix/core/bx-boot',
+        'brix/core/bx-find',
+        'brix/core/bx-watcher',
+        'promise',
+        'rich-base',
+        'xtemplate',
+        'node',
+        'event',
+        'sizzle'
+    ]
+});
+KISSY.add('brix/core/bx-boot', function(S, Promise) {
+
+    var exports = {
+        bxBootOptions: function(el, data) {
             var options
+
+            // Boot as child:
+            //
+            //     .boot({ el: el, tpl: tpl, data: data })
+            //
+            // Boot self:
+            //
+            //     .boot({ data: data })
+            //
             if (S.isPlainObject(el)) {
                 data = null
                 options = el
             }
-            else {
+            // .boot('#page')
+            else if (S.isString(el)) {
                 options = {
-                    el: el
-                }
-                if (data) {
-                    options.data = data
+                    el: el,
+                    data: data
                 }
             }
-            el = S.one(options.el || '[bx-app]')
-            var config = self.bxHandleConfig(el)
-
-            var ancestor = self.bxGetBrickAncestor(self)
-            var overrides
-            if (S.isArray(config)) {
-                //options = [];
-                //self.bxMixArgument(options, config)
-                while (ancestor) {
-                    overrides = ancestor.get('config')
-
-                    if (overrides) {
-                        self.bxMixArgument(config, overrides[el.attr('id')])
-                        self.bxMixArgument(config, overrides[el.attr('name')])
-                    }
-
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
-                }
-                options = config
-            } else if (S.isPlainObject(config)) {
-                S.mix(options, config)
-                while (ancestor) {
-                    overrides = ancestor.get('config')
-
-                    if (overrides) {
-                        S.mix(options, overrides[el.attr('id')])
-                        S.mix(options, overrides[el.attr('name')])
-                    }
-
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
-                }
-                options.el = el
-            } else {
-                options = config
+            // .boot()
+            else {
+                options = {}
             }
+            el = options.el || '[bx-app]'
+
+            if (S.isString(el)) options.el = el = S.one(el)
+            if (el) options.parent = this
+
+            el = options.el
+
+            // We are booting this brick. There's no reason that it remains deferred.
+            el.removeAttr('bx-defer')
+
             return options
         },
 
         bxBootName: function(el) {
             var name = el.attr('bx-name')
             var naked = el.hasAttr('bx-naked') && (el.attr('bx-naked') || 'all')
-            // the name might be
-            //
-            // - mosaics/wangwang
-            // - mosaics/wangwang/
-            // - mosaics/dropdown/large
-            // - mosaics/calendar/twin
-            //
+
             if (name && naked !== 'all' && naked !== 'js') {
                 name = name.split('/').length > 2 ? name : (name + '/index')
-            } else {
+            }
+            else {
                 name = 'brix/base'
             }
 
             return name
         },
-        bxIBoot: function(el, options, Klass, renderedFn, activatedFn) {
-            var self = this
-            self.bxUniqueId(el)
-            // We are booting this brick. There's no reason that it remains deferred.
-            el.removeAttr('bx-defer')
-            var bothFn = function() {
-                if (renderedFn) renderedFn()
-                if (activatedFn) activatedFn()
+
+        bxBoot: function(options, Klass) {
+            var children = this.get('children')
+            var el = options.el
+
+            if (!children) {
+                children = []
+                this.set('children', children)
             }
 
-            if (!(el && DOM.contains(document, el[0]))) {
-                return bothFn()
-            }
-            var inst
-            var isExtendBrick = false
-            if (!S.isFunction(Klass)) {
-                inst = Klass
-                S.mix(inst, Third)
-            } else {
-                if (!self.bxIsExtendBrickClass(Klass)) {
-                    Third = Third || appConfig.config('Third')
-                    S.augment(Klass, Third)
-                } else {
-                    isExtendBrick = true
-                }
-                if (S.isArray(options)) {
-                    delete options.el;
-                    inst = self.bxConstruct(Klass, options);
-                } else {
-                    inst = new Klass(options)
-                }
-            }
+            var brick = this.find('#' + el.attr('id'))
 
-            inst.bxId = el.attr('id')
-            inst.bxName = el.attr('bx-name')
-            inst.bxChildren = []
-            inst.bxParent = self;
+            if (brick) brick.destroy()
 
-            var children = self.bxChildren
-            children.push(inst)
+            brick = new Klass(options)
+            children.push(brick)
 
-
-            if (isExtendBrick) {
-                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
-                if (renderedFn) inst.once('rendered', renderedFn)
-                if (activatedFn) inst.once('ready', activatedFn)
-                // 如果组件在实例化过程中被销毁了
-                inst.once('destroy', bothFn)
-            } else {
-                //将el节点持有
-                inst.bxEl = el;
-                inst.bxInit(renderedFn, activatedFn)
-            }
-            return inst;
+            return brick
         },
-        bxBootUse: function(klasses, fn) {
-            var self = this;
-            KISSY.use(klasses.join(','), function(S) {
-                var Klasses = S.makeArray(arguments)
 
-                // remove the S in the arguments array
-                Klasses.shift()
-                if (fn) {
-                    fn.call(self, Klasses)
-                }
-            })
-        },
-        bxBoot: function(el, data) {
+        boot: function(el, data) {
             var self = this
-            var opts = self.bxBootOptions(el, data)
+            var options = self.bxBootOptions(el, data)
             var d = new Promise.Defer()
+            var name = this.bxBootName(options.el)
 
-            el = opts.el
-
-            var brick = this.bxFind('#' + el.attr('id'))
-            if (brick) {
-                S.later(function() {
-                    d.resolve(brick)
-                })
-            } else {
-                var name = this.bxBootName(el)
-                self.bxBootUse([name], function(Klasses) {
-                    var brick = self.bxIBoot(el, opts, Klasses[0])
-                    //brick有可能为空
-                    d.resolve(brick)
-                })
-            }
+            S.use(name, function(S, Klass) {
+                d.resolve(self.bxBoot(options, Klass))
+            })
 
             return d.promise
         },
-        bxPrepare: function(el, data) {
+
+        prepare: function(el, data) {
             var d = new Promise.Defer()
 
             this.boot(el, data).then(function(brick) {
@@ -1113,7 +1027,7 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
 
     return exports
 }, {
-    requires: ['brix/app/config', 'promise', 'dom']
+    requires: ['promise']
 });
 KISSY.add('brix/core/bx-config', function(S) {
 
@@ -1233,21 +1147,11 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             function wrapFn(fnc) {
                 return function() {
-                    var obj = self.bxGetAncestorWithData(self)
-                    var ancestor
-                    if(obj.data){
-                        //增加brixData，方便外部直接获取
-                        arguments[0].brixData = obj.data
-                        ancestor = obj.ancestor
-                    }
-                    else{
-                        ancestor = self;
-                    }
-                    var ret = fnc.apply(this, arguments)
-                    if(ret!==false){
-                        ancestor.digest()
-                    }
-                    
+                    //增加brixData，方便外部直接获取
+                    arguments[0].brixData = self.get('data')
+
+                    fnc.apply(this, arguments)
+                    self.digest()
                 }
             }
 
@@ -1325,10 +1229,15 @@ KISSY.add('brix/core/bx-event', function(S) {
 KISSY.add('brix/core/bx-find', function() {
 
     var exports = {
-        bxOne:function(selector){
-            return this.bxIOne(selector, this.bxChildren || [], true)
+        /**
+         * 递归查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Brick}
+         */
+        one: function(selector) {
+            return this.bxOne(selector, this.get('children') || [], true)
         },
-        bxIOne: function(selector, children, isRecursive) {
+        bxOne: function(selector, children, isRecursive) {
             if (selector.charAt(0) === '#') {
                 selector = selector.substr(1)
             }
@@ -1338,19 +1247,26 @@ KISSY.add('brix/core/bx-find', function() {
                     child.bxName === selector) {
                     return child
                 } else if (isRecursive) {
-                    var result = this.bxIOne(selector, child.bxChildren || [], isRecursive)
+                    var result = this.bxOne(selector, child.get('children') || [], isRecursive)
                     if (result) {
                         return result
                     }
                 }
             }
         },
-        bxAll:function(selector){
+        /**
+         * 查找当前组件下的子组件
+         * @param  {Object} opts 查找条件，name和selector只能任选其一
+         * @param  {String} opts.name 组件名称bx-name
+         * @param  {String} opts.selector el节点选择器
+         * @return {Array}  符合过滤条件的实例数组
+         */
+        all: function(selector) {
             var result = []
-            this.bxIAll(selector, this.bxChildren || [], result, true)
+            this.bxAll(selector, this.get('children') || [], result, true)
             return result;
         },
-        bxIAll: function(selector, children, result, isRecursive) {
+        bxAll: function(selector, children, result, isRecursive) {
             if (selector.charAt(0) === '#') {
                 selector = selector.substr(1)
             }
@@ -1362,25 +1278,37 @@ KISSY.add('brix/core/bx-find', function() {
                     result.push(child)
                 }
                 if (isRecursive) {
-                    this.bxIAll(selector, child.bxChildren || [], result, isRecursive)
+                    this.bxAll(selector, child.get('children') || [], result, isRecursive)
                 }
             }
         },
-        bxFind:function(selector){
-             return this.bxIOne(selector, this.bxChildren || [])
+        /**
+         * 查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Brick}
+         */
+        find: function(selector) {
+            return this.bxOne(selector, this.get('children') || [])
         },
-        bxWhere:function(selector){
+        /**
+         * 查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Array}  符合过滤条件的实例数组
+         */
+        where: function(selector) {
             var result = []
-            this.bxIAll(selector, this.bxChildren || [], result)
+            this.bxAll(selector, this.get('children') || [], result)
             return result;
         }
     }
+
     return exports
 });
-KISSY.add('brix/core/bx-name', function(S) {
+KISSY.add('brix/core/bx-name', function(S, Util, Node) {
 
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
+            root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var self = this
 
@@ -1393,7 +1321,7 @@ KISSY.add('brix/core/bx-name', function(S) {
                 } else {
                     // Some of the child nodes might be instantiated already.
                     // Remove them out of the nodes array that will be processed.
-                    var brick = self.bxFind('#' + node.attr('id'))
+                    var brick = self.find('#' + node.attr('id'))
 
                     if (brick) nodes.splice(i, 1)
                 }
@@ -1425,21 +1353,126 @@ KISSY.add('brix/core/bx-name', function(S) {
                 }
 
             for (var i = 0; i < total; i++) {
-                var node = nodes[i]
-                klasses[i] = self.bxBootName(node)
+                var node = Node(nodes[i])
+                var naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
+                var name = node.attr('bx-name')
+
+                if (naked === 'js' || naked === 'all') {
+                    klasses[i] = 'brix/base'
+                }
+                // the name might be
+                //
+                // - mosaics/wangwang
+                // - mosaics/wangwang/
+                // - mosaics/dropdown/large
+                // - mosaics/calendar/twin
+                //
+                else if (name.split('/').length > 2) {
+                    klasses[i] = name
+                } else {
+                    klasses[i] = name + '/index'
+                }
             }
 
-            this.bxBootUse(klasses, function(Klasses) {
+            KISSY.use(klasses.join(','), function(S) {
+                var Klasses = S.makeArray(arguments)
+
+                // remove the S in the arguments array
+                Klasses.shift()
+
                 for (var i = 0; i < Klasses.length; i++) {
-                    var el = nodes[i]
-                    // passive:开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
-                    var opts = self.bxBootOptions({
-                        el: el,
-                        passive: !activatedCheck
-                    })
-                    self.bxIBoot(el, opts, Klasses[i], renderedCheck, activatedCheck)
+                    self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
                 }
             })
+        },
+
+        bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
+            var parent = this
+            var DOM = S.DOM
+            var bothFn = function() {
+                renderedFn()
+                if (activatedFn) activatedFn()
+            }
+
+            if (!S.isFunction(Klass)) {
+                // no need to initialize anything.
+                return bothFn()
+            }
+            if (!(el && DOM.contains(document, el[0]))) {
+                //S.log(parent.bxName+'_bothFn:')
+                // el is gone
+                return bothFn()
+            }
+            Util.bxUniqueId(el)
+            var opts = parent.bxHandleConfig(el, Klass)
+            var inst
+            var ancestor = parent
+            var overrides
+            if (S.isArray(opts)) {
+                while (ancestor) {
+                    overrides = ancestor.get('config')
+
+                    if (overrides) {
+                        Util.bxMixArgument(opts, overrides[el.attr('id')])
+                        Util.bxMixArgument(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = ancestor.get('parent')
+                }
+
+                inst = Util.bxConstruct(Klass, opts)
+            } else if (S.isPlainObject(opts)) {
+                var tag = el.attr('bx-tag')
+
+                S.mix(opts, {
+                    el: el,
+                    name: el.attr('bx-name'),
+                    parent: parent,
+
+                    // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                    passive: !activatedFn,
+
+                    // the tag and brickTpl attribute is required for interface/zuomo
+                    tag: tag,
+                    brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
+                })
+
+                while (ancestor) {
+                    overrides = ancestor.get('config')
+
+                    if (overrides) {
+                        S.mix(opts, overrides[el.attr('id')])
+                        S.mix(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = ancestor.get('parent')
+                }
+                inst = new Klass(opts)
+            } else {
+                inst = new Klass(opts)
+            }
+
+            inst.bxId = el.attr('id')
+            inst.bxName = el.attr('bx-name')
+
+            var children = parent.get('children')
+
+            if (!children) {
+                children = []
+                parent.set('children', children)
+            }
+            children.push(inst)
+
+            if (inst.bxRender) {
+                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
+                inst.once('rendered', renderedFn)
+                if (activatedFn) inst.once('ready', activatedFn)
+                // 如果组件在实例化过程中被销毁了
+                inst.once('destroy', bothFn)
+            } else {
+                bothFn()
+            }
+            el = children = null
         },
 
         /**
@@ -1488,12 +1521,13 @@ KISSY.add('brix/core/bx-name', function(S) {
 
 }, {
     requires: [
+        'brix/tool/util',
         'node',
         'sizzle',
         'event'
     ]
 });
-KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, Util, app, IO, Uri) {
 
     var exports = {
 
@@ -1555,30 +1589,20 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 throw Error('Cannot load data.json via xhr in current mode.')
             }
 
-            IO.get(this.bxResolveModule(mod, '.json'), callback)
+            IO.get(Util.bxResolveModule(mod, '.json'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'uri'
     ]
 });
-KISSY.add('brix/core/bx-third', function(S, bxBoot, bxName, bxFind, bxUtil, bxConfig) {
-    var exports = {}
-    S.mix(exports, bxBoot)
-    S.mix(exports, bxName)
-    S.mix(exports, bxFind)
-    S.mix(exports, bxUtil)
-    S.mix(exports, bxConfig)
-    return exports
-}, {
-    requires: ['brix/core/bx-boot', 'brix/core/bx-name', 'brix/core/bx-find', 'brix/core/bx-util', 'brix/core/bx-config']
-});
-KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
+KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -1617,7 +1641,7 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
                         break
                     }
                 }
-                var subTpls = self.bxParent.get('subTplsCache')
+                var subTpls = self.get('parent').get('subTplsCache')
 
                 callback(withinEach ? subTpls[0] : subTpls.shift())
             }
@@ -1637,7 +1661,7 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
 
         bxRemoteTpl: function(mod, callback) {
             // The mod value shall be something like `mosaics/dropdown/tpl'
-            if (appConfig.config('debug')) {
+            if (app.config('debug')) {
                 // In debug mode, we use XHR to get the template file.
                 this.bxXhrTpl(mod, callback)
             }
@@ -1660,162 +1684,19 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
                 throw Error('Cannot load tpl via xhr in current mode.')
             }
 
-            IO.get(this.bxResolveModule(mod, '.html'), callback)
+            IO.get(Util.bxResolveModule(mod, '.html'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'node',
         'sizzle'
     ]
-});
-KISSY.add('brix/core/bx-util', function(S, appConfig) {
-    var Brick
-    return {
-        /**
-         * 动态传参数实例类
-         * @param  {Function} constructor 需要实例化的类
-         * @param  {Array} args        参数数组
-         * @return {Object}             类的实例
-         */
-        bxConstruct: function(constructor, args) {
-            function F() {
-                return constructor.apply(this, args);
-            }
-            F.prototype = constructor.prototype;
-            return new F();
-        },
-        /**
-         * 给el节点设置唯一的id
-         * @param  {String|Node} el 节点
-         * @return {String}    id
-         */
-        bxUniqueId: function(el) {
-            if (S.isString(el)) {
-                el = S.one(el)
-            }
-            if (!el.attr('id')) {
-                var id
-
-                // 判断页面id是否存在，如果存在继续随机。
-                while ((id = S.guid('brix-brick-')) && S.one('#' + id)) {}
-
-                el.attr('id', id)
-            }
-
-            return el.attr('id')
-        },
-        /**
-         * 合并数组参数
-         * @param  {Array} receiver 参数数组
-         * @param  {Array} supplier 配置的参数数组
-         */
-        bxMixArgument: function(receiver, supplier) {
-            if (supplier) {
-                S.each(supplier, function(o, i) {
-                    if (o !== null) {
-                        if (S.isPlainObject(o)) {
-                            receiver[i] = receiver[i] || {}
-                            S.mix(receiver[i], o)
-                        } else {
-                            receiver[i] = o;
-                        }
-                    }
-                })
-            }
-        },
-        bxResolveModule: function(mod, ext) {
-            var parts = mod.split('/')
-            var ns = parts.shift()
-            var name = parts.shift()
-            var file = parts.shift()
-            var base = S.config('packages')[ns].base
-
-            var components = appConfig.config('components')
-            var imports = appConfig.config('imports')
-
-            var pkgs = S.config('packages')
-            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
-
-            if (!pkgsIgnore) parts.push(ns)
-
-            parts.push(name)
-
-            if (imports && imports[ns]) {
-                parts.push(imports[ns][name])
-            } else if (components && S.isPlainObject(components[ns])) {
-                parts.push(components[ns][name])
-            }
-
-            parts.push(file + ext)
-
-            return base + parts.join('/')
-        },
-        /**
-         * 获取实例的数据
-         * @param  {Objcet} context 实例
-         * @return {Object}          对象
-         */
-        bxGetAncestorWithData: function(context) {
-            var data
-            var ancestor = this.bxGetBrickAncestor(context)
-            while (ancestor) {
-                if ((data = ancestor.get('data')) && data) {
-                    break;
-                }
-                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
-            }
-
-            if (!data) {
-                ancestor = context
-            }
-            return {
-                data: data,
-                ancestor: ancestor
-            }
-        },
-        bxGetBrickAncestor: function(ancestor) {
-            while (ancestor) {
-                if (!this.bxIsBrickInstance(ancestor)) {
-                    ancestor = ancestor.bxParent
-                } else {
-                    return ancestor
-                }
-            }
-        },
-        /**
-         * 是否是Brick类的实例
-         * @param  {Object} context 实例
-         * @return {Boolean}       
-         */
-        bxIsBrickInstance: function(context) {
-            Brick = Brick || appConfig.config('Brick')
-            return context instanceof Brick
-        },
-        /**
-         * 是否继承Brick的类  
-         * @param  {Function} c 类
-         * @return {Boolean}   
-         */
-        bxIsExtendBrickClass:function(c){
-            Brick = Brick || appConfig.config('Brick')
-            if(c==Brick){
-                return true
-            }
-            if(c.superclass){
-                return c.superclass instanceof Brick
-            }
-            else{
-                return false;
-            }
-        }
-    }
-}, {
-    requires: ['brix/app/config', 'node']
 });
 KISSY.add('brix/core/bx-watcher', function(S, JSON) {
     var memo = {};
@@ -1917,22 +1798,6 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
 }, {
     requires: ['json']
 });;
-KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRemote, bxWatcher, bxThird) {
-    var exports = {}
-    S.mix(exports, bxApi)
-    S.mix(exports, bxTpl)
-    S.mix(exports, bxEvent)
-    S.mix(exports, bxDelegate)
-    S.mix(exports, bxRemote)
-    S.mix(exports, bxWatcher)
-    S.mix(exports, bxThird)
-
-    exports.ATTRS = S.mix({}, bxWatcher.ATTRS)
-    
-    return exports
-}, {
-    requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-watcher', 'brix/core/bx-third']
-});
 KISSY.add('brix/interface/index', function(S) {
     //var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
 
@@ -1942,42 +1807,33 @@ KISSY.add('brix/interface/index', function(S) {
         bxIBuildTpl: function() {
             var self = this
             var tpl = self.get('tpl')
-            //var tempTpl
+            //临时存储监听的数据key
+            self.bxWatcherKeys = {}
+            //延迟刷新存储的key
+            self.bxRefreshKeys = []
+            var tempTpl
             if (tpl) {
-                //存储监听的数据key
-                self.bxWatcherKeys = {}
-                //延迟刷新存储的key
-                self.bxRefreshKeys = []
-                //子模板数组
-                self.bxSubTpls = []
-                var data = self.get('data');
-                if (!data) {
-                    //有模板必然有数据
-                    self.set('data', {}, {
-                        silent: true
-                    });
-                }
-                //tpl = self.bxITag(tpl)
+                tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
                 //存储模板
-                tpl = self.bxIBuildStoreTpls(tpl)
+                self.bxIBuildStoreTpls(tpl)
                 self.set('tpl', tpl)
-                //tempTpl = self.bxIBuildBrickTpls(tpl)
-                var level = self.get('level')
-                self.bxISelfCloseTag(tpl, self.bxSubTpls)
-                self.bxIBuildSubTpls(tpl, self.bxSubTpls, level)
+                tempTpl = self.bxIBuildBrickTpls(tpl)
 
+
+            } else {
+                var brickTpl = self.get('brickTpl')
+                if (brickTpl) {
+                    tempTpl = self.bxIBuildBrickTpls(brickTpl)
+                }
             }
-            // else {
-            //     var brickTpl = self.get('brickTpl')
-            //     if (brickTpl) {
-            //         tempTpl = self.bxIBuildBrickTpls(brickTpl)
-            //     }
-            // }
-            // if (tempTpl) {
-            //     self.bxISelfCloseTag(tpl)
-            //     self.bxIBuildSubTpls(tpl)
-            // }
+            if (tempTpl) {
+                self.bxISelfCloseTag(tempTpl)
+                self.bxIBuildSubTpls(tempTpl)
+            }
+
+            //删除临时监听
+            delete self.bxWatcherKeys
         },
 
         bxIActivate: function() {
@@ -1987,17 +1843,18 @@ KISSY.add('brix/interface/index', function(S) {
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
-
+                //S.log('beforeRefreshTpl_'+needRenderCounter)
                 needRenderCounter++
                 needActivateCounter++
-
+                //debugger
+                
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
                     for (var i = 0; i < children.length; i++) {
-                        var brick = self.bxFind('#' + children[i].attr('id'))
+                        var brick = self.find('#' + children[i].attr('id'))
                         //这个组件如果没有触发rendered和ready事件，移除会有问题
-                        if (brick) brick.bxDestroy()
+                        if (brick) brick.destroy()
                     }
                 }
             })
@@ -2009,12 +1866,12 @@ KISSY.add('brix/interface/index', function(S) {
                         //debugger
                         //S.log('afterRefreshTpl_'+needRenderCounter)
                         if (--needRenderCounter === 0) {
-                            self.bxRendered = true
+                            self.setInternal('rendered', true)
                             self.fire('rendered')
                         }
                     }, function activatedCheck() {
                         if (--needActivateCounter === 0) {
-                            self.bxActivated = true
+                            self.setInternal('activated', true)
                             self.fire('ready')
                         }
                     })
@@ -2062,27 +1919,27 @@ KISSY.add('brix/interface/index', function(S) {
                 })
         },
 
-        // bxIBuildBrickTpls: function(tpl) {
-        //     var self = this
-        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-        //     var brickTpls = self.get('brickTpls')
-        //     var level = self.get('level')
-        //     while (level--) {
-        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-        //     }
-        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-        //     var reg = new RegExp(r, "ig")
-        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-        //         brickTpls[bx] = {
-        //             start: start,
-        //             middle: middle,
-        //             end: end
-        //         }
-        //         //占位符
-        //         return '@brix@' + bx + '@brix@'
-        //     })
-        //     return tpl
-        // },
+        bxIBuildBrickTpls: function(tpl) {
+            var self = this
+            var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
+            var brickTpls = self.get('brickTpls')
+            var level = self.get('level')
+            while (level--) {
+                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+            }
+            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+            var reg = new RegExp(r, "ig")
+            tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
+                brickTpls[bx] = {
+                    start: start,
+                    middle: middle,
+                    end: end
+                }
+                //占位符
+                return '@brix@' + bx + '@brix@'
+            })
+            return tpl
+        },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -2092,7 +1949,7 @@ KISSY.add('brix/interface/index', function(S) {
         bxIStoreAttrs: function(str) {
             var attrs = {}
             var storeAttr = function(all, attr, tpl) {
-                if (tpl.indexOf('{{') > -1 && tpl.indexOf('}}') > 0) {
+                if(tpl.indexOf('{{')>-1&&tpl.indexOf('}}')>0){
                     attrs[attr] = tpl
                 }
             }
@@ -2106,30 +1963,33 @@ KISSY.add('brix/interface/index', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var obj = self.bxGetAncestorWithData(self)
-            var data = obj.data
-            var ancestor = obj.ancestor
-            if (data) {
-                var watch = function(key) {
-                    ancestor.watch(data, key, function() {
-                        if (!S.inArray(key, ancestor.bxRefreshKeys)) {
-                            ancestor.bxRefreshKeys.push(key)
-                        }
-                        if (ancestor.bxLaterTimer) {
-                            ancestor.bxLaterTimer.cancel();
-                            delete ancestor.bxLaterTimer
-                        }
-                        ancestor.bxLaterTimer = S.later(function() {
-                            ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, ancestor.bxRefreshKeys, data, 'html')
-                            ancestor.bxRefreshKeys = [];
-                        }, 100)
+            var data = self.get('data')
+
+            var watch = function(key) {
+                self.watch(data, key, function() {
+                    if(!S.inArray(key,self.bxRefreshKeys)){
+                        self.bxRefreshKeys.push(key)
+                    }
+                    //这个再看，不知道为什么，这个会引起ready事件的触发出错
+                    if(self.bxLaterTimer){
+                        self.bxLaterTimer.cancel();
+                        delete self.bxLaterTimer
+                    }
+                    self.bxLaterTimer = S.later(function(){
+                        //debugger
+                        self.bxIRefreshTpl(self.bxRefreshKeys, self.get('data'), 'html')
+                        self.bxRefreshKeys = [];
                     })
-                }
+                    
+                })
+            }
+
+            if (data) {
                 var temparr = datakey.split(',')
                 for (var i = 0; i < temparr.length; i++) {
                     var key = temparr[i]
-                    if (!ancestor.bxWatcherKeys[key]) {
-                        ancestor.bxWatcherKeys[key] = true;
+                    if (!self.bxWatcherKeys[key]) {
+                        self.bxWatcherKeys[key] = true;
                         watch(key);
                     }
                 }
@@ -2141,48 +2001,55 @@ KISSY.add('brix/interface/index', function(S) {
          * @param {String} tpl  需要解析的模板
          * @private
          */
-        bxIBuildSubTpls: function(tpl, subTpls, level) {
+        bxIBuildSubTpls: function(tpl) {
             var self = this
-            // var subTpls = self.get('subTpls')
-            // var brickTpls = self.get('brickTpls')
-            //var level = self.get('level')
-            var l = level
+            var subTpls = self.get('subTpls')
+            var brickTpls = self.get('brickTpls')
+            var level = self.get('level')
+
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-            while (l--) {
+            while (level--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
             }
             r = r.replace('@brix@', '(?:[\\s\\S]*?)')
 
             var reg = new RegExp(r, "ig")
             var m
-            // var replacer = function(all, bx) {
-            //     var o = brickTpls[bx]
-            //     return o.start + o.middle + o.end
-            // }
+            var replacer = function(all, bx) {
+                var o = brickTpls[bx]
+                return o.start + o.middle + o.end
+            }
 
             while ((m = reg.exec(tpl)) !== null) {
                 var datakey = m[4]
-                var obj = {
+                subTpls.push({
                     name: m[3],
                     datakey: datakey,
-                    // tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-                    tpl: m[5],
-                    attrs: self.bxIStoreAttrs(m[1]),
-                    subTpls: []
-                }
-                subTpls.push(obj)
+                    tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+                    attrs: self.bxIStoreAttrs(m[1])
+                })
                 self.bxIAddWatch(datakey)
                 //递归编译子模板
-                self.bxIBuildSubTpls(m[5], obj.subTpls, level)
+                self.bxIBuildSubTpls(m[5])
             }
+            // var bxEvents = self.get('bx-events')
+            // //获取模板中bx-type的对象
+            // var rrr = /bx\-([^=]+)=["\']([^"\'\s]+)["\']/ig
+            // tpl.replace(rrr, function(all, type, fn) {
+            //     if (!S.inArray(type, KEYS)) {
+            //         bxEvents[fn] = bxEvents[fn] || []
+            //         bxEvents[fn].push(type)
+            //     }
+            //     return all
+            // })
         },
         /**
          * 子闭合标间的处理
          * @param  {String} tpl 模板
          */
-        bxISelfCloseTag: function(tpl, subTpls) {
+        bxISelfCloseTag: function(tpl) {
             var self = this
-            //var subTpls = self.get('subTpls')
+            var subTpls = self.get('subTpls')
 
             var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
             var reg = new RegExp(r, "ig")
@@ -2205,12 +2072,14 @@ KISSY.add('brix/interface/index', function(S) {
          * @param  {String} renderType 渲染方式，目前支持html，append，prepend
          * @private
          */
-        bxIRefreshTpl: function(el, subTpls, keys, data, renderType) {
+        bxIRefreshTpl: function(keys, data, renderType) {
             var self = this
 
-            if (!self.bxRendered) {
+            if (!self.get('rendered')) {
                 return
             }
+            var el = self.get('el')
+            var subTpls = self.get('subTpls')
 
             S.each(subTpls, function(o) {
                 var datakeys = S.map(o.datakey.split(','), function(str) {
@@ -2236,6 +2105,25 @@ KISSY.add('brix/interface/index', function(S) {
                     }
 
                     nodes.each(function(node) {
+                        // var newData = {}
+                        // S.each(datakeys, function(item) {
+                        //     var tempdata = data,
+                        //         temparr = item.split('.'),
+                        //         length = temparr.length,
+                        //         i = 0
+                        //     while (i !== length) {
+                        //         tempdata = tempdata[temparr[i]]
+                        //         i++
+                        //     }
+                        //     newData[temparr[length - 1]] = tempdata
+                        //     tempdata = null
+                        // })
+                        // S.each(data, function(d, k) {
+                        //     if (S.isFunction(d)) {
+                        //         newData[k] = d
+                        //     }
+                        // })
+
                         if (o.tpl) {
                             self.fire('beforeRefreshTpl', {
                                 node: node,
@@ -2269,10 +2157,27 @@ KISSY.add('brix/interface/index', function(S) {
                             }
                         })
                     })
-                } else if (o.subTpls.length > 0) {
-                    //刷新子模板的子模板
-                    self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
                 }
+            })
+
+            var children = self.get('children')
+
+            // 为什么要这样做？
+            // 因为 bxIRefreshTpl 有可能会更改 children 数组的长度
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+
+                if (!child.get('refresh')) {
+                    child.set('refresh', true)
+                    if (!child.get('data')) {
+                        child.bxIRefreshTpl(keys, data, renderType)
+                        i = 0
+                    }
+                }
+            }
+            // 更新 refresh 的状态为 false
+            S.each(children, function(child) {
+                child.set('refresh', false)
             })
         },
 
@@ -2287,9 +2192,19 @@ KISSY.add('brix/interface/index', function(S) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var obj = self.bxGetAncestorWithData(self)
-            var newData = obj.data || {}
-            var ancestor = obj.ancestor
+            var newData
+            var parent = self
+
+            while (parent) {
+                if ((newData = parent.get('data')) && newData) {
+                    break
+                }
+                parent = parent.get('parent')
+            }
+            if (!newData) {
+                newData = {}
+                parent = self
+            }
             var keys = []
             if (S.isObject(datakey)) {
                 for (var key in datakey) {
@@ -2310,10 +2225,10 @@ KISSY.add('brix/interface/index', function(S) {
                     delete opts.renderType
                 }
             }
-            ancestor.set('data', newData, opts)
+            parent.set('data', newData, opts)
 
             if (!opts || !opts.silent) {
-                ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, newData, renderType)
+                self.bxIRefreshTpl(keys, newData, renderType)
             }
         }
     }
@@ -2340,7 +2255,7 @@ KISSY.add('brix/interface/index', function(S) {
          * @cfg {Number}
          */
         level: {
-            value: 3
+            value: 4
         },
 
         /**
@@ -2369,129 +2284,88 @@ KISSY.add('brix/interface/index', function(S) {
     return exports
 });
 ;
-KISSY.add('brix/third/index', function(S, bxThird) {
-
-    var Third = {
-        bxInit: function(renderedFn, activatedFn) {
-            var self = this
-            //初始化一些方法
-            if (renderedFn) {
-                self.bxListenRendered(renderedFn)
+KISSY.add('brix/tool/util', function(S, app) {
+    return {
+        /**
+         * 动态传参数实例类
+         * @param  {Function} constructor 需要实例化的类
+         * @param  {Array} args        参数数组
+         * @return {Object}             类的实例
+         */
+        bxConstruct: function(constructor, args) {
+            function F() {
+                return constructor.apply(this, args);
             }
-            if (activatedFn) {
-                self.bxListenReady(activatedFn)
-            }
-            S.later(function() {
-                self.bxRender()
-            })
+            F.prototype = constructor.prototype;
+            return new F();
         },
-        bxRender: function() {
-            var self = this
-
-            if (self.bxRendering || self.bxRendered) {
-                return
+        /**
+         * 给el节点设置唯一的id
+         * @param  {String|Node} el 节点
+         * @return {String}    id
+         */
+        bxUniqueId: function(el) {
+            if (S.isString(el)) {
+                el = S.one(el)
             }
-            self.bxRendering = true
+            if (!el.attr('id')) {
+                var id
 
-            var el = self.bxEl
+                // 判断页面id是否存在，如果存在继续随机。
+                while ((id = S.guid('brix-brick-')) && S.one('#' + id)) {}
 
-            // 初始化子组件
-            self.bxHandleName(el, function() {
-                delete self.bxRendering;
-                self.bxRendered = true
-                if (self.bxRenderedFn) {
-                    self.bxRenderedFn();
-                    delete self.bxRenderedFn
-                }
-            })
+                el.attr('id', id)
+            }
+
+            return el.attr('id')
         },
-        bxActivate: function() {
-            var self = this
-            if (self.bxActivating ||
-                self.bxActivated || // activated before,
-                !self.bxRendered) { // or not rendered yet.
-                return
-            }
-            self.bxActivating = true;
-            var children = self.bxChildren
-
-            if (children.length === 0) {
-                S.later(function() {
-                    activated()
-                }, 0)
-                return
-            }
-            var total = children.length
-            var counter = 0;
-
-            function activated() {
-                delete self.bxActivating;
-                self.bxActivated = true
-                if (self.bxReadyFn) {
-                    self.bxReadyFn();
-                    delete self.bxReadyFn;
-
-                }
-            }
-
-            function check() {
-                if (++counter === total) activated()
-            }
-
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i]
-                if (!self.bxIsBrickInstance(child)) {
-                    check()
-                } else {
-                    child.once('ready', check)
-                    child.bxActivate()
-                }
-            }
-        },
-        bxListenReady: function(fn) {
-            this.bxReadyFn = fn;
-        },
-        bxListenRendered: function(fn) {
-            this.bxRenderedFn = fn;
-        },
-        bxDestroy: function() {
-            var self = this
-
-            //需要销毁子组件
-            var children = self.bxChildren
-            var i
-            for (i = children.length - 1; i >= 0; i--) {
-                children[i].bxDestroy()
-            }
-            self.bxChildren = [];
-
-            delete self.bxEl;
-            
-            var parent = self.bxParent
-
-            // 如果存在父组件，则移除
-            if (parent) {
-                var siblings = parent.bxChildren
-                var id = self.bxId
-
-                for (i = siblings.length - 1; i >= 0; i--) {
-                    if (siblings[i].bxId === id) {
-                        siblings.splice(i, 1)
-                        break
+        /**
+         * 合并数组参数
+         * @param  {Array} receiver 参数数组
+         * @param  {Array} supplier 配置的参数数组
+         */
+        bxMixArgument: function(receiver, supplier) {
+            if (supplier) {
+                S.each(supplier, function(o, i) {
+                    if (o !== null) {
+                        if (S.isPlainObject(o)) {
+                            receiver[i] = receiver[i] || {}
+                            S.mix(receiver[i], o)
+                        } else {
+                            receiver[i] = o;
+                        }
                     }
-                }
+                })
+            }
+        },
+        bxResolveModule: function(mod, ext) {
+            var parts = mod.split('/')
+            var ns = parts.shift()
+            var name = parts.shift()
+            var file = parts.shift()
+            var base = S.config('packages')[ns].base
+
+            var components = app.config('components')
+            var imports = app.config('imports')
+
+            var pkgs = S.config('packages')
+            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
+
+            if (!pkgsIgnore) parts.push(ns)
+
+            parts.push(name)
+
+            if (imports && imports[ns]) {
+                parts.push(imports[ns][name])
+            } else if (components && S.isPlainObject(components[ns])) {
+                parts.push(components[ns][name])
             }
 
-            if (self.destroy) {
-                self.destroy()
-            }
+            parts.push(file + ext)
+
+            return base + parts.join('/')
         }
     }
-
-    S.mix(Third, bxThird)
-
-    return Third
-
 }, {
-    requires: ['brix/core/bx-third']
+    requires: ['brix/app/config', 'node']
 });
