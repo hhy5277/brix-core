@@ -68,14 +68,14 @@ describe('brix/app', function() {
 
     it('goes into the children of app', function(done) {
       promise.then(function(brick) {
-        expect(S.indexOf(brick, app.get('children'))).to.not.be.below(0)
+        expect(S.indexOf(brick, app.bxChildren)).to.not.be.below(0)
         done()
       })
     })
 
     it('has it\'s parent point to app', function(done) {
       promise.then(function(brick) {
-        expect(brick.get('parent')).to.equal(app)
+        expect(brick.bxParent).to.equal(app)
         done()
       })
     })
@@ -111,9 +111,9 @@ describe('brix/app', function() {
           el: '#fixture2-vframe',
           tpl: '<div bx-name="thx.test/app-foo"></div>'
         }).then(function() {
-          expect(this.get('children').length).to.be(1)
+          expect(this.bxChildren.length).to.be(1)
 
-          var children = app.get('children')
+          var children = app.bxChildren
           var ids = ['fixture1', 'fixture2', 'fixture3', 'fixture2-vframe']
 
           for (var i = 0; i < children.length; i++) {

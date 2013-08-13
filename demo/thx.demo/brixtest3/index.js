@@ -19,8 +19,7 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 				q.on('valuechange',function(e){
 				var data = self.get('data')
 				data.text = e.currentTarget.value
-				var watcher = self.get('watcher');
-				watcher.digest()
+				self.digest()
 			})
 			}
 				

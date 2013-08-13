@@ -8,7 +8,16 @@
 <body>
   <div id="mocha"></div>
   <div id="fixture0">
-    <div id="fixture1" bx-name="thx.test/class-foo" bx-config="['xx',{a:1},[1,2,3]]"></div>
+    <div id="fixture1" bx-name="thx.test/class-foo" bx-config="['xx',{a:1},[1,2,3]]">
+      <div id="fixture1-foo"
+         bx-name="thx.test/watcher-foo"
+         bx-tpl="./tpl">
+    </div>
+    </div>
+    <div id="fixture1-foo"
+         bx-name="thx.test/watcher-foo"
+         bx-tpl="./tpl">
+    </div>
     <div id="fixture2" bx-name="thx.test/class-foo" bx-config="{x:1}"></div>
     <div id="fixture3" bx-name="thx.test/class-foo" bx-config="1"></div>
   </div>

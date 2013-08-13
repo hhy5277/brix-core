@@ -1,8 +1,7 @@
-KISSY.add('brix/core/bx-name', function(S, Util, Node) {
+KISSY.add('brix/core/bx-name', function(S) {
 
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
-            root = Node(root)
             var nodes = this.bxDirectChildren(root)
             var self = this
 
@@ -15,7 +14,7 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 } else {
                     // Some of the child nodes might be instantiated already.
                     // Remove them out of the nodes array that will be processed.
-                    var brick = self.find('#' + node.attr('id'))
+                    var brick = self.bxFind('#' + node.attr('id'))
 
                     if (brick) nodes.splice(i, 1)
                 }
@@ -47,126 +46,21 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
                 }
 
             for (var i = 0; i < total; i++) {
-                var node = Node(nodes[i])
-                var naked = node.hasAttr('bx-naked') && (node.attr('bx-naked') || 'all')
-                var name = node.attr('bx-name')
-
-                if (naked === 'js' || naked === 'all') {
-                    klasses[i] = 'brix/base'
-                }
-                // the name might be
-                //
-                // - mosaics/wangwang
-                // - mosaics/wangwang/
-                // - mosaics/dropdown/large
-                // - mosaics/calendar/twin
-                //
-                else if (name.split('/').length > 2) {
-                    klasses[i] = name
-                } else {
-                    klasses[i] = name + '/index'
-                }
+                var node = nodes[i]
+                klasses[i] = self.bxBootName(node)
             }
 
-            KISSY.use(klasses.join(','), function(S) {
-                var Klasses = S.makeArray(arguments)
-
-                // remove the S in the arguments array
-                Klasses.shift()
-
+            this.bxBootUse(klasses, function(Klasses) {
                 for (var i = 0; i < Klasses.length; i++) {
-                    self.bxInstantiate(nodes[i], Klasses[i], renderedCheck, activatedCheck)
+                    var el = nodes[i]
+                    // passive:开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                    var opts = self.bxBootOptions({
+                        el: el,
+                        passive: !activatedCheck
+                    })
+                    self.bxIBoot(el, opts, Klasses[i], renderedCheck, activatedCheck)
                 }
             })
-        },
-
-        bxInstantiate: function(el, Klass, renderedFn, activatedFn) {
-            var parent = this
-            var DOM = S.DOM
-            var bothFn = function() {
-                renderedFn()
-                if (activatedFn) activatedFn()
-            }
-
-            if (!S.isFunction(Klass)) {
-                // no need to initialize anything.
-                return bothFn()
-            }
-            if (!(el && DOM.contains(document, el[0]))) {
-                //S.log(parent.bxName+'_bothFn:')
-                // el is gone
-                return bothFn()
-            }
-            Util.bxUniqueId(el)
-            var opts = parent.bxHandleConfig(el, Klass)
-            var inst
-            var ancestor = parent
-            var overrides
-            if (S.isArray(opts)) {
-                while (ancestor) {
-                    overrides = ancestor.get('config')
-
-                    if (overrides) {
-                        Util.bxMixArgument(opts, overrides[el.attr('id')])
-                        Util.bxMixArgument(opts, overrides[el.attr('name')])
-                    }
-
-                    ancestor = ancestor.get('parent')
-                }
-
-                inst = Util.bxConstruct(Klass, opts)
-            } else if (S.isPlainObject(opts)) {
-                var tag = el.attr('bx-tag')
-
-                S.mix(opts, {
-                    el: el,
-                    name: el.attr('bx-name'),
-                    parent: parent,
-
-                    // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
-                    passive: !activatedFn,
-
-                    // the tag and brickTpl attribute is required for interface/zuomo
-                    tag: tag,
-                    brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
-                })
-
-                while (ancestor) {
-                    overrides = ancestor.get('config')
-
-                    if (overrides) {
-                        S.mix(opts, overrides[el.attr('id')])
-                        S.mix(opts, overrides[el.attr('name')])
-                    }
-
-                    ancestor = ancestor.get('parent')
-                }
-                inst = new Klass(opts)
-            } else {
-                inst = new Klass(opts)
-            }
-
-            inst.bxId = el.attr('id')
-            inst.bxName = el.attr('bx-name')
-
-            var children = parent.get('children')
-
-            if (!children) {
-                children = []
-                parent.set('children', children)
-            }
-            children.push(inst)
-
-            if (inst.bxRender) {
-                // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
-                inst.once('rendered', renderedFn)
-                if (activatedFn) inst.once('ready', activatedFn)
-                // 如果组件在实例化过程中被销毁了
-                inst.once('destroy', bothFn)
-            } else {
-                bothFn()
-            }
-            el = children = null
         },
 
         /**
@@ -215,7 +109,6 @@ KISSY.add('brix/core/bx-name', function(S, Util, Node) {
 
 }, {
     requires: [
-        'brix/tool/util',
         'node',
         'sizzle',
         'event'

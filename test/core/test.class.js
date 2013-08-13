@@ -15,7 +15,6 @@ describe('brix/class', function() {
         components: 'thx.test',
         base: '../'
       })
-
       done()
     })
   })
@@ -44,6 +43,7 @@ describe('brix/class', function() {
       expect(foo.xx).to.equal('xx')
       expect(foo.yy.b).to.equal(2)
       expect(foo.zz).to.equal('z')
+      expect(foo.bxChildren.length).to.equal(1)
     })
     it('class one object arguments', function() {
       var foo = rootBrick.find('#fixture2')

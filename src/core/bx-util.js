@@ -1,4 +1,5 @@
-KISSY.add('brix/tool/util', function(S, app) {
+KISSY.add('brix/core/bx-util', function(S, appConfig) {
+    var Brick
     return {
         /**
          * 动态传参数实例类
@@ -59,8 +60,8 @@ KISSY.add('brix/tool/util', function(S, app) {
             var file = parts.shift()
             var base = S.config('packages')[ns].base
 
-            var components = app.config('components')
-            var imports = app.config('imports')
+            var components = appConfig.config('components')
+            var imports = appConfig.config('imports')
 
             var pkgs = S.config('packages')
             var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
@@ -78,6 +79,64 @@ KISSY.add('brix/tool/util', function(S, app) {
             parts.push(file + ext)
 
             return base + parts.join('/')
+        },
+        /**
+         * 获取实例的数据
+         * @param  {Objcet} context 实例
+         * @return {Object}          对象
+         */
+        bxGetAncestorWithData: function(context) {
+            var data
+            var ancestor = this.bxGetBrickAncestor(context)
+            while (ancestor) {
+                if ((data = ancestor.get('data')) && data) {
+                    break;
+                }
+                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
+            }
+
+            if (!data) {
+                ancestor = context
+            }
+            return {
+                data: data,
+                ancestor: ancestor
+            }
+        },
+        bxGetBrickAncestor: function(ancestor) {
+            while (ancestor) {
+                if (!this.bxIsBrickInstance(ancestor)) {
+                    ancestor = ancestor.bxParent
+                } else {
+                    return ancestor
+                }
+            }
+        },
+        /**
+         * 是否是Brick类的实例
+         * @param  {Object} context 实例
+         * @return {Boolean}       
+         */
+        bxIsBrickInstance: function(context) {
+            Brick = Brick || appConfig.config('Brick')
+            return context instanceof Brick
+        },
+        /**
+         * 是否继承Brick的类  
+         * @param  {Function} c 类
+         * @return {Boolean}   
+         */
+        bxIsExtendBrickClass:function(c){
+            Brick = Brick || appConfig.config('Brick')
+            if(c==Brick){
+                return true
+            }
+            if(c.superclass){
+                return c.superclass instanceof Brick
+            }
+            else{
+                return false;
+            }
         }
     }
 }, {

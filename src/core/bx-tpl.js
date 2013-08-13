@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
+KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -37,7 +37,7 @@ KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
                         break
                     }
                 }
-                var subTpls = self.get('parent').get('subTplsCache')
+                var subTpls = self.bxParent.get('subTplsCache')
 
                 callback(withinEach ? subTpls[0] : subTpls.shift())
             }
@@ -57,7 +57,7 @@ KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
 
         bxRemoteTpl: function(mod, callback) {
             // The mod value shall be something like `mosaics/dropdown/tpl'
-            if (app.config('debug')) {
+            if (appConfig.config('debug')) {
                 // In debug mode, we use XHR to get the template file.
                 this.bxXhrTpl(mod, callback)
             }
@@ -80,14 +80,13 @@ KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
                 throw Error('Cannot load tpl via xhr in current mode.')
             }
 
-            IO.get(Util.bxResolveModule(mod, '.html'), callback)
+            IO.get(this.bxResolveModule(mod, '.html'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
-        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'node',

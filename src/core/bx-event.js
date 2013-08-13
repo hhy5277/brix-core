@@ -26,11 +26,21 @@ KISSY.add('brix/core/bx-event', function(S) {
 
             function wrapFn(fnc) {
                 return function() {
-                    //增加brixData，方便外部直接获取
-                    arguments[0].brixData = self.get('data')
-
-                    fnc.apply(this, arguments)
-                    self.digest()
+                    var obj = self.bxGetAncestorWithData(self)
+                    var ancestor
+                    if(obj.data){
+                        //增加brixData，方便外部直接获取
+                        arguments[0].brixData = obj.data
+                        ancestor = obj.ancestor
+                    }
+                    else{
+                        ancestor = self;
+                    }
+                    var ret = fnc.apply(this, arguments)
+                    if(ret!==false){
+                        ancestor.digest()
+                    }
+                    
                 }
             }
 

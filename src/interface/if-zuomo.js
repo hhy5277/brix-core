@@ -7,33 +7,42 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         bxIBuildTpl: function() {
             var self = this
             var tpl = self.get('tpl')
-            //临时存储监听的数据key
-            self.bxWatcherKeys = {}
-            //延迟刷新存储的key
-            self.bxRefreshKeys = []
-            var tempTpl
+            //var tempTpl
             if (tpl) {
-                tpl = self.bxITag(tpl)
+                //存储监听的数据key
+                self.bxWatcherKeys = {}
+                //延迟刷新存储的key
+                self.bxRefreshKeys = []
+                //子模板数组
+                self.bxSubTpls = []
+                var data = self.get('data');
+                if (!data) {
+                    //有模板必然有数据
+                    self.set('data', {}, {
+                        silent: true
+                    });
+                }
+                //tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
                 //存储模板
-                self.bxIBuildStoreTpls(tpl)
+                tpl = self.bxIBuildStoreTpls(tpl)
                 self.set('tpl', tpl)
-                tempTpl = self.bxIBuildBrickTpls(tpl)
+                //tempTpl = self.bxIBuildBrickTpls(tpl)
+                var level = self.get('level')
+                self.bxISelfCloseTag(tpl, self.bxSubTpls)
+                self.bxIBuildSubTpls(tpl, self.bxSubTpls, level)
 
-
-            } else {
-                var brickTpl = self.get('brickTpl')
-                if (brickTpl) {
-                    tempTpl = self.bxIBuildBrickTpls(brickTpl)
-                }
             }
-            if (tempTpl) {
-                self.bxISelfCloseTag(tempTpl)
-                self.bxIBuildSubTpls(tempTpl)
-            }
-
-            //删除临时监听
-            delete self.bxWatcherKeys
+            // else {
+            //     var brickTpl = self.get('brickTpl')
+            //     if (brickTpl) {
+            //         tempTpl = self.bxIBuildBrickTpls(brickTpl)
+            //     }
+            // }
+            // if (tempTpl) {
+            //     self.bxISelfCloseTag(tpl)
+            //     self.bxIBuildSubTpls(tpl)
+            // }
         },
 
         bxIActivate: function() {
@@ -43,18 +52,17 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
-                //S.log('beforeRefreshTpl_'+needRenderCounter)
+
                 needRenderCounter++
                 needActivateCounter++
-                //debugger
-                
+
                 if (e.renderType === 'html') {
                     var children = self.bxDirectChildren(e.node)
 
                     for (var i = 0; i < children.length; i++) {
-                        var brick = self.find('#' + children[i].attr('id'))
+                        var brick = self.bxFind('#' + children[i].attr('id'))
                         //这个组件如果没有触发rendered和ready事件，移除会有问题
-                        if (brick) brick.destroy()
+                        if (brick) brick.bxDestroy()
                     }
                 }
             })
@@ -66,12 +74,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                         //debugger
                         //S.log('afterRefreshTpl_'+needRenderCounter)
                         if (--needRenderCounter === 0) {
-                            self.setInternal('rendered', true)
+                            self.bxRendered = true
                             self.fire('rendered')
                         }
                     }, function activatedCheck() {
                         if (--needActivateCounter === 0) {
-                            self.setInternal('activated', true)
+                            self.bxActivated = true
                             self.fire('ready')
                         }
                     })
@@ -119,27 +127,27 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 })
         },
 
-        bxIBuildBrickTpls: function(tpl) {
-            var self = this
-            var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-            var brickTpls = self.get('brickTpls')
-            var level = self.get('level')
-            while (level--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-            var reg = new RegExp(r, "ig")
-            tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-                brickTpls[bx] = {
-                    start: start,
-                    middle: middle,
-                    end: end
-                }
-                //占位符
-                return '@brix@' + bx + '@brix@'
-            })
-            return tpl
-        },
+        // bxIBuildBrickTpls: function(tpl) {
+        //     var self = this
+        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
+        //     var brickTpls = self.get('brickTpls')
+        //     var level = self.get('level')
+        //     while (level--) {
+        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+        //     }
+        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+        //     var reg = new RegExp(r, "ig")
+        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
+        //         brickTpls[bx] = {
+        //             start: start,
+        //             middle: middle,
+        //             end: end
+        //         }
+        //         //占位符
+        //         return '@brix@' + bx + '@brix@'
+        //     })
+        //     return tpl
+        // },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -149,7 +157,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         bxIStoreAttrs: function(str) {
             var attrs = {}
             var storeAttr = function(all, attr, tpl) {
-                if(tpl.indexOf('{{')>-1&&tpl.indexOf('}}')>0){
+                if (tpl.indexOf('{{') > -1 && tpl.indexOf('}}') > 0) {
                     attrs[attr] = tpl
                 }
             }
@@ -163,33 +171,30 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var data = self.get('data')
-
-            var watch = function(key) {
-                self.watch(data, key, function() {
-                    if(!S.inArray(key,self.bxRefreshKeys)){
-                        self.bxRefreshKeys.push(key)
-                    }
-                    //这个再看，不知道为什么，这个会引起ready事件的触发出错
-                    if(self.bxLaterTimer){
-                        self.bxLaterTimer.cancel();
-                        delete self.bxLaterTimer
-                    }
-                    self.bxLaterTimer = S.later(function(){
-                        //debugger
-                        self.bxIRefreshTpl(self.bxRefreshKeys, self.get('data'), 'html')
-                        self.bxRefreshKeys = [];
-                    })
-                    
-                })
-            }
-
+            var obj = self.bxGetAncestorWithData(self)
+            var data = obj.data
+            var ancestor = obj.ancestor
             if (data) {
+                var watch = function(key) {
+                    ancestor.watch(data, key, function() {
+                        if (!S.inArray(key, ancestor.bxRefreshKeys)) {
+                            ancestor.bxRefreshKeys.push(key)
+                        }
+                        if (ancestor.bxLaterTimer) {
+                            ancestor.bxLaterTimer.cancel();
+                            delete ancestor.bxLaterTimer
+                        }
+                        ancestor.bxLaterTimer = S.later(function() {
+                            ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, ancestor.bxRefreshKeys, data, 'html')
+                            ancestor.bxRefreshKeys = [];
+                        }, 100)
+                    })
+                }
                 var temparr = datakey.split(',')
                 for (var i = 0; i < temparr.length; i++) {
                     var key = temparr[i]
-                    if (!self.bxWatcherKeys[key]) {
-                        self.bxWatcherKeys[key] = true;
+                    if (!ancestor.bxWatcherKeys[key]) {
+                        ancestor.bxWatcherKeys[key] = true;
                         watch(key);
                     }
                 }
@@ -201,55 +206,48 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @param {String} tpl  需要解析的模板
          * @private
          */
-        bxIBuildSubTpls: function(tpl) {
+        bxIBuildSubTpls: function(tpl, subTpls, level) {
             var self = this
-            var subTpls = self.get('subTpls')
-            var brickTpls = self.get('brickTpls')
-            var level = self.get('level')
-
+            // var subTpls = self.get('subTpls')
+            // var brickTpls = self.get('brickTpls')
+            //var level = self.get('level')
+            var l = level
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-            while (level--) {
+            while (l--) {
                 r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
             }
             r = r.replace('@brix@', '(?:[\\s\\S]*?)')
 
             var reg = new RegExp(r, "ig")
             var m
-            var replacer = function(all, bx) {
-                var o = brickTpls[bx]
-                return o.start + o.middle + o.end
-            }
+            // var replacer = function(all, bx) {
+            //     var o = brickTpls[bx]
+            //     return o.start + o.middle + o.end
+            // }
 
             while ((m = reg.exec(tpl)) !== null) {
                 var datakey = m[4]
-                subTpls.push({
+                var obj = {
                     name: m[3],
                     datakey: datakey,
-                    tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-                    attrs: self.bxIStoreAttrs(m[1])
-                })
+                    // tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+                    tpl: m[5],
+                    attrs: self.bxIStoreAttrs(m[1]),
+                    subTpls: []
+                }
+                subTpls.push(obj)
                 self.bxIAddWatch(datakey)
                 //递归编译子模板
-                self.bxIBuildSubTpls(m[5])
+                self.bxIBuildSubTpls(m[5], obj.subTpls, level)
             }
-            // var bxEvents = self.get('bx-events')
-            // //获取模板中bx-type的对象
-            // var rrr = /bx\-([^=]+)=["\']([^"\'\s]+)["\']/ig
-            // tpl.replace(rrr, function(all, type, fn) {
-            //     if (!S.inArray(type, KEYS)) {
-            //         bxEvents[fn] = bxEvents[fn] || []
-            //         bxEvents[fn].push(type)
-            //     }
-            //     return all
-            // })
         },
         /**
          * 子闭合标间的处理
          * @param  {String} tpl 模板
          */
-        bxISelfCloseTag: function(tpl) {
+        bxISelfCloseTag: function(tpl, subTpls) {
             var self = this
-            var subTpls = self.get('subTpls')
+            //var subTpls = self.get('subTpls')
 
             var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
             var reg = new RegExp(r, "ig")
@@ -272,14 +270,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @param  {String} renderType 渲染方式，目前支持html，append，prepend
          * @private
          */
-        bxIRefreshTpl: function(keys, data, renderType) {
+        bxIRefreshTpl: function(el, subTpls, keys, data, renderType) {
             var self = this
 
-            if (!self.get('rendered')) {
+            if (!self.bxRendered) {
                 return
             }
-            var el = self.get('el')
-            var subTpls = self.get('subTpls')
 
             S.each(subTpls, function(o) {
                 var datakeys = S.map(o.datakey.split(','), function(str) {
@@ -305,25 +301,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     }
 
                     nodes.each(function(node) {
-                        // var newData = {}
-                        // S.each(datakeys, function(item) {
-                        //     var tempdata = data,
-                        //         temparr = item.split('.'),
-                        //         length = temparr.length,
-                        //         i = 0
-                        //     while (i !== length) {
-                        //         tempdata = tempdata[temparr[i]]
-                        //         i++
-                        //     }
-                        //     newData[temparr[length - 1]] = tempdata
-                        //     tempdata = null
-                        // })
-                        // S.each(data, function(d, k) {
-                        //     if (S.isFunction(d)) {
-                        //         newData[k] = d
-                        //     }
-                        // })
-
                         if (o.tpl) {
                             self.fire('beforeRefreshTpl', {
                                 node: node,
@@ -357,27 +334,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                             }
                         })
                     })
+                } else if (o.subTpls.length > 0) {
+                    //刷新子模板的子模板
+                    self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
                 }
-            })
-
-            var children = self.get('children')
-
-            // 为什么要这样做？
-            // 因为 bxIRefreshTpl 有可能会更改 children 数组的长度
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i]
-
-                if (!child.get('refresh')) {
-                    child.set('refresh', true)
-                    if (!child.get('data')) {
-                        child.bxIRefreshTpl(keys, data, renderType)
-                        i = 0
-                    }
-                }
-            }
-            // 更新 refresh 的状态为 false
-            S.each(children, function(child) {
-                child.set('refresh', false)
             })
         },
 
@@ -392,19 +352,9 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var newData
-            var parent = self
-
-            while (parent) {
-                if ((newData = parent.get('data')) && newData) {
-                    break
-                }
-                parent = parent.get('parent')
-            }
-            if (!newData) {
-                newData = {}
-                parent = self
-            }
+            var obj = self.bxGetAncestorWithData(self)
+            var newData = obj.data || {}
+            var ancestor = obj.ancestor
             var keys = []
             if (S.isObject(datakey)) {
                 for (var key in datakey) {
@@ -425,10 +375,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     delete opts.renderType
                 }
             }
-            parent.set('data', newData, opts)
+            ancestor.set('data', newData, opts)
 
             if (!opts || !opts.silent) {
-                self.bxIRefreshTpl(keys, newData, renderType)
+                ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, newData, renderType)
             }
         }
     }
@@ -455,7 +405,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @cfg {Number}
          */
         level: {
-            value: 4
+            value: 3
         },
 
         /**
