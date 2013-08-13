@@ -54,11 +54,11 @@ KISSY.add('brix/core/bx-name', function(S) {
                 for (var i = 0; i < Klasses.length; i++) {
                     var el = nodes[i]
                     // passive:开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
-                    var options = self.bxBootOptions({
+                    var opts = self.bxBootOptions({
                         el: el,
                         passive: !activatedCheck
                     })
-                    self.bxIBoot(el, options, Klasses[i], renderedCheck, activatedCheck)
+                    self.bxIBoot(el, opts, Klasses[i], renderedCheck, activatedCheck)
                 }
             })
         },

@@ -1,30 +1,25 @@
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick, Base) {
-
-    function BxApp() {
-        BxApp.superclass.constructor.apply(this, arguments)
-    }
-
-    S.extend(BxApp, Base)
-    S.augment(BxApp, appConfig, bxApi, bxThird, {
+KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
+    var BxApp = {
         bootStyle: function(fn) {
-            S.use(this.bxComboStyle().join(','), fn)
-        }
-    })
+            S.use(appConfig.bxComboStyle.call(appConfig).join(','), fn)
+            return this
+        },
+        bxChildren: []
+    }
+    S.mix(BxApp, appConfig)
+    S.mix(BxApp, bxApi)
+    S.mix(BxApp, bxThird)
 
-    var app = new BxApp({})
+    appConfig.config('Third', Third)
+    appConfig.config('Brick', Brick)
 
-    app.bxChildren = []
-
-    app.config('Third', Third)
-    app.config('Brick', Brick)
-    return app
+    return BxApp
 }, {
     requires: [
         'brix/app/config',
         'brix/core/bx-api',
         'brix/core/bx-third',
         'brix/third/index',
-        'brix/base',
-        'base'
+        'brix/base'
     ]
 })

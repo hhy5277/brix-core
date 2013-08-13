@@ -92,7 +92,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = this.bxGetBrickAncestor(context)
+                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
             }
 
             if (!data) {
