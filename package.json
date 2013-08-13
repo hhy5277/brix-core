@@ -1,7 +1,7 @@
 {
   "name": "brix-core",
   "description": "Brix Core",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "author": "THX <thx@alibaba-inc.com>",
   "private": true,
   "contributors": [
