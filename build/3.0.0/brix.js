@@ -288,8 +288,8 @@ KISSY.add('brix/app/config', function(S) {
     return exports
 });
 KISSY.add("brix/base",
-          function(S, app, Interface,
-                      bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
+          function(S, Util, app, Interface,
+                    bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind,
                       Watcher, Promise, RichBase, XTemplate) {
 
     var noop = S.noop
@@ -303,11 +303,9 @@ KISSY.add("brix/base",
             var self = this
             var el = self.get('el')
 
-            // id 和 name 都用采用静默更新
-            self.set('id', el.attr('id'), { silent : true })
-            if (!self.get('name')) {
-                self.set('name', el.attr('bx-name'), { silent : true })
-            }
+
+            self.bxId = el.attr('id')
+            self.bxName = el.attr('bx-name')
 
             self.bxIgnite()
         },
@@ -588,9 +586,14 @@ KISSY.add("brix/base",
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-
-                child.once('ready', check)
-                child.bxActivate()
+                if(!child.bxRender){
+                    check()
+                }   
+                else{
+                    child.once('ready', check)
+                    child.bxActivate() 
+                }
+                
             }
 
             if (!children || children.length === 0) {
@@ -665,10 +668,10 @@ KISSY.add("brix/base",
             // 如果存在父组件，则移除
             if (parent) {
                 var siblings = parent.get('children')
-                var id = self.get('id')
+                var id = self.bxId
 
                 for (i = siblings.length - 1; i >= 0; i--) {
-                    if (siblings[i].get('id') === id) {
+                    if (siblings[i].bxId === id) {
                         siblings.splice(i, 1)
                         break
                     }
@@ -707,8 +710,8 @@ KISSY.add("brix/base",
             if (parent) {
                 context = context || this;
                 if (context === this) {
-                    var eventTypeId = '#' + context.get('id') + '_' + eventType
-                    var eventTypeName = context.get('name') + '_' + eventType
+                    var eventTypeId = '#' + context.bxId + '_' + eventType
+                    var eventTypeName = context.bxName + '_' + eventType
 
                     parent.fire(eventTypeId, eventData, context)
                     parent.fire(eventTypeName, eventData, context)
@@ -799,41 +802,11 @@ KISSY.add("brix/base",
                     if (S.isString(s)) {
                         s = S.one(s)
                     }
-
                     return s
                 },
-
                 setter: function(el) {
-                    if (S.isString(el)) {
-                        el = S.one(el)
-                    }
-                    if (!el.attr('id')) {
-                        var id
-
-                        // 判断页面id是否存在，如果存在继续随机。
-                        while ((id = S.guid('brix-brick-')) && S.one('#' + id)) {}
-
-                        el.attr('id', id)
-                    }
-
-                    return '#' + el.attr('id')
+                    return '#' + Util.bxUniqueId(el)
                 }
-            },
-
-            /**
-             * 组件的id
-             * @type {String}
-             */
-            id:{
-                value: null
-            },
-
-            /**
-             * 组件名称
-             * @type {String}
-             */
-            name: {
-                value: null
             },
 
             /**
@@ -925,15 +898,15 @@ KISSY.add("brix/base",
         }, Interface.ATTRS),Watcher.ATTRS)
     }, 'Brick')
 
-    S.augment(Brick, bxUtil, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
+    S.augment(Brick, bxTpl, bxName, bxEvent, bxDelegate, bxConfig, bxRemote, bxBoot, bxFind, Watcher, Interface.METHODS)
 
 
     return Brick
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'brix/interface/index',
-        'brix/core/bx-util',
         'brix/core/bx-tpl',
         'brix/core/bx-name',
         'brix/core/bx-event',
@@ -1256,46 +1229,82 @@ KISSY.add('brix/core/bx-event', function(S) {
 KISSY.add('brix/core/bx-find', function() {
 
     var exports = {
-        find: function(name) {
-            var children = this.get('children')
-            var id
-
-            if (name.charAt(0) === '#') {
-                id = name.substr(1)
-                name = null
+        /**
+         * 递归查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Brick}
+         */
+        one: function(selector) {
+            return this.bxOne(selector, this.get('children') || [], true)
+        },
+        bxOne: function(selector, children, isRecursive) {
+            if (selector.charAt(0) === '#') {
+                selector = selector.substr(1)
             }
-
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-
-                if (child.get('id') === id ||
-                    child.get('name') === name) {
-
+                if (child.bxId === selector ||
+                    child.bxName === selector) {
                     return child
+                } else if (isRecursive) {
+                    var result = this.bxOne(selector, child.get('children') || [], isRecursive)
+                    if (result) {
+                        return result
+                    }
                 }
             }
         },
-
-        where: function(opts) {
-            var children = this.get('children')
-            var result =[]
-            var name = opts.name
-            var selector = opts.selector
-
+        /**
+         * 查找当前组件下的子组件
+         * @param  {Object} opts 查找条件，name和selector只能任选其一
+         * @param  {String} opts.name 组件名称bx-name
+         * @param  {String} opts.selector el节点选择器
+         * @return {Array}  符合过滤条件的实例数组
+         */
+        all: function(selector) {
+            var result = []
+            this.bxAll(selector, this.get('children') || [], result, true)
+            return result;
+        },
+        bxAll: function(selector, children, result, isRecursive) {
+            if (selector.charAt(0) === '#') {
+                selector = selector.substr(1)
+            }
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                if (child.get('name') === name) result.push(child)
-                if (selector && child.get('el').test(selector)) result.push(child)
+                if (child.bxId === selector ||
+                    child.bxName === selector) {
+                    result.push(child)
+                }
+                if (isRecursive) {
+                    this.bxAll(selector, child.get('children') || [], result, isRecursive)
+                }
             }
-
-            return result
+        },
+        /**
+         * 查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Brick}
+         */
+        find: function(selector) {
+            return this.bxOne(selector, this.get('children') || [])
+        },
+        /**
+         * 查找当前组件下的子组件
+         * @param  {String} selector 选择器，目前支持id和bx-name
+         * @return {Array}  符合过滤条件的实例数组
+         */
+        where: function(selector) {
+            var result = []
+            this.bxAll(selector, this.get('children') || [], result)
+            return result;
         }
     }
 
     return exports
 });
-KISSY.add('brix/core/bx-name', function(S, Node) {
+KISSY.add('brix/core/bx-name', function(S, Util, Node) {
 
     var exports = {
         bxHandleName: function(root, renderedFn, activatedFn) {
@@ -1309,8 +1318,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 // If the node is deferred, do not instantiate it.
                 if (node.hasAttr('bx-defer')) {
                     nodes.splice(i, 1)
-                }
-                else {
+                } else {
                     // Some of the child nodes might be instantiated already.
                     // Remove them out of the nodes array that will be processed.
                     var brick = self.find('#' + node.attr('id'))
@@ -1321,12 +1329,11 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
             if (nodes.length === 0) {
                 S.later(function() {
-                    //S.log(self.get('name')+'_'+renderedCounter+'_total:'+total)
+                    //S.log(self.bxName+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
-            }
-            else {
+            } else {
                 self.bxUseModules(nodes, renderedFn, activatedFn)
             }
         },
@@ -1338,12 +1345,12 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
             var total = nodes.length
             var klasses = []
             var renderedCheck = function() {
-                //S.log(self.get('name')+'_'+renderedCounter+'_'+total)
+                //S.log(self.bxName+'_'+renderedCounter+'_'+total)
                 if (++renderedCounter === total) renderedFn()
             }
             var activatedCheck = activatedFn && function() {
-                if (++activatedCounter === total) activatedFn()
-            }
+                    if (++activatedCounter === total) activatedFn()
+                }
 
             for (var i = 0; i < total; i++) {
                 var node = Node(nodes[i])
@@ -1362,8 +1369,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 //
                 else if (name.split('/').length > 2) {
                     klasses[i] = name
-                }
-                else {
+                } else {
                     klasses[i] = name + '/index'
                 }
             }
@@ -1393,45 +1399,62 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 return bothFn()
             }
             if (!(el && DOM.contains(document, el[0]))) {
-                //S.log(parent.get('name')+'_bothFn:')
+                //S.log(parent.bxName+'_bothFn:')
                 // el is gone
                 return bothFn()
             }
+            Util.bxUniqueId(el)
             var opts = parent.bxHandleConfig(el, Klass)
-            var tag = el.attr('bx-tag')
-
-            S.mix(opts, {
-                el: el,
-                name: el.attr('bx-name'),
-                parent: parent,
-
-                // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
-                passive: !activatedFn,
-
-                // the tag and brickTpl attribute is required for interface/zuomo
-                tag: tag,
-                brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
-            })
-
+            var inst
             var ancestor = parent
+            var overrides
+            if (S.isArray(opts)) {
+                while (ancestor) {
+                    overrides = ancestor.get('config')
 
-            while (ancestor) {
-                var overrides = ancestor.get('config')
+                    if (overrides) {
+                        Util.bxMixArgument(opts, overrides[el.attr('id')])
+                        Util.bxMixArgument(opts, overrides[el.attr('name')])
+                    }
 
-                if (overrides) {
-                    S.mix(opts, overrides[el.attr('id')])
-                    S.mix(opts, overrides[el.attr('name')])
+                    ancestor = ancestor.get('parent')
                 }
 
-                ancestor = ancestor.get('parent')
+                inst = Util.bxConstruct(Klass, opts)
+            } else if (S.isPlainObject(opts)) {
+                var tag = el.attr('bx-tag')
+
+                S.mix(opts, {
+                    el: el,
+                    name: el.attr('bx-name'),
+                    parent: parent,
+
+                    // 开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                    passive: !activatedFn,
+
+                    // the tag and brickTpl attribute is required for interface/zuomo
+                    tag: tag,
+                    brickTpl: tag ? parent.get('brickTpls')[tag].middle : null
+                })
+
+                while (ancestor) {
+                    overrides = ancestor.get('config')
+
+                    if (overrides) {
+                        S.mix(opts, overrides[el.attr('id')])
+                        S.mix(opts, overrides[el.attr('name')])
+                    }
+
+                    ancestor = ancestor.get('parent')
+                }
+                inst = new Klass(opts)
+            } else {
+                inst = new Klass(opts)
             }
 
-            // 对父类的 listeners 的处理还没加进来，原代码见：
-            // https://github.com/thx/brix-core/blob/bfa78a0b2b4dcfea4c24220e54850381140c7516/src/base.js#L606
-            //
-            // @keyapril 这里的使用场景得补充一下。
+            inst.bxId = el.attr('id')
+            inst.bxName = el.attr('bx-name')
 
-            var inst = new Klass(opts)
             var children = parent.get('children')
 
             if (!children) {
@@ -1446,8 +1469,7 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
                 if (activatedFn) inst.once('ready', activatedFn)
                 // 如果组件在实例化过程中被销毁了
                 inst.once('destroy', bothFn)
-            }
-            else {
+            } else {
                 bothFn()
             }
             el = children = null
@@ -1474,20 +1496,19 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
         bxDirectChildren: function(root, selector) {
             var arr = []
 
-            function walk(node) {
-                var children = node.children()
+                function walk(node) {
+                    var children = node.children()
 
-                for (var i = 0; i < children.length; i++) {
-                    var child = children.item(i)
+                    for (var i = 0; i < children.length; i++) {
+                        var child = children.item(i)
 
-                    if (child.test(selector)) {
-                        arr.push(child)
-                    }
-                    else {
-                        walk(child)
+                        if (child.test(selector)) {
+                            arr.push(child)
+                        } else {
+                            walk(child)
+                        }
                     }
                 }
-            }
 
             selector = selector || '[bx-name]'
             walk(root)
@@ -1500,12 +1521,13 @@ KISSY.add('brix/core/bx-name', function(S, Node) {
 
 }, {
     requires: [
+        'brix/tool/util',
         'node',
         'sizzle',
         'event'
     ]
 });
-KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, Util, app, IO, Uri) {
 
     var exports = {
 
@@ -1521,7 +1543,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                     self.bxJsonpRemote(uri, callback)
             }
             else if (/^\.\//.test(remote)) {
-                var name = self.get('name')
+                var name = self.bxName
                 var mod = name.replace(/\/?$/, '') + remote.substr(1)
 
                 if (app.config('debug')) {
@@ -1567,19 +1589,20 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 throw Error('Cannot load data.json via xhr in current mode.')
             }
 
-            IO.get(this.bxResolveModule(mod, '.json'), callback)
+            IO.get(Util.bxResolveModule(mod, '.json'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'uri'
     ]
 });
-KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
+KISSY.add('brix/core/bx-tpl', function(S, Util, app, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -1661,56 +1684,18 @@ KISSY.add('brix/core/bx-tpl', function(S, app, IO) {
                 throw Error('Cannot load tpl via xhr in current mode.')
             }
 
-            IO.get(this.bxResolveModule(mod, '.html'), callback)
+            IO.get(Util.bxResolveModule(mod, '.html'), callback)
         }
     }
 
     return exports
 }, {
     requires: [
+        'brix/tool/util',
         'brix/app/config',
         'ajax',
         'node',
         'sizzle'
-    ]
-});
-KISSY.add('brix/core/bx-util', function(S, app) {
-
-    var exports = {
-        bxResolveModule: function(mod, ext) {
-            var parts = mod.split('/')
-            var ns = parts.shift()
-            var name = parts.shift()
-            var file = parts.shift()
-            var base = S.config('packages')[ns].base
-
-            var components = app.config('components')
-            var imports = app.config('imports')
-
-            var pkgs = S.config('packages')
-            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
-
-            if (!pkgsIgnore) parts.push(ns)
-
-            parts.push(name)
-
-            if (imports && imports[ns]) {
-                parts.push(imports[ns][name])
-            }
-            else if (components && S.isPlainObject(components[ns])) {
-                parts.push(components[ns][name])
-            }
-
-            parts.push(file + ext)
-
-            return base + parts.join('/')
-        }
-    }
-
-    return exports
-}, {
-    requires: [
-        'brix/app/config'
     ]
 });
 KISSY.add('brix/core/bx-watcher', function(S, JSON) {
@@ -2299,3 +2284,88 @@ KISSY.add('brix/interface/index', function(S) {
     return exports
 });
 ;
+KISSY.add('brix/tool/util', function(S, app) {
+    return {
+        /**
+         * 动态传参数实例类
+         * @param  {Function} constructor 需要实例化的类
+         * @param  {Array} args        参数数组
+         * @return {Object}             类的实例
+         */
+        bxConstruct: function(constructor, args) {
+            function F() {
+                return constructor.apply(this, args);
+            }
+            F.prototype = constructor.prototype;
+            return new F();
+        },
+        /**
+         * 给el节点设置唯一的id
+         * @param  {String|Node} el 节点
+         * @return {String}    id
+         */
+        bxUniqueId: function(el) {
+            if (S.isString(el)) {
+                el = S.one(el)
+            }
+            if (!el.attr('id')) {
+                var id
+
+                // 判断页面id是否存在，如果存在继续随机。
+                while ((id = S.guid('brix-brick-')) && S.one('#' + id)) {}
+
+                el.attr('id', id)
+            }
+
+            return el.attr('id')
+        },
+        /**
+         * 合并数组参数
+         * @param  {Array} receiver 参数数组
+         * @param  {Array} supplier 配置的参数数组
+         */
+        bxMixArgument: function(receiver, supplier) {
+            if (supplier) {
+                S.each(supplier, function(o, i) {
+                    if (o !== null) {
+                        if (S.isPlainObject(o)) {
+                            receiver[i] = receiver[i] || {}
+                            S.mix(receiver[i], o)
+                        } else {
+                            receiver[i] = o;
+                        }
+                    }
+                })
+            }
+        },
+        bxResolveModule: function(mod, ext) {
+            var parts = mod.split('/')
+            var ns = parts.shift()
+            var name = parts.shift()
+            var file = parts.shift()
+            var base = S.config('packages')[ns].base
+
+            var components = app.config('components')
+            var imports = app.config('imports')
+
+            var pkgs = S.config('packages')
+            var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
+
+            if (!pkgsIgnore) parts.push(ns)
+
+            parts.push(name)
+
+            if (imports && imports[ns]) {
+                parts.push(imports[ns][name])
+            } else if (components && S.isPlainObject(components[ns])) {
+                parts.push(components[ns][name])
+            }
+
+            parts.push(file + ext)
+
+            return base + parts.join('/')
+        }
+    }
+}, {
+    requires: ['brix/app/config', 'node']
+});
