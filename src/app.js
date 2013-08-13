@@ -1,4 +1,4 @@
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Base) {
+KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick, Base) {
 
     function BxApp() {
         BxApp.superclass.constructor.apply(this, arguments)
@@ -16,7 +16,7 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Base) {
     app.bxChildren = []
 
     app.config('Third', Third)
-
+    app.config('Brick', Brick)
     return app
 }, {
     requires: [

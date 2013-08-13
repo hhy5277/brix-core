@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise,DOM) {
+KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
     var Third
     var exports = {
 
@@ -107,13 +107,23 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise,DOM) {
                 return bothFn()
             }
             var inst
-
+            var isExtendBrick = false
             if (!S.isFunction(Klass)) {
                 inst = Klass
-            } else if (S.isArray(options)) {
-                inst = self.bxConstruct(Klass, options);
+                S.mix(inst, Third)
             } else {
-                inst = new Klass(options)
+                if (!self.bxIsExtendBrickClass(Klass)) {
+                    Third = Third || appConfig.config('Third')
+                    S.augment(Klass, Third)
+                } else {
+                    isExtendBrick = true
+                }
+                if (S.isArray(options)) {
+                    delete options.el;
+                    inst = self.bxConstruct(Klass, options);
+                } else {
+                    inst = new Klass(options)
+                }
             }
 
             inst.bxId = el.attr('id')
@@ -125,16 +135,14 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise,DOM) {
             children.push(inst)
 
 
-            if (self.bxIsBrickInstance(inst)) {
+            if (isExtendBrick) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 if (renderedFn) inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
                 // 如果组件在实例化过程中被销毁了
                 inst.once('destroy', bothFn)
             } else {
-                //这里mix Brix的方法，实现组件的局部刷新等功能
-                Third = Third || appConfig.config('Third')
-                S.mix(inst, Third)
+                //将el节点持有
                 inst.bxEl = el;
                 inst.bxInit(renderedFn, activatedFn)
             }
@@ -190,5 +198,5 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise,DOM) {
 
     return exports
 }, {
-    requires: ['brix/app/config', 'promise','dom']
+    requires: ['brix/app/config', 'promise', 'dom']
 })

@@ -171,7 +171,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var obj = self.bxGetAncestor(self)
+            var obj = self.bxGetAncestorWithData(self)
             var data = obj.data
             var ancestor = obj.ancestor
             if (data) {
@@ -352,7 +352,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var obj = self.bxGetAncestor(self)
+            var obj = self.bxGetAncestorWithData(self)
             var newData = obj.data || {}
             var ancestor = obj.ancestor
             var keys = []

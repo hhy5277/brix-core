@@ -294,7 +294,7 @@ KISSY.add("brix/base",
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
                     if (!self.bxIsBrickInstance(child)) {
-                        child.bxListionReady(check)
+                        child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
                     }
@@ -581,7 +581,6 @@ KISSY.add("brix/base",
         }, 'Brick')
 
         S.augment(Brick, Core, Interface.METHODS)
-
 
         return Brick
     }, {

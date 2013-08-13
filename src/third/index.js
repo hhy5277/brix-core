@@ -5,10 +5,10 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             var self = this
             //初始化一些方法
             if (renderedFn) {
-                self.bxListionRendered(renderedFn)
+                self.bxListenRendered(renderedFn)
             }
             if (activatedFn) {
-                self.bxListionReady(activatedFn)
+                self.bxListenReady(activatedFn)
             }
             S.later(function() {
                 self.bxRender()
@@ -77,10 +77,10 @@ KISSY.add('brix/third/index', function(S, bxThird) {
                 }
             }
         },
-        bxListionReady: function(fn) {
+        bxListenReady: function(fn) {
             this.bxReadyFn = fn;
         },
-        bxListionRendered: function(fn) {
+        bxListenRendered: function(fn) {
             this.bxRenderedFn = fn;
         },
         bxDestroy: function() {
@@ -94,7 +94,8 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             }
             self.bxChildren = [];
 
-
+            delete self.bxEl;
+            
             var parent = self.bxParent
 
             // 如果存在父组件，则移除

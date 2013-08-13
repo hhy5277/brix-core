@@ -1,4 +1,5 @@
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
+    var Brick
     return {
         /**
          * 动态传参数实例类
@@ -84,7 +85,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @param  {Objcet} context 实例
          * @return {Object}          对象
          */
-        bxGetAncestor: function(context) {
+        bxGetAncestorWithData: function(context) {
             var data
             var ancestor = this.bxGetBrickAncestor(context)
             while (ancestor) {
@@ -112,19 +113,30 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
             }
         },
         /**
-         * 获取brick的Class
+         * 是否是Brick类的实例
          * @param  {Object} context 实例
-         * @return {Function}       Class
+         * @return {Boolean}       
          */
         bxIsBrickInstance: function(context) {
-            var c = context.constructor
-            while (c) {
-                if (c.NAME == 'Brick') {
-                    return true
-                }
-                c = c.superclass ? c.superclass.constructor : null
+            Brick = Brick || appConfig.config('Brick')
+            return context instanceof Brick
+        },
+        /**
+         * 是否继承Brick的类  
+         * @param  {Function} c 类
+         * @return {Boolean}   
+         */
+        bxIsExtendBrickClass:function(c){
+            Brick = Brick || appConfig.config('Brick')
+            if(c==Brick){
+                return true
             }
-            return false
+            if(c.superclass){
+                return c.superclass instanceof Brick
+            }
+            else{
+                return false;
+            }
         }
     }
 }, {
