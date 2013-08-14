@@ -1,5 +1,5 @@
-KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
-    var Third
+KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
+    var THIRDBASE = 'brix/third/index'
     var exports = {
         /**
          * 处理boot参数
@@ -91,7 +91,8 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
             var inst
             //是否从Brick继承
             var isExtendBrick = false
-            Third = Third || appConfig.config('Third')
+            var Third = S.require(THIRDBASE)
+            
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -186,5 +187,5 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
 
     return exports
 }, {
-    requires: ['brix/app/config', 'promise', 'dom']
+    requires: ['promise', 'dom']
 })

@@ -1,5 +1,5 @@
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
-    var Brick
+    var BRICKBASE = 'brix/base'
     return {
         /**
          * 动态传参数实例类
@@ -118,8 +118,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @return {Boolean}       
          */
         bxIsBrickInstance: function(context) {
-            Brick = Brick || appConfig.config('Brick')
-            return context instanceof Brick
+            return context instanceof S.require(BRICKBASE)
         },
         /**
          * 是否继承Brick的类  
@@ -127,7 +126,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @return {Boolean}   
          */
         bxIsExtendBrickClass:function(c){
-            Brick = Brick || appConfig.config('Brick')
+            var Brick = S.require(BRICKBASE)
             if(c==Brick){
                 return true
             }

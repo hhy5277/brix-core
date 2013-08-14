@@ -1,4 +1,4 @@
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
+KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird) {
     var BxApp = {
         bootStyle: function(fn) {
             S.use(this.bxComboStyle().join(','), fn)
@@ -9,8 +9,8 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
     S.mix(BxApp, bxApi)
     S.mix(BxApp, bxThird)
 
-    appConfig.config('Third', Third)
-    appConfig.config('Brick', Brick)
+    // appConfig.config('Third', Third)
+    // appConfig.config('Brick', Brick)
 
     return BxApp
 }, {
@@ -18,7 +18,7 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
         'brix/app/config',
         'brix/core/bx-api',
         'brix/core/bx-third',
-        'brix/third/index',
+        'brix/third/index',//这里的两个依赖必须存在
         'brix/base'
     ]
 })
