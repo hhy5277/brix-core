@@ -9,10 +9,10 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          */
         bxConstruct: function(constructor, args) {
             function F() {
-                return constructor.apply(this, args);
+                return constructor.apply(this, args)
             }
-            F.prototype = constructor.prototype;
-            return new F();
+            F.prototype = constructor.prototype
+            return new F()
         },
         /**
          * 给el节点设置唯一的id

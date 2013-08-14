@@ -91,6 +91,7 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
             var inst
             //是否从Brick继承
             var isExtendBrick = false
+            Third = Third || appConfig.config('Third')
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -102,7 +103,6 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
                 S.mix(inst, Third)
             } else {
                 if (!self.bxIsExtendBrickClass(Klass)) {
-                    Third = Third || appConfig.config('Third')
                     S.augment(Klass, Third)
                 } else {
                     isExtendBrick = true

@@ -553,13 +553,6 @@ KISSY.add("brix/base",
                  */
                 events: {
 
-                },
-                /**
-                 * 组件的父组件实例对象
-                 * @cfg {Object}
-                 */
-                parent: {
-                    value: false
                 }
             }, Interface.ATTRS), Core.ATTRS)
         }, 'Brick')
