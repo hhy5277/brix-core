@@ -6,8 +6,7 @@
 KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
     var BxApp = {
         bootStyle: function(fn) {
-            S.use(appConfig.bxComboStyle.call(appConfig).join(','), fn)
-            return this
+            S.use(this.bxComboStyle().join(','), fn)
         },
         bxChildren: []
     }
@@ -937,14 +936,13 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
          * @param  {Object} data 传入数据
          * @return {Object|Array|String|Boolean|Number}  处理完后的类的参数
          */
-        bxBootOptions: function(el,data) {
+        bxBootOptions: function(el, data) {
             var self = this
             var options
             if (S.isPlainObject(el)) {
                 data = null
                 options = el
-            }
-            else {
+            } else {
                 options = {
                     el: el
                 }
@@ -958,8 +956,6 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
             var ancestor = self.bxGetBrickAncestor(self)
             var overrides
             if (S.isArray(config)) {
-                //options = [];
-                //self.bxMixArgument(options, config)
                 while (ancestor) {
                     overrides = ancestor.get('config')
 
@@ -1022,8 +1018,15 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
                 return bothFn()
             }
             var inst
+            //是否从Brick继承
             var isExtendBrick = false
             if (!S.isFunction(Klass)) {
+                if (!S.isPlainObject(Klass)) {
+                    //保留原始值bxKlass
+                    Klass = {
+                        bxKlass: Klass
+                    }
+                }
                 inst = Klass
                 S.mix(inst, Third)
             } else {
@@ -1034,7 +1037,6 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
                     isExtendBrick = true
                 }
                 if (S.isArray(options)) {
-                    delete options.el;
                     inst = self.bxConstruct(Klass, options);
                 } else {
                     inst = new Klass(options)
