@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, appConfig, IO, Uri) {
 
     var exports = {
 
@@ -17,7 +17,7 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
                 var name = self.bxName
                 var mod = name.replace(/\/?$/, '') + remote.substr(1)
 
-                if (app.config('debug')) {
+                if (appConfig.config('debug')) {
                     self.bxXhrRemote(mod, callback)
                 }
                 else {

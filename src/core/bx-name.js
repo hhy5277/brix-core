@@ -22,7 +22,6 @@ KISSY.add('brix/core/bx-name', function(S) {
 
             if (nodes.length === 0) {
                 S.later(function() {
-                    //S.log(self.bxName+'_'+renderedCounter+'_total:'+total)
                     renderedFn()
                     if (activatedFn) activatedFn()
                 }, 0)
@@ -38,7 +37,6 @@ KISSY.add('brix/core/bx-name', function(S) {
             var total = nodes.length
             var klasses = []
             var renderedCheck = function() {
-                //S.log(self.bxName+'_'+renderedCounter+'_'+total)
                 if (++renderedCounter === total) renderedFn()
             }
             var activatedCheck = activatedFn && function() {
@@ -107,10 +105,4 @@ KISSY.add('brix/core/bx-name', function(S) {
 
     return exports
 
-}, {
-    requires: [
-        'node',
-        'sizzle',
-        'event'
-    ]
 })

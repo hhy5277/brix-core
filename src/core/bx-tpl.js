@@ -88,8 +88,6 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
 }, {
     requires: [
         'brix/app/config',
-        'ajax',
-        'node',
-        'sizzle'
+        'ajax'
     ]
 })

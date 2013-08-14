@@ -25,6 +25,4 @@ KISSY.add('brix/core/bx-delegate', function() {
     }
 
     return exports
-}, {
-    requires: ['event']
 })

@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-event', function(S) {
+KISSY.add('brix/core/bx-event', function(S, Event) {
 
     var exports = {
 
@@ -20,7 +20,6 @@ KISSY.add('brix/core/bx-event', function(S) {
         bxDelegateMap: function(eventsMap) {
             var self = this
             var el = this.get('el')
-            var Event = S.Event
             var fnc
             var fn;
 
@@ -28,19 +27,18 @@ KISSY.add('brix/core/bx-event', function(S) {
                 return function() {
                     var obj = self.bxGetAncestorWithData(self)
                     var ancestor
-                    if(obj.data){
+                    if (obj.data) {
                         //增加brixData，方便外部直接获取
                         arguments[0].brixData = obj.data
                         ancestor = obj.ancestor
-                    }
-                    else{
+                    } else {
                         ancestor = self;
                     }
                     var ret = fnc.apply(this, arguments)
-                    if(ret!==false){
+                    if (ret !== false) {
                         ancestor.digest()
                     }
-                    
+
                 }
             }
 
@@ -84,7 +82,6 @@ KISSY.add('brix/core/bx-event', function(S) {
 
         bxUndelegateMap: function(eventsMap) {
             var el = this.get('el')
-            var Event = S.Event
             var fn
 
             for (var sel in eventsMap) {

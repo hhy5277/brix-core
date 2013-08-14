@@ -139,5 +139,5 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
         }
     }
 }, {
-    requires: ['brix/app/config', 'node']
+    requires: ['brix/app/config']
 })

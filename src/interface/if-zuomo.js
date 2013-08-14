@@ -15,6 +15,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 self.bxRefreshKeys = []
                 //子模板数组
                 self.bxSubTpls = []
+
+                self.bxStoreTpls = {}
                 var data = self.get('data');
                 if (!data) {
                     //有模板必然有数据
@@ -22,27 +24,15 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                         silent: true
                     });
                 }
-                //tpl = self.bxITag(tpl)
-                tpl = self.bxISubTpl(tpl)
                 //存储模板
                 tpl = self.bxIBuildStoreTpls(tpl)
+
+                tpl = self.bxISubTpl(tpl)
                 self.set('tpl', tpl)
-                //tempTpl = self.bxIBuildBrickTpls(tpl)
                 var level = self.get('level')
                 self.bxISelfCloseTag(tpl, self.bxSubTpls)
                 self.bxIBuildSubTpls(tpl, self.bxSubTpls, level)
-
             }
-            // else {
-            //     var brickTpl = self.get('brickTpl')
-            //     if (brickTpl) {
-            //         tempTpl = self.bxIBuildBrickTpls(brickTpl)
-            //     }
-            // }
-            // if (tempTpl) {
-            //     self.bxISelfCloseTag(tpl)
-            //     self.bxIBuildSubTpls(tpl)
-            // }
         },
 
         bxIActivate: function() {
@@ -68,11 +58,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             })
 
             self.on('afterRefreshTpl', function(e) {
-                //S.log('afterRefreshTpl_xx')
                 self.bxHandleName(
                     e.node, function renderedCheck() {
-                        //debugger
-                        //S.log('afterRefreshTpl_'+needRenderCounter)
                         if (--needRenderCounter === 0) {
                             self.bxRendered = true
                             self.fire('rendered')
@@ -93,26 +80,13 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIBuildStoreTpls: function(tpl) {
             var self = this
-            var storeTpls = self.get('storeTpls')
             var storeTplRegexp = /\{\{#bx\-store\-tpl\-([^\}]*)?\}\}([\s\S]*?)\{\{\/bx\-store\-tpl\}\}/ig
 
             tpl = tpl.replace(storeTplRegexp, function(g, id, html) {
-                storeTpls[id] = html
+                self.bxStoreTpls[id] = html
                 return ''
             })
             return tpl
-        },
-
-        /**
-         * 为模板中的组件打上tag标识
-         * @param  {String} tpl 模板
-         * @return {String}      替换后的模板
-         */
-        bxITag: function(tpl) {
-            return tpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
-                .replace(/(bx-name=["'][^"']+["'])/ig, function(match) {
-                    return match + ' bx-tag="brix_tag_' + S.guid() + '"'
-                })
         },
 
         /**
@@ -126,28 +100,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
                 })
         },
-
-        // bxIBuildBrickTpls: function(tpl) {
-        //     var self = this
-        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-        //     var brickTpls = self.get('brickTpls')
-        //     var level = self.get('level')
-        //     while (level--) {
-        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-        //     }
-        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-        //     var reg = new RegExp(r, "ig")
-        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-        //         brickTpls[bx] = {
-        //             start: start,
-        //             middle: middle,
-        //             end: end
-        //         }
-        //         //占位符
-        //         return '@brix@' + bx + '@brix@'
-        //     })
-        //     return tpl
-        // },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -208,9 +160,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxIBuildSubTpls: function(tpl, subTpls, level) {
             var self = this
-            // var subTpls = self.get('subTpls')
-            // var brickTpls = self.get('brickTpls')
-            //var level = self.get('level')
             var l = level
             var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
             while (l--) {
@@ -220,17 +169,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             var reg = new RegExp(r, "ig")
             var m
-            // var replacer = function(all, bx) {
-            //     var o = brickTpls[bx]
-            //     return o.start + o.middle + o.end
-            // }
 
             while ((m = reg.exec(tpl)) !== null) {
                 var datakey = m[4]
                 var obj = {
                     name: m[3],
                     datakey: datakey,
-                    // tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
                     tpl: m[5],
                     attrs: self.bxIStoreAttrs(m[1]),
                     subTpls: []
@@ -247,8 +191,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          */
         bxISelfCloseTag: function(tpl, subTpls) {
             var self = this
-            //var subTpls = self.get('subTpls')
-
             var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
             var reg = new RegExp(r, "ig")
             var m
@@ -385,50 +327,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
     exports.ATTRS = {
         /**
-         * 子模板
-         * @type {Array}
-         */
-        subTpls: {
-            value: []
-        },
-
-        /**
-         * 存储模板
-         * @type {Array}
-         */
-        storeTpls: {
-            value: []
-        },
-
-        /**
          * 子模板嵌套的级别
          * @cfg {Number}
          */
         level: {
             value: 3
-        },
-
-        /**
-         * 组件的分析模板，不进入渲染逻辑
-         * @type {String}
-         */
-        brickTpl: {
-            value: false
-        },
-        /**
-         * 存储组件模板集合
-         * @type {Object}
-         */
-        brickTpls: {
-            value: {}
         }
-        // ,
-        // /**
-        //  * 存储dom中bx-type的事件对象
-        //  */
-        // 'bx-events': {
-        //     value: {}
-        // }
     }
 
     return exports

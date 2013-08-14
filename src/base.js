@@ -1,9 +1,6 @@
 KISSY.add("brix/base",
-    function(S, Interface, Core, Promise, RichBase, XTemplate) {
-
+    function(S, Interface, Core, Promise, RichBase, XTemplate, DOM) {
         var noop = S.noop
-
-        var DOM = S.DOM
 
         var DESTROY_ACTIONS = ['remove', 'empty']
 
@@ -393,7 +390,6 @@ KISSY.add("brix/base",
                 }
             }
         }, {
-            NAME: 'Brick',
             ATTRS: S.mix(S.mix({
                 /**
                  * 模板
@@ -513,8 +509,8 @@ KISSY.add("brix/base",
             'promise',
             'rich-base',
             'xtemplate',
+            'dom',
             'node',
-            'event',
             'sizzle'
         ]
     })
