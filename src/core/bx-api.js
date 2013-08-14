@@ -40,23 +40,6 @@ KISSY.add('brix/core/bx-api', function() {
          */
         where: function(selector) {
             return this.bxWhere(selector)
-        },
-        /**
-         * 运行fn后增加数据dirty checking
-         * @param  {Function|String} fn 需要执行的方法
-         */
-        dirtyCheck: function(fn) {
-            var self = this
-
-            if (typeof fn !== 'function') {
-                fn = self[fn];
-            }
-            if (fn) {
-                fn.apply(self, Array.prototype.slice.call(arguments, 1))
-                self.digest()
-            } else {
-                throw new Error('没有找到对应的函数')
-            }
         }
     }
     return exports
