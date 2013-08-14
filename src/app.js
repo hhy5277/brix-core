@@ -1,8 +1,7 @@
 KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
     var BxApp = {
         bootStyle: function(fn) {
-            S.use(appConfig.bxComboStyle.call(appConfig).join(','), fn)
-            return this
+            S.use(this.bxComboStyle().join(','), fn)
         },
         bxChildren: []
     }
