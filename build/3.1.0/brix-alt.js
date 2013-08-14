@@ -3,7 +3,7 @@
  * 
  * http://github.com/thx/brix-core
  */
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
+KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird) {
     var BxApp = {
         bootStyle: function(fn) {
             S.use(this.bxComboStyle().join(','), fn)
@@ -14,8 +14,8 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
     S.mix(BxApp, bxApi)
     S.mix(BxApp, bxThird)
 
-    appConfig.config('Third', Third)
-    appConfig.config('Brick', Brick)
+    // appConfig.config('Third', Third)
+    // appConfig.config('Brick', Brick)
 
     return BxApp
 }, {
@@ -23,7 +23,7 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird, Third, Brick) {
         'brix/app/config',
         'brix/core/bx-api',
         'brix/core/bx-third',
-        'brix/third/index',
+        'brix/third/index',//这里的两个依赖必须存在
         'brix/base'
     ]
 });
@@ -839,13 +839,6 @@ KISSY.add("brix/base",
                  */
                 events: {
 
-                },
-                /**
-                 * 组件的父组件实例对象
-                 * @cfg {Object}
-                 */
-                parent: {
-                    value: false
                 }
             }, Interface.ATTRS), Core.ATTRS)
         }, 'Brick')
@@ -928,8 +921,8 @@ KISSY.add('brix/core/bx-api', function() {
     }
     return exports
 });
-KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
-    var Third
+KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
+    var THIRDBASE = 'brix/third/index'
     var exports = {
         /**
          * 处理boot参数
@@ -1021,6 +1014,8 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
             var inst
             //是否从Brick继承
             var isExtendBrick = false
+            var Third = S.require(THIRDBASE)
+            
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -1032,7 +1027,6 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
                 S.mix(inst, Third)
             } else {
                 if (!self.bxIsExtendBrickClass(Klass)) {
-                    Third = Third || appConfig.config('Third')
                     S.augment(Klass, Third)
                 } else {
                     isExtendBrick = true
@@ -1116,7 +1110,7 @@ KISSY.add('brix/core/bx-boot', function(S, appConfig, Promise, DOM) {
 
     return exports
 }, {
-    requires: ['brix/app/config', 'promise', 'dom']
+    requires: ['promise', 'dom']
 });
 KISSY.add('brix/core/bx-config', function(S) {
 
@@ -1677,7 +1671,7 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
     ]
 });
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
-    var Brick
+    var BRICKBASE = 'brix/base'
     return {
         /**
          * 动态传参数实例类
@@ -1687,10 +1681,10 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          */
         bxConstruct: function(constructor, args) {
             function F() {
-                return constructor.apply(this, args);
+                return constructor.apply(this, args)
             }
-            F.prototype = constructor.prototype;
-            return new F();
+            F.prototype = constructor.prototype
+            return new F()
         },
         /**
          * 给el节点设置唯一的id
@@ -1796,8 +1790,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @return {Boolean}       
          */
         bxIsBrickInstance: function(context) {
-            Brick = Brick || appConfig.config('Brick')
-            return context instanceof Brick
+            return context instanceof S.require(BRICKBASE)
         },
         /**
          * 是否继承Brick的类  
@@ -1805,7 +1798,7 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @return {Boolean}   
          */
         bxIsExtendBrickClass:function(c){
-            Brick = Brick || appConfig.config('Brick')
+            var Brick = S.require(BRICKBASE)
             if(c==Brick){
                 return true
             }
