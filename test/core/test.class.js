@@ -37,7 +37,9 @@ describe('brix/class', function() {
         done()
       })
     })
-
+    it('class all load', function() {
+      expect(rootBrick.bxChildren.length).to.equal(7)
+    })
     it('class multiple arguments', function() {
       var foo = rootBrick.find('#fixture1')
       expect(foo.xx).to.equal('xx')
@@ -53,6 +55,24 @@ describe('brix/class', function() {
     it('class one simple arguments', function() {
       var foo = rootBrick.find('#fixture3')
       expect(foo.xx).to.equal(1)
+    })
+
+    it('class is num', function() {
+      var foo = rootBrick.find('#fixture4')
+      expect(foo.bxKlass).to.equal(123)
+      expect(foo.bxChildren.length).to.equal(1)
+    })
+
+    it('class is nil', function() {
+      var foo = rootBrick.find('#fixture5')
+      expect(foo.bxKlass).to.equal(undefined)
+      expect(foo.bxChildren.length).to.equal(2)
+    })
+
+    it('class is obj', function() {
+      var foo = rootBrick.find('#fixture6')
+      expect(foo.xxx).to.equal(1)
+      expect(foo.bxChildren.length).to.equal(1)
     })
   })
 
