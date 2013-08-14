@@ -14,9 +14,6 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird) {
     S.mix(BxApp, bxApi)
     S.mix(BxApp, bxThird)
 
-    // appConfig.config('Third', Third)
-    // appConfig.config('Brick', Brick)
-
     return BxApp
 }, {
     requires: [
@@ -580,6 +577,7 @@ KISSY.add("brix/base",
                         child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
+                        child.once('destroy',check)
                     }
                     child.bxActivate()
                 }
@@ -676,7 +674,7 @@ KISSY.add("brix/base",
                 }
             }
         }, {
-            ATTRS: S.mix(S.mix({
+            ATTRS: S.mix({
                 /**
                  * 模板
                  * @cfg {Object}
@@ -782,7 +780,7 @@ KISSY.add("brix/base",
                 events: {
 
                 }
-            }, Interface.ATTRS), Core.ATTRS)
+            }, Interface.ATTRS)
         }, 'Brick')
 
         S.augment(Brick, Core, Interface.METHODS)
@@ -1748,10 +1746,10 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
             }
         }
     }
-    var Watcher = {
+    return {
         watch: function(context, expression, callback) {
             var watcher
-            var watchers = this.get('watchers');
+            var watchers = this.bxWatchers = this.bxWatchers || [];
 
             var value = typeof expression === 'function' ? function() {
                     return expression(context)
@@ -1778,9 +1776,12 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
             if (this.bxWatcherChecking) {
                 throw new Error('Digest phase is already started')
             }
+            var watchers = this.bxWatchers
+            if (!watchers) {
+                return
+            }
             this.bxWatcherChecking = true
-            var clean, index, length, watcher, value, iterations = 10
-            var watchers = this.get('watchers');
+            var clean, index, length, watcher, value, iterations = 10;
             do {
                 clean = true
                 index = -1
@@ -1797,7 +1798,6 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                         flg = true;
                     }
                     if (last !== watcher.last) {
-                        //watcher.callback(value, watcher.last)
                         watcher.callback(value)
                         watcher.last = last
                         clean = false
@@ -1813,13 +1813,6 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
         },
         parse: parse
     }
-
-    Watcher.ATTRS = {
-        watchers: {
-            value: []
-        }
-    }
-    return Watcher
 }, {
     requires: ['json']
 });;
@@ -1906,8 +1899,6 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
     S.mix(exports, bxWatcher)
     S.mix(exports, bxThird)
 
-    exports.ATTRS = S.mix({}, bxWatcher.ATTRS)
-
     return exports
 }, {
     requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-watcher', 'brix/core/bx-third']
@@ -1954,7 +1945,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
     var Third = {
         bxInit: function(renderedFn, activatedFn) {
             var self = this
-            //初始化一些方法
+
             if (renderedFn) {
                 self.bxListenRendered(renderedFn)
             }
@@ -1979,10 +1970,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             self.bxHandleName(el, function() {
                 delete self.bxRendering;
                 self.bxRendered = true
-                if (self.bxRenderedFn) {
-                    self.bxRenderedFn();
-                    delete self.bxRenderedFn
-                }
+                self.bxFireRendered()
             })
         },
         bxActivate: function() {
@@ -2007,11 +1995,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             function activated() {
                 delete self.bxActivating;
                 self.bxActivated = true
-                if (self.bxReadyFn) {
-                    self.bxReadyFn();
-                    delete self.bxReadyFn;
-
-                }
+                self.bxFireReady()
             }
 
             function check() {
@@ -2024,6 +2008,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
                     check()
                 } else {
                     child.once('ready', check)
+                    child.once('destroy', check)
                     child.bxActivate()
                 }
             }
@@ -2033,6 +2018,18 @@ KISSY.add('brix/third/index', function(S, bxThird) {
         },
         bxListenRendered: function(fn) {
             this.bxRenderedFn = fn;
+        },
+        bxFireRendered: function() {
+            if (this.bxRenderedFn) {
+                this.bxRenderedFn();
+                delete this.bxRenderedFn
+            }
+        },
+        bxFireReady: function() {
+            if (this.bxReadyFn) {
+                this.bxReadyFn();
+                delete this.bxReadyFn;
+            }
         },
         bxDestroy: function() {
             var self = this
@@ -2046,7 +2043,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             self.bxChildren = [];
 
             delete self.bxEl;
-            
+
             var parent = self.bxParent
 
             // 如果存在父组件，则移除
@@ -2061,7 +2058,8 @@ KISSY.add('brix/third/index', function(S, bxThird) {
                     }
                 }
             }
-
+            self.bxFireRendered();
+            self.bxFireReady();
             if (self.destroy) {
                 self.destroy()
             }
