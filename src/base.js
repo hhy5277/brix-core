@@ -294,6 +294,7 @@ KISSY.add("brix/base",
                         child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
+                        child.once('destroy',check)
                     }
                     child.bxActivate()
                 }
@@ -390,7 +391,7 @@ KISSY.add("brix/base",
                 }
             }
         }, {
-            ATTRS: S.mix(S.mix({
+            ATTRS: S.mix({
                 /**
                  * 模板
                  * @cfg {Object}
@@ -496,7 +497,7 @@ KISSY.add("brix/base",
                 events: {
 
                 }
-            }, Interface.ATTRS), Core.ATTRS)
+            }, Interface.ATTRS)
         }, 'Brick')
 
         S.augment(Brick, Core, Interface.METHODS)

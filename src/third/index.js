@@ -3,7 +3,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
     var Third = {
         bxInit: function(renderedFn, activatedFn) {
             var self = this
-            //初始化一些方法
+
             if (renderedFn) {
                 self.bxListenRendered(renderedFn)
             }
@@ -28,10 +28,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             self.bxHandleName(el, function() {
                 delete self.bxRendering;
                 self.bxRendered = true
-                if (self.bxRenderedFn) {
-                    self.bxRenderedFn();
-                    delete self.bxRenderedFn
-                }
+                self.bxFireRendered()
             })
         },
         bxActivate: function() {
@@ -56,11 +53,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             function activated() {
                 delete self.bxActivating;
                 self.bxActivated = true
-                if (self.bxReadyFn) {
-                    self.bxReadyFn();
-                    delete self.bxReadyFn;
-
-                }
+                self.bxFireReady()
             }
 
             function check() {
@@ -73,6 +66,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
                     check()
                 } else {
                     child.once('ready', check)
+                    child.once('destroy', check)
                     child.bxActivate()
                 }
             }
@@ -82,6 +76,18 @@ KISSY.add('brix/third/index', function(S, bxThird) {
         },
         bxListenRendered: function(fn) {
             this.bxRenderedFn = fn;
+        },
+        bxFireRendered: function() {
+            if (this.bxRenderedFn) {
+                this.bxRenderedFn();
+                delete this.bxRenderedFn
+            }
+        },
+        bxFireReady: function() {
+            if (this.bxReadyFn) {
+                this.bxReadyFn();
+                delete this.bxReadyFn;
+            }
         },
         bxDestroy: function() {
             var self = this
@@ -95,7 +101,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
             self.bxChildren = [];
 
             delete self.bxEl;
-            
+
             var parent = self.bxParent
 
             // 如果存在父组件，则移除
@@ -110,7 +116,8 @@ KISSY.add('brix/third/index', function(S, bxThird) {
                     }
                 }
             }
-
+            self.bxFireRendered();
+            self.bxFireReady();
             if (self.destroy) {
                 self.destroy()
             }

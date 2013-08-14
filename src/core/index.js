@@ -81,8 +81,6 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
     S.mix(exports, bxWatcher)
     S.mix(exports, bxThird)
 
-    exports.ATTRS = S.mix({}, bxWatcher.ATTRS)
-
     return exports
 }, {
     requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-watcher', 'brix/core/bx-third']

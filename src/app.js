@@ -9,9 +9,6 @@ KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird) {
     S.mix(BxApp, bxApi)
     S.mix(BxApp, bxThird)
 
-    // appConfig.config('Third', Third)
-    // appConfig.config('Brick', Brick)
-
     return BxApp
 }, {
     requires: [

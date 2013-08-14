@@ -23,10 +23,10 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
             }
         }
     }
-    var Watcher = {
+    return {
         watch: function(context, expression, callback) {
             var watcher
-            var watchers = this.get('watchers');
+            var watchers = this.bxWatchers = this.bxWatchers || [];
 
             var value = typeof expression === 'function' ? function() {
                     return expression(context)
@@ -53,9 +53,12 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
             if (this.bxWatcherChecking) {
                 throw new Error('Digest phase is already started')
             }
+            var watchers = this.bxWatchers
+            if (!watchers) {
+                return
+            }
             this.bxWatcherChecking = true
-            var clean, index, length, watcher, value, iterations = 10
-            var watchers = this.get('watchers');
+            var clean, index, length, watcher, value, iterations = 10;
             do {
                 clean = true
                 index = -1
@@ -72,7 +75,6 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                         flg = true;
                     }
                     if (last !== watcher.last) {
-                        //watcher.callback(value, watcher.last)
                         watcher.callback(value)
                         watcher.last = last
                         clean = false
@@ -88,13 +90,6 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
         },
         parse: parse
     }
-
-    Watcher.ATTRS = {
-        watchers: {
-            value: []
-        }
-    }
-    return Watcher
 }, {
     requires: ['json']
 });

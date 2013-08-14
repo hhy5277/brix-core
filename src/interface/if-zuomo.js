@@ -1,6 +1,5 @@
 KISSY.add('brix/interface/if-zuomo', function(S) {
-    //var KEYS = ['name', 'tpl', 'subtpl', 'datakey', 'tag', 'remote', 'config', 'app']
-
+    
     var exports = {}
 
     exports.METHODS = {
@@ -51,7 +50,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
                     for (var i = 0; i < children.length; i++) {
                         var brick = self.bxFind('#' + children[i].attr('id'))
-                        //这个组件如果没有触发rendered和ready事件，移除会有问题
                         if (brick) brick.bxDestroy()
                     }
                 }
