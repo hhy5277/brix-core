@@ -185,11 +185,11 @@ KISSY.add("brix/base",
                 self.fire('beforeRender')
 
                 var tpl = self.get('tpl')
+
                 var el = self.get('el')
-
                 if (tpl) {
-                    var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
-
+                    var data = self.bxGetAncestorWithData().data || {}
+                    var html = S.trim(self.bxRenderTpl(tpl, data))
                     el.html(html)
                 }
 
@@ -290,11 +290,11 @@ KISSY.add("brix/base",
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!self.bxIsBrickInstance(child)) {
+                    if (!child.bxIsBrickInstance()) {
                         child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
-                        child.once('destroy',check)
+                        child.once('destroy', check)
                     }
                     child.bxActivate()
                 }
@@ -407,7 +407,6 @@ KISSY.add("brix/base",
                 data: {
                     value: null
                 },
-
                 /**
                  * 是否已经添加行为
                  * @type {Object}

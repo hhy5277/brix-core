@@ -24,7 +24,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             el = S.one(options.el || '[bx-app]')
             var config = self.bxHandleConfig(el)
 
-            var ancestor = self.bxGetBrickAncestor(self)
+            var ancestor = self.bxGetBrickAncestor()
             var overrides
             if (S.isArray(config)) {
                 while (ancestor) {
@@ -35,7 +35,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         self.bxMixArgument(config, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options = config
             } else if (S.isPlainObject(config)) {
@@ -48,7 +48,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         S.mix(options, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options.el = el
             } else {
@@ -92,7 +92,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             //是否从Brick继承
             var isExtendBrick = false
             var Third = S.require(THIRDBASE)
-            
+
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -120,8 +120,13 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             inst.bxChildren = []
             inst.bxParent = self;
 
-            var children = self.bxChildren
-            children.push(inst)
+            var tag = el.attr('bx-tag')
+            var bxBrickTpls = self.bxBrickTpls;
+            if (bxBrickTpls && bxBrickTpls[tag]) {
+                inst.bxBrickTpl = bxBrickTpls[tag].middle
+            }
+
+            self.bxChildren.push(inst)
 
 
             if (isExtendBrick) {

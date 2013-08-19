@@ -34,7 +34,7 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
             var ret = Brick.superclass.fire.apply(this, arguments)
 
             //触发父组件的事件
-            var parent = this.bxGetBrickAncestor(this.bxParent)
+            var parent = this.bxParent&&this.bxParent.bxGetBrickAncestor()
 
             if (parent) {
                 context = context || this;

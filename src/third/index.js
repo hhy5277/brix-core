@@ -62,7 +62,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-                if (!self.bxIsBrickInstance(child)) {
+                if (!child.bxIsBrickInstance()) {
                     check()
                 } else {
                     child.once('ready', check)

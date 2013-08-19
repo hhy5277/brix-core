@@ -1,5 +1,6 @@
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
     var BRICKBASE = 'brix/base'
+
     return {
         /**
          * 动态传参数实例类
@@ -85,14 +86,15 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @param  {Objcet} context 实例
          * @return {Object}          对象
          */
-        bxGetAncestorWithData: function(context) {
+        bxGetAncestorWithData: function() {
+            var context = this;
             var data
-            var ancestor = this.bxGetBrickAncestor(context)
+            var ancestor = context.bxGetBrickAncestor()
             while (ancestor) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
+                ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
             }
 
             if (!data) {
@@ -103,37 +105,36 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
                 ancestor: ancestor
             }
         },
-        bxGetBrickAncestor: function(ancestor) {
-            while (ancestor) {
-                if (!this.bxIsBrickInstance(ancestor)) {
-                    ancestor = ancestor.bxParent
+        bxGetBrickAncestor: function() {
+            var context = this
+            while (context) {
+                if (!context.bxIsBrickInstance()) {
+                    context = context.bxParent
                 } else {
-                    return ancestor
+                    return context
                 }
             }
         },
         /**
          * 是否是Brick类的实例
-         * @param  {Object} context 实例
-         * @return {Boolean}       
+         * @return {Boolean}
          */
-        bxIsBrickInstance: function(context) {
-            return context instanceof S.require(BRICKBASE)
+        bxIsBrickInstance: function() {
+            return this instanceof S.require(BRICKBASE)
         },
         /**
-         * 是否继承Brick的类  
+         * 是否继承Brick的类
          * @param  {Function} c 类
-         * @return {Boolean}   
+         * @return {Boolean}
          */
-        bxIsExtendBrickClass:function(c){
+        bxIsExtendBrickClass: function(c) {
             var Brick = S.require(BRICKBASE)
-            if(c==Brick){
+            if (c == Brick) {
                 return true
             }
-            if(c.superclass){
+            if (c.superclass) {
                 return c.superclass instanceof Brick
-            }
-            else{
+            } else {
                 return false;
             }
         }

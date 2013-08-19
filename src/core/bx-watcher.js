@@ -48,7 +48,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
 
             return unwatch(watcher, watchers)
         },
-        digest: function() {
+        digest: function(callbackFlg) {
             //临时状态标识
             if (this.bxWatcherChecking) {
                 throw new Error('Digest phase is already started')
@@ -75,7 +75,9 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                         flg = true;
                     }
                     if (last !== watcher.last) {
-                        watcher.callback(value)
+                        if (!callbackFlg) {
+                            watcher.callback(value)
+                        }
                         watcher.last = last
                         clean = false
                     }

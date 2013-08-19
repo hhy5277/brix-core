@@ -25,7 +25,7 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
 
             function wrapFn(fnc) {
                 return function() {
-                    var obj = self.bxGetAncestorWithData(self)
+                    var obj = self.bxGetAncestorWithData()
                     var ancestor
                     if (obj.data) {
                         //增加brixData，方便外部直接获取
