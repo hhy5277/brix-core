@@ -16,7 +16,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             self.bxStoreTpls = {}
 
             var tpl = self.get('tpl')
-            var level = self.get('level')
             var tempTpl
 
             if (tpl) {
@@ -25,16 +24,16 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 tpl = self.bxISubTpl(tpl)
                 //存储模板
                 self.set('tpl', tpl)
-                tempTpl = self.bxIBuildBrickTpls(tpl, level)
+                tempTpl = self.bxIBuildBrickTpls(tpl)
             } else {
                 var brickTpl = self.bxBrickTpl
                 if (brickTpl) {
-                    tempTpl = self.bxIBuildBrickTpls(brickTpl, level)
+                    tempTpl = self.bxIBuildBrickTpls(brickTpl)
                 }
             }
             if (tempTpl) {
-                self.bxISelfCloseTag(tempTpl, self.bxSubTpls)
-                self.bxIBuildSubTpls(tempTpl, self.bxSubTpls, level)
+                tempTpl = self.bxISelfCloseTag(tempTpl)
+                self.bxIBuildSubTpls(tempTpl, self.bxSubTpls)
             }
         },
 
@@ -112,25 +111,81 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
                 })
         },
-        bxIBuildBrickTpls: function(tpl, level) {
-            var self = this
-            var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-            while (level--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-            var reg = new RegExp(r, "ig")
-            tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-                self.bxBrickTpls[bx] = {
-                    start: start,
-                    middle: middle,
-                    end: end
+        /**
+         * 获取模板中的innerHTML，替换原来的构建正则
+         * @param  {String} tpl    模板字符串
+         * @param  {String} tag    节点的tag，如：div
+         * @param  {Number} s_pos  开始查找的位置
+         * @param  {Number} offset 偏移量
+         * @return {Object}        {html:'',e_pos:12}
+         */
+        bxIInnerHTML: function(tpl, tag, s_pos, offset) {
+            var s_tag = '<' + tag
+            var e_tag = '</' + tag + '>'
+
+            var s_or_pos = s_pos
+
+            var e_pos = s_pos
+            var e_next_pos = s_pos
+
+            s_pos = s_pos - offset
+            s_pos = tpl.indexOf(s_tag, s_pos)
+            var s_next_pos = s_pos + 1
+
+            while (true) {
+                s_pos = tpl.indexOf(s_tag, s_next_pos);
+                e_pos = tpl.indexOf(e_tag, e_next_pos);
+
+                if (s_pos == -1 || s_pos > e_pos) {
+                    break
                 }
-                //占位符
-                return '@brix@' + bx + '@brix@'
-            })
+                s_next_pos = s_pos + 1
+                e_next_pos = e_pos + 1
+            }
+            return {
+                html: tpl.substring(s_or_pos, e_pos),
+                e_pos: e_pos + e_tag.length
+            }
+        },
+        bxIBuildBrickTpls: function(tpl) {
+            var self = this
+            var r = '<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>'
+            var reg = new RegExp(r, "ig")
+
+            var m = reg.exec(tpl)
+            if (m) {
+                var offset = m[0].length
+                var obj = self.bxIInnerHTML(tpl, m[1], reg.lastIndex, offset)
+                self.bxBrickTpls[m[3]] = {
+                    start: m[0],
+                    middle: obj.html,
+                    end: '</' + m[1] + '>'
+                }
+
+                tpl = tpl.substring(0, reg.lastIndex - offset) + '@brix@' + m[3] + '@brix@' + tpl.substr(obj.e_pos)
+                return self.bxIBuildBrickTpls(tpl)
+            }
             return tpl
         },
+        // bxIBuildBrickTpls: function(tpl, level) {
+        //     var self = this
+        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
+        //     while (level--) {
+        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+        //     }
+        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+        //     var reg = new RegExp(r, "ig")
+        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
+        //         self.bxBrickTpls[bx] = {
+        //             start: start,
+        //             middle: middle,
+        //             end: end
+        //         }
+        //         //占位符
+        //         return '@brix@' + bx + '@brix@'
+        //     })
+        //     return tpl
+        // },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -185,58 +240,99 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         },
 
         /**
-         * 对节点中的bx-tpl和bx-datakey解析，构建模板和数据配置
+         * 对节点中的bx-datakey解析，构建模板和数据配置
          * @param {String} tpl  需要解析的模板
          * @private
          */
-        bxIBuildSubTpls: function(tpl, subTpls, level) {
+        bxIBuildSubTpls: function(tpl, subTpls) {
             var self = this
-            var l = level
-            var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-            while (l--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+            var r = '<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>'
 
             var reg = new RegExp(r, "ig")
-            var m
+            var m = reg.exec(tpl)
             var replacer = function(all, bx) {
                 var o = self.bxBrickTpls[bx]
                 return o.start + o.middle + o.end
             }
-            while ((m = reg.exec(tpl)) !== null) {
-                var datakey = m[4]
-                var obj = {
-                    name: m[3],
+
+            if (m) {
+                var datakey = m[3]
+                var offset = m[0].length
+                var obj = self.bxIInnerHTML(tpl, m[1], reg.lastIndex, offset)
+
+                var subTpl = {
+                    name: m[2],
                     datakey: datakey,
-                    tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-                    attrs: self.bxIStoreAttrs(m[1]),
+                    tpl: obj.html.replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+                    attrs: self.bxIStoreAttrs(m[0]),
                     subTpls: []
                 }
-                subTpls.push(obj)
+                subTpls.push(subTpl)
                 self.bxIAddWatch(datakey)
+                //递归编译子模板的子模板
+                self.bxIBuildSubTpls(obj.html, subTpl.subTpls)
                 //递归编译子模板
-                self.bxIBuildSubTpls(m[5], obj.subTpls, level)
+                self.bxIBuildSubTpls(tpl.substring(0, reg.lastIndex - offset) + tpl.substr(obj.e_pos), subTpls)
             }
         },
+        // bxIBuildSubTpls: function(tpl, subTpls, level) {
+        //     var self = this
+        //     var l = level
+        //     var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
+        //     while (l--) {
+        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+        //     }
+        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+
+        //     var reg = new RegExp(r, "ig")
+        //     var m
+        //     var replacer = function(all, bx) {
+        //         var o = self.bxBrickTpls[bx]
+        //         return o.start + o.middle + o.end
+        //     }
+        //     while ((m = reg.exec(tpl)) !== null) {
+        //         var datakey = m[4]
+        //         var obj = {
+        //             name: m[3],
+        //             datakey: datakey,
+        //             tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+        //             attrs: self.bxIStoreAttrs(m[1]),
+        //             subTpls: []
+        //         }
+        //         subTpls.push(obj)
+        //         self.bxIAddWatch(datakey)
+        //         //递归编译子模板
+        //         self.bxIBuildSubTpls(m[5], obj.subTpls, level)
+        //     }
+        // },
         /**
          * 子闭合标间的处理
          * @param  {String} tpl 模板
          */
-        bxISelfCloseTag: function(tpl, subTpls) {
+        bxISelfCloseTag: function(tpl) {
             var self = this
-            var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
+            var r = '<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>'
             var reg = new RegExp(r, "ig")
-            var m
-            while ((m = reg.exec(tpl)) !== null) {
-                var datakey = m[4]
-                subTpls.push({
-                    name: m[3],
+
+            tpl = tpl.replace(reg, function(all,tag,name,datakey){
+                self.bxSubTpls.push({
+                    name: name,
                     datakey: datakey,
-                    attrs: self.bxIStoreAttrs(m[1])
+                    attrs: self.bxIStoreAttrs(all)
                 })
                 self.bxIAddWatch(datakey)
-            }
+                return ''
+            })
+            return tpl
+            // while ((m = reg.exec(tpl)) !== null) {
+            //     var datakey = m[4]
+            //     self.subTpls.push({
+            //         name: m[3],
+            //         datakey: datakey,
+            //         attrs: self.bxIStoreAttrs(m[1])
+            //     })
+            //     self.bxIAddWatch(datakey)
+            // }
         },
 
         /**
@@ -389,13 +485,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
     }
 
     exports.ATTRS = {
-        /**
-         * 子模板嵌套的级别
-         * @cfg {Number}
-         */
-        level: {
-            value: 3
-        }
     }
 
     return exports
