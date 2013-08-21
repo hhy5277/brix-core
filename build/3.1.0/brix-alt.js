@@ -468,11 +468,11 @@ KISSY.add("brix/base",
                 self.fire('beforeRender')
 
                 var tpl = self.get('tpl')
+
                 var el = self.get('el')
-
                 if (tpl) {
-                    var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
-
+                    var data = self.bxGetAncestorWithData().data || {}
+                    var html = S.trim(self.bxRenderTpl(tpl, data))
                     el.html(html)
                 }
 
@@ -573,11 +573,11 @@ KISSY.add("brix/base",
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!self.bxIsBrickInstance(child)) {
+                    if (!child.bxIsBrickInstance()) {
                         child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
-                        child.once('destroy',check)
+                        child.once('destroy', check)
                     }
                     child.bxActivate()
                 }
@@ -690,7 +690,6 @@ KISSY.add("brix/base",
                 data: {
                     value: null
                 },
-
                 /**
                  * 是否已经添加行为
                  * @type {Object}
@@ -870,7 +869,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             el = S.one(options.el || '[bx-app]')
             var config = self.bxHandleConfig(el)
 
-            var ancestor = self.bxGetBrickAncestor(self)
+            var ancestor = self.bxGetBrickAncestor()
             var overrides
             if (S.isArray(config)) {
                 while (ancestor) {
@@ -881,7 +880,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         self.bxMixArgument(config, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options = config
             } else if (S.isPlainObject(config)) {
@@ -894,7 +893,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         S.mix(options, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options.el = el
             } else {
@@ -938,7 +937,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             //是否从Brick继承
             var isExtendBrick = false
             var Third = S.require(THIRDBASE)
-            
+
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -966,8 +965,13 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             inst.bxChildren = []
             inst.bxParent = self;
 
-            var children = self.bxChildren
-            children.push(inst)
+            var tag = el.attr('bx-tag')
+            var bxBrickTpls = self.bxBrickTpls;
+            if (bxBrickTpls && bxBrickTpls[tag]) {
+                inst.bxBrickTpl = bxBrickTpls[tag].middle
+            }
+
+            self.bxChildren.push(inst)
 
 
             if (isExtendBrick) {
@@ -1124,7 +1128,7 @@ KISSY.add('brix/core/bx-delegate', function() {
     return exports
 });
 KISSY.add('brix/core/bx-event', function(S, Event) {
-
+    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -1143,14 +1147,16 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
         },
 
         bxDelegateMap: function(eventsMap) {
+
             var self = this
             var el = this.get('el')
             var fnc
             var fn;
+            self.bxUnBubbleEvents = {}
 
             function wrapFn(fnc) {
                 return function() {
-                    var obj = self.bxGetAncestorWithData(self)
+                    var obj = self.bxGetAncestorWithData()
                     var ancestor
                     if (obj.data) {
                         //增加brixData，方便外部直接获取
@@ -1184,7 +1190,18 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.on(document, type, fn, this)
                     } else {
-                        el.delegate(type, sel, fn, this)
+                        if (S.inArray(type, unSupportBubbleEvents)) {
+                            //将不冒泡事件做记录
+                            self.bxUnBubbleEvents[sel] = self.bxUnBubbleEvents[sel] || []
+                            self.bxUnBubbleEvents[sel].push({
+                                type: type,
+                                fn: fn
+                            })
+                            el.all(sel).on(type, fn, this)
+                        } else {
+                            el.delegate(type, sel, fn, this)
+                        }
+
                     }
                 }
 
@@ -1223,7 +1240,11 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.detach(document, type, fn, this)
                     } else {
-                        el.undelegate(type, sel, fn, this)
+                        if (S.inArray(type, unSupportBubbleEvents)) {
+                            el.all(sel).detach(type, fn, this)
+                        } else {
+                            el.undelegate(type, sel, fn, this)
+                        }
                     }
 
                     fn = null;
@@ -1580,6 +1601,7 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
 });
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
     var BRICKBASE = 'brix/base'
+
     return {
         /**
          * 动态传参数实例类
@@ -1665,14 +1687,15 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @param  {Objcet} context 实例
          * @return {Object}          对象
          */
-        bxGetAncestorWithData: function(context) {
+        bxGetAncestorWithData: function() {
+            var context = this;
             var data
-            var ancestor = this.bxGetBrickAncestor(context)
+            var ancestor = context.bxGetBrickAncestor()
             while (ancestor) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
+                ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
             }
 
             if (!data) {
@@ -1683,37 +1706,36 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
                 ancestor: ancestor
             }
         },
-        bxGetBrickAncestor: function(ancestor) {
-            while (ancestor) {
-                if (!this.bxIsBrickInstance(ancestor)) {
-                    ancestor = ancestor.bxParent
+        bxGetBrickAncestor: function() {
+            var context = this
+            while (context) {
+                if (!context.bxIsBrickInstance()) {
+                    context = context.bxParent
                 } else {
-                    return ancestor
+                    return context
                 }
             }
         },
         /**
          * 是否是Brick类的实例
-         * @param  {Object} context 实例
-         * @return {Boolean}       
+         * @return {Boolean}
          */
-        bxIsBrickInstance: function(context) {
-            return context instanceof S.require(BRICKBASE)
+        bxIsBrickInstance: function() {
+            return this instanceof S.require(BRICKBASE)
         },
         /**
-         * 是否继承Brick的类  
+         * 是否继承Brick的类
          * @param  {Function} c 类
-         * @return {Boolean}   
+         * @return {Boolean}
          */
-        bxIsExtendBrickClass:function(c){
+        bxIsExtendBrickClass: function(c) {
             var Brick = S.require(BRICKBASE)
-            if(c==Brick){
+            if (c == Brick) {
                 return true
             }
-            if(c.superclass){
+            if (c.superclass) {
                 return c.superclass instanceof Brick
-            }
-            else{
+            } else {
                 return false;
             }
         }
@@ -1771,7 +1793,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
 
             return unwatch(watcher, watchers)
         },
-        digest: function() {
+        digest: function(callbackFlg) {
             //临时状态标识
             if (this.bxWatcherChecking) {
                 throw new Error('Digest phase is already started')
@@ -1798,7 +1820,9 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                         flg = true;
                     }
                     if (last !== watcher.last) {
-                        watcher.callback(value)
+                        if (!callbackFlg) {
+                            watcher.callback(value)
+                        }
                         watcher.last = last
                         clean = false
                     }
@@ -1852,7 +1876,7 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
             var ret = Brick.superclass.fire.apply(this, arguments)
 
             //触发父组件的事件
-            var parent = this.bxGetBrickAncestor(this.bxParent)
+            var parent = this.bxParent&&this.bxParent.bxGetBrickAncestor()
 
             if (parent) {
                 context = context || this;
@@ -2004,7 +2028,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-                if (!self.bxIsBrickInstance(child)) {
+                if (!child.bxIsBrickInstance()) {
                     check()
                 } else {
                     child.once('ready', check)

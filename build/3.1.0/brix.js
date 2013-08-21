@@ -468,11 +468,11 @@ KISSY.add("brix/base",
                 self.fire('beforeRender')
 
                 var tpl = self.get('tpl')
+
                 var el = self.get('el')
-
                 if (tpl) {
-                    var html = S.trim(self.bxRenderTpl(tpl, self.get('data')))
-
+                    var data = self.bxGetAncestorWithData().data || {}
+                    var html = S.trim(self.bxRenderTpl(tpl, data))
                     el.html(html)
                 }
 
@@ -573,11 +573,11 @@ KISSY.add("brix/base",
 
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!self.bxIsBrickInstance(child)) {
+                    if (!child.bxIsBrickInstance()) {
                         child.bxListenReady(check)
                     } else {
                         child.once('ready', check)
-                        child.once('destroy',check)
+                        child.once('destroy', check)
                     }
                     child.bxActivate()
                 }
@@ -690,7 +690,6 @@ KISSY.add("brix/base",
                 data: {
                     value: null
                 },
-
                 /**
                  * 是否已经添加行为
                  * @type {Object}
@@ -870,7 +869,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             el = S.one(options.el || '[bx-app]')
             var config = self.bxHandleConfig(el)
 
-            var ancestor = self.bxGetBrickAncestor(self)
+            var ancestor = self.bxGetBrickAncestor()
             var overrides
             if (S.isArray(config)) {
                 while (ancestor) {
@@ -881,7 +880,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         self.bxMixArgument(config, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options = config
             } else if (S.isPlainObject(config)) {
@@ -894,7 +893,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                         S.mix(options, overrides[el.attr('name')])
                     }
 
-                    ancestor = ancestor.bxParent && self.bxGetBrickAncestor(ancestor.bxParent)
+                    ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
                 }
                 options.el = el
             } else {
@@ -938,7 +937,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             //是否从Brick继承
             var isExtendBrick = false
             var Third = S.require(THIRDBASE)
-            
+
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
                     //保留原始值bxKlass
@@ -966,8 +965,13 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             inst.bxChildren = []
             inst.bxParent = self;
 
-            var children = self.bxChildren
-            children.push(inst)
+            var tag = el.attr('bx-tag')
+            var bxBrickTpls = self.bxBrickTpls;
+            if (bxBrickTpls && bxBrickTpls[tag]) {
+                inst.bxBrickTpl = bxBrickTpls[tag].middle
+            }
+
+            self.bxChildren.push(inst)
 
 
             if (isExtendBrick) {
@@ -1124,7 +1128,7 @@ KISSY.add('brix/core/bx-delegate', function() {
     return exports
 });
 KISSY.add('brix/core/bx-event', function(S, Event) {
-
+    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -1143,14 +1147,16 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
         },
 
         bxDelegateMap: function(eventsMap) {
+
             var self = this
             var el = this.get('el')
             var fnc
             var fn;
+            self.bxUnBubbleEvents = {}
 
             function wrapFn(fnc) {
                 return function() {
-                    var obj = self.bxGetAncestorWithData(self)
+                    var obj = self.bxGetAncestorWithData()
                     var ancestor
                     if (obj.data) {
                         //增加brixData，方便外部直接获取
@@ -1184,7 +1190,18 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.on(document, type, fn, this)
                     } else {
-                        el.delegate(type, sel, fn, this)
+                        if (S.inArray(type, unSupportBubbleEvents)) {
+                            //将不冒泡事件做记录
+                            self.bxUnBubbleEvents[sel] = self.bxUnBubbleEvents[sel] || []
+                            self.bxUnBubbleEvents[sel].push({
+                                type: type,
+                                fn: fn
+                            })
+                            el.all(sel).on(type, fn, this)
+                        } else {
+                            el.delegate(type, sel, fn, this)
+                        }
+
                     }
                 }
 
@@ -1223,7 +1240,11 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.detach(document, type, fn, this)
                     } else {
-                        el.undelegate(type, sel, fn, this)
+                        if (S.inArray(type, unSupportBubbleEvents)) {
+                            el.all(sel).detach(type, fn, this)
+                        } else {
+                            el.undelegate(type, sel, fn, this)
+                        }
                     }
 
                     fn = null;
@@ -1580,6 +1601,7 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
 });
 KISSY.add('brix/core/bx-util', function(S, appConfig) {
     var BRICKBASE = 'brix/base'
+
     return {
         /**
          * 动态传参数实例类
@@ -1665,14 +1687,15 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
          * @param  {Objcet} context 实例
          * @return {Object}          对象
          */
-        bxGetAncestorWithData: function(context) {
+        bxGetAncestorWithData: function() {
+            var context = this;
             var data
-            var ancestor = this.bxGetBrickAncestor(context)
+            var ancestor = context.bxGetBrickAncestor()
             while (ancestor) {
                 if ((data = ancestor.get('data')) && data) {
                     break;
                 }
-                ancestor = this.bxGetBrickAncestor(ancestor.bxParent)
+                ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
             }
 
             if (!data) {
@@ -1683,37 +1706,36 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
                 ancestor: ancestor
             }
         },
-        bxGetBrickAncestor: function(ancestor) {
-            while (ancestor) {
-                if (!this.bxIsBrickInstance(ancestor)) {
-                    ancestor = ancestor.bxParent
+        bxGetBrickAncestor: function() {
+            var context = this
+            while (context) {
+                if (!context.bxIsBrickInstance()) {
+                    context = context.bxParent
                 } else {
-                    return ancestor
+                    return context
                 }
             }
         },
         /**
          * 是否是Brick类的实例
-         * @param  {Object} context 实例
-         * @return {Boolean}       
+         * @return {Boolean}
          */
-        bxIsBrickInstance: function(context) {
-            return context instanceof S.require(BRICKBASE)
+        bxIsBrickInstance: function() {
+            return this instanceof S.require(BRICKBASE)
         },
         /**
-         * 是否继承Brick的类  
+         * 是否继承Brick的类
          * @param  {Function} c 类
-         * @return {Boolean}   
+         * @return {Boolean}
          */
-        bxIsExtendBrickClass:function(c){
+        bxIsExtendBrickClass: function(c) {
             var Brick = S.require(BRICKBASE)
-            if(c==Brick){
+            if (c == Brick) {
                 return true
             }
-            if(c.superclass){
+            if (c.superclass) {
                 return c.superclass instanceof Brick
-            }
-            else{
+            } else {
                 return false;
             }
         }
@@ -1771,7 +1793,7 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
 
             return unwatch(watcher, watchers)
         },
-        digest: function() {
+        digest: function(callbackFlg) {
             //临时状态标识
             if (this.bxWatcherChecking) {
                 throw new Error('Digest phase is already started')
@@ -1798,7 +1820,9 @@ KISSY.add('brix/core/bx-watcher', function(S, JSON) {
                         flg = true;
                     }
                     if (last !== watcher.last) {
-                        watcher.callback(value)
+                        if (!callbackFlg) {
+                            watcher.callback(value)
+                        }
                         watcher.last = last
                         clean = false
                     }
@@ -1852,7 +1876,7 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
             var ret = Brick.superclass.fire.apply(this, arguments)
 
             //触发父组件的事件
-            var parent = this.bxGetBrickAncestor(this.bxParent)
+            var parent = this.bxParent&&this.bxParent.bxGetBrickAncestor()
 
             if (parent) {
                 context = context || this;
@@ -1904,38 +1928,41 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
     requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-watcher', 'brix/core/bx-third']
 });
 KISSY.add('brix/interface/index', function(S) {
-    
+
     var exports = {}
 
     exports.METHODS = {
         bxIBuildTpl: function() {
             var self = this
+            //存储监听的数据key
+            self.bxWatcherKeys = {}
+            //延迟刷新存储的key
+            self.bxRefreshKeys = []
+            //子模板数组
+            self.bxSubTpls = []
+            self.bxBrickTpls = {}
+
+            self.bxStoreTpls = {}
+
             var tpl = self.get('tpl')
-            //var tempTpl
+            var tempTpl
+
             if (tpl) {
-                //存储监听的数据key
-                self.bxWatcherKeys = {}
-                //延迟刷新存储的key
-                self.bxRefreshKeys = []
-                //子模板数组
-                self.bxSubTpls = []
-
-                self.bxStoreTpls = {}
-                var data = self.get('data');
-                if (!data) {
-                    //有模板必然有数据
-                    self.set('data', {}, {
-                        silent: true
-                    });
-                }
-                //存储模板
-                tpl = self.bxIBuildStoreTpls(tpl)
-
+                self.bxIBuildStoreTpls(tpl)
+                tpl = self.bxITag(tpl)
                 tpl = self.bxISubTpl(tpl)
+                //存储模板
                 self.set('tpl', tpl)
-                var level = self.get('level')
-                self.bxISelfCloseTag(tpl, self.bxSubTpls)
-                self.bxIBuildSubTpls(tpl, self.bxSubTpls, level)
+                tempTpl = self.bxIBuildBrickTpls(tpl)
+            } else {
+                var brickTpl = self.bxBrickTpl
+                if (brickTpl) {
+                    tempTpl = self.bxIBuildBrickTpls(brickTpl)
+                }
+            }
+            if (tempTpl) {
+                tempTpl = self.bxISelfCloseTag(tempTpl)
+                self.bxIBuildSubTpls(tempTpl, self.bxSubTpls)
             }
         },
 
@@ -1947,11 +1974,20 @@ KISSY.add('brix/interface/index', function(S) {
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
 
+                //移除不冒泡的事件绑定
+                var node = e.node;
+                S.each(self.bxUnBubbleEvents, function(v, k) {
+                    var ns = node.all(k)
+                    S.each(v, function(o) {
+                        ns.detach(o.type, o.fn, self)
+                    })
+                })
+
                 needRenderCounter++
                 needActivateCounter++
 
                 if (e.renderType === 'html') {
-                    var children = self.bxDirectChildren(e.node)
+                    var children = self.bxDirectChildren(node)
 
                     for (var i = 0; i < children.length; i++) {
                         var brick = self.bxFind('#' + children[i].attr('id'))
@@ -1961,8 +1997,17 @@ KISSY.add('brix/interface/index', function(S) {
             })
 
             self.on('afterRefreshTpl', function(e) {
+                //不冒泡的事件绑定
+                var node = e.node;
+                S.each(self.bxUnBubbleEvents, function(v, k) {
+                    var ns = node.all(k)
+                    S.each(v, function(o) {
+                        ns.on(o.type, o.fn, self)
+                    })
+                })
+
                 self.bxHandleName(
-                    e.node, function renderedCheck() {
+                    node, function renderedCheck() {
                         if (--needRenderCounter === 0) {
                             self.bxRendered = true
                             self.fire('rendered')
@@ -1991,7 +2036,17 @@ KISSY.add('brix/interface/index', function(S) {
             })
             return tpl
         },
-
+        /**
+         * 为模板中的组件打上tag标识
+         * @param  {String} tpl 模板
+         * @return {String}      替换后的模板
+         */
+        bxITag: function(tpl) {
+            return tpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
+                .replace(/(bx-name=["'][^"']+["'])/ig, function(match) {
+                    return match + ' bx-tag="brix_tag_' + S.guid() + '"'
+                })
+        },
         /**
          * 为bx-datakey自动生成bx-subtpl
          * @param  {String} tpl 模板
@@ -2003,6 +2058,81 @@ KISSY.add('brix/interface/index', function(S) {
                     return 'bx-subtpl="brix_subtpl_' + S.guid() + '" ' + match
                 })
         },
+        /**
+         * 获取模板中的innerHTML，替换原来的构建正则
+         * @param  {String} tpl    模板字符串
+         * @param  {String} tag    节点的tag，如：div
+         * @param  {Number} s_pos  开始查找的位置
+         * @param  {Number} offset 偏移量
+         * @return {Object}        {html:'',e_pos:12}
+         */
+        bxIInnerHTML: function(tpl, tag, s_pos, offset) {
+            var s_tag = '<' + tag
+            var e_tag = '</' + tag + '>'
+
+            var s_or_pos = s_pos
+
+            var e_pos = s_pos
+            var e_next_pos = s_pos
+
+            s_pos = s_pos - offset
+            s_pos = tpl.indexOf(s_tag, s_pos)
+            var s_next_pos = s_pos + 1
+
+            while (true) {
+                s_pos = tpl.indexOf(s_tag, s_next_pos);
+                e_pos = tpl.indexOf(e_tag, e_next_pos);
+
+                if (s_pos == -1 || s_pos > e_pos) {
+                    break
+                }
+                s_next_pos = s_pos + 1
+                e_next_pos = e_pos + 1
+            }
+            return {
+                html: tpl.substring(s_or_pos, e_pos),
+                e_pos: e_pos + e_tag.length
+            }
+        },
+        bxIBuildBrickTpls: function(tpl) {
+            var self = this
+            var r = '<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>'
+            var reg = new RegExp(r, "ig")
+
+            var m = reg.exec(tpl)
+            if (m) {
+                var offset = m[0].length
+                var obj = self.bxIInnerHTML(tpl, m[1], reg.lastIndex, offset)
+                self.bxBrickTpls[m[3]] = {
+                    start: m[0],
+                    middle: obj.html,
+                    end: '</' + m[1] + '>'
+                }
+
+                tpl = tpl.substring(0, reg.lastIndex - offset) + '@brix@' + m[3] + '@brix@' + tpl.substr(obj.e_pos)
+                return self.bxIBuildBrickTpls(tpl)
+            }
+            return tpl
+        },
+        // bxIBuildBrickTpls: function(tpl, level) {
+        //     var self = this
+        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
+        //     while (level--) {
+        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+        //     }
+        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+        //     var reg = new RegExp(r, "ig")
+        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
+        //         self.bxBrickTpls[bx] = {
+        //             start: start,
+        //             middle: middle,
+        //             end: end
+        //         }
+        //         //占位符
+        //         return '@brix@' + bx + '@brix@'
+        //     })
+        //     return tpl
+        // },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -2026,7 +2156,7 @@ KISSY.add('brix/interface/index', function(S) {
          */
         bxIAddWatch: function(datakey) {
             var self = this
-            var obj = self.bxGetAncestorWithData(self)
+            var obj = self.bxGetAncestorWithData()
             var data = obj.data
             var ancestor = obj.ancestor
             if (data) {
@@ -2057,55 +2187,99 @@ KISSY.add('brix/interface/index', function(S) {
         },
 
         /**
-         * 对节点中的bx-tpl和bx-datakey解析，构建模板和数据配置
+         * 对节点中的bx-datakey解析，构建模板和数据配置
          * @param {String} tpl  需要解析的模板
          * @private
          */
-        bxIBuildSubTpls: function(tpl, subTpls, level) {
+        bxIBuildSubTpls: function(tpl, subTpls) {
             var self = this
-            var l = level
-            var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-            while (l--) {
-                r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-            }
-            r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+            var r = '<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>'
 
             var reg = new RegExp(r, "ig")
-            var m
+            var m = reg.exec(tpl)
+            var replacer = function(all, bx) {
+                var o = self.bxBrickTpls[bx]
+                return o.start + o.middle + o.end
+            }
 
-            while ((m = reg.exec(tpl)) !== null) {
-                var datakey = m[4]
-                var obj = {
-                    name: m[3],
+            if (m) {
+                var datakey = m[3]
+                var offset = m[0].length
+                var obj = self.bxIInnerHTML(tpl, m[1], reg.lastIndex, offset)
+
+                var subTpl = {
+                    name: m[2],
                     datakey: datakey,
-                    tpl: m[5],
-                    attrs: self.bxIStoreAttrs(m[1]),
+                    tpl: obj.html.replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+                    attrs: self.bxIStoreAttrs(m[0]),
                     subTpls: []
                 }
-                subTpls.push(obj)
+                subTpls.push(subTpl)
                 self.bxIAddWatch(datakey)
+                //递归编译子模板的子模板
+                self.bxIBuildSubTpls(obj.html, subTpl.subTpls)
                 //递归编译子模板
-                self.bxIBuildSubTpls(m[5], obj.subTpls, level)
+                self.bxIBuildSubTpls(tpl.substring(0, reg.lastIndex - offset) + tpl.substr(obj.e_pos), subTpls)
             }
         },
+        // bxIBuildSubTpls: function(tpl, subTpls, level) {
+        //     var self = this
+        //     var l = level
+        //     var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
+        //     while (l--) {
+        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
+        //     }
+        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
+
+        //     var reg = new RegExp(r, "ig")
+        //     var m
+        //     var replacer = function(all, bx) {
+        //         var o = self.bxBrickTpls[bx]
+        //         return o.start + o.middle + o.end
+        //     }
+        //     while ((m = reg.exec(tpl)) !== null) {
+        //         var datakey = m[4]
+        //         var obj = {
+        //             name: m[3],
+        //             datakey: datakey,
+        //             tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
+        //             attrs: self.bxIStoreAttrs(m[1]),
+        //             subTpls: []
+        //         }
+        //         subTpls.push(obj)
+        //         self.bxIAddWatch(datakey)
+        //         //递归编译子模板
+        //         self.bxIBuildSubTpls(m[5], obj.subTpls, level)
+        //     }
+        // },
         /**
          * 子闭合标间的处理
          * @param  {String} tpl 模板
          */
-        bxISelfCloseTag: function(tpl, subTpls) {
+        bxISelfCloseTag: function(tpl) {
             var self = this
-            var r = '(<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>)'
+            var r = '<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>'
             var reg = new RegExp(r, "ig")
-            var m
-            while ((m = reg.exec(tpl)) !== null) {
-                var datakey = m[4]
-                subTpls.push({
-                    name: m[3],
+
+            tpl = tpl.replace(reg, function(all, tag, name, datakey) {
+                self.bxSubTpls.push({
+                    name: name,
                     datakey: datakey,
-                    attrs: self.bxIStoreAttrs(m[1])
+                    attrs: self.bxIStoreAttrs(all)
                 })
                 self.bxIAddWatch(datakey)
-            }
+                return ''
+            })
+            return tpl
+            // while ((m = reg.exec(tpl)) !== null) {
+            //     var datakey = m[4]
+            //     self.subTpls.push({
+            //         name: m[3],
+            //         datakey: datakey,
+            //         attrs: self.bxIStoreAttrs(m[1])
+            //     })
+            //     self.bxIAddWatch(datakey)
+            // }
         },
 
         /**
@@ -2184,6 +2358,34 @@ KISSY.add('brix/interface/index', function(S) {
                     self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
                 }
             })
+
+
+            function loop(children) {
+                // 为什么要这样做？
+                // 因为 bxIRefreshTpl 有可能会更改 children 数组的长度
+                for (var i = 0; i < children.length; i++) {
+                    var child = children[i]
+                    if (!child.bxRefresh) {
+                        child.bxRefresh = true
+                        if (!child.bxIsBrickInstance()) {
+                            loop(child.bxChildren)
+                        } else if (!child.get('data')) {
+                            //data = child.get('data') || data //数据有可能是父亲的父亲来的
+                            el = child.get('el')
+                            subTpls = child.bxSubTpls || []
+                            child.bxIRefreshTpl(el, subTpls, keys, data, renderType)
+                            i = 0
+                        }
+                    }
+                }
+                // 移除 bxRefresh
+                S.each(children, function(child) {
+                    delete child.bxRefresh
+                })
+            }
+
+            var children = self.bxChildren
+            loop(children)
         },
 
         /**
@@ -2197,7 +2399,7 @@ KISSY.add('brix/interface/index', function(S) {
          */
         setChunkData: function(datakey, data, opts) {
             var self = this
-            var obj = self.bxGetAncestorWithData(self)
+            var obj = self.bxGetAncestorWithData()
             var newData = obj.data || {}
             var ancestor = obj.ancestor
             var keys = []
@@ -2223,20 +2425,13 @@ KISSY.add('brix/interface/index', function(S) {
             ancestor.set('data', newData, opts)
 
             if (!opts || !opts.silent) {
+                ancestor.digest(true)
                 ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, newData, renderType)
             }
         }
     }
 
-    exports.ATTRS = {
-        /**
-         * 子模板嵌套的级别
-         * @cfg {Number}
-         */
-        level: {
-            value: 3
-        }
-    }
+    exports.ATTRS = {}
 
     return exports
 });
@@ -2305,7 +2500,7 @@ KISSY.add('brix/third/index', function(S, bxThird) {
 
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
-                if (!self.bxIsBrickInstance(child)) {
+                if (!child.bxIsBrickInstance()) {
                     check()
                 } else {
                     child.once('ready', check)
