@@ -47,7 +47,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
                 //移除不冒泡的事件绑定
                 var node = e.node;
-                S.each(self.bxBubbleEvents, function(v, k) {
+                S.each(self.bxUnBubbleEvents, function(v, k) {
                     var ns = node.all(k)
                     S.each(v, function(o) {
                         ns.detach(o.type, o.fn, self)
@@ -70,7 +70,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             self.on('afterRefreshTpl', function(e) {
                 //不冒泡的事件绑定
                 var node = e.node;
-                S.each(self.bxBubbleEvents, function(v, k) {
+                S.each(self.bxUnBubbleEvents, function(v, k) {
                     var ns = node.all(k)
                     S.each(v, function(o) {
                         ns.on(o.type, o.fn, self)

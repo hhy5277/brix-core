@@ -1,5 +1,5 @@
 KISSY.add('brix/core/bx-event', function(S, Event) {
-    var bubbleEvents = ['valuechange']
+    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -23,7 +23,7 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
             var el = this.get('el')
             var fnc
             var fn;
-            self.bxBubbleEvents = {}
+            self.bxUnBubbleEvents = {}
 
             function wrapFn(fnc) {
                 return function() {
@@ -61,10 +61,10 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.on(document, type, fn, this)
                     } else {
-                        if (S.inArray(type, bubbleEvents)) {
+                        if (S.inArray(type, unSupportBubbleEvents)) {
                             //将不冒泡事件做记录
-                            self.bxBubbleEvents[sel] = self.bxBubbleEvents[sel] || []
-                            self.bxBubbleEvents[sel].push({
+                            self.bxUnBubbleEvents[sel] = self.bxUnBubbleEvents[sel] || []
+                            self.bxUnBubbleEvents[sel].push({
                                 type: type,
                                 fn: fn
                             })
@@ -111,7 +111,7 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.detach(document, type, fn, this)
                     } else {
-                        if (S.inArray(type, bubbleEvents)) {
+                        if (S.inArray(type, unSupportBubbleEvents)) {
                             el.all(sel).detach(type, fn, this)
                         } else {
                             el.undelegate(type, sel, fn, this)
