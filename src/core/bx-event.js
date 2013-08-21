@@ -1,5 +1,5 @@
 KISSY.add('brix/core/bx-event', function(S, Event) {
-
+    var bubbleEvents = ['valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -18,10 +18,12 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
         },
 
         bxDelegateMap: function(eventsMap) {
+
             var self = this
             var el = this.get('el')
             var fnc
             var fn;
+            self.bxBubbleEvents = {}
 
             function wrapFn(fnc) {
                 return function() {
@@ -59,7 +61,18 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.on(document, type, fn, this)
                     } else {
-                        el.delegate(type, sel, fn, this)
+                        if (S.inArray(type, bubbleEvents)) {
+                            //将不冒泡事件做记录
+                            self.bxBubbleEvents[sel] = self.bxBubbleEvents[sel] || []
+                            self.bxBubbleEvents[sel].push({
+                                type: type,
+                                fn: fn
+                            })
+                            el.all(sel).on(type, fn, this)
+                        } else {
+                            el.delegate(type, sel, fn, this)
+                        }
+
                     }
                 }
 
@@ -98,7 +111,11 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                     } else if (sel === 'document') {
                         Event.detach(document, type, fn, this)
                     } else {
-                        el.undelegate(type, sel, fn, this)
+                        if (S.inArray(type, bubbleEvents)) {
+                            el.all(sel).detach(type, fn, this)
+                        } else {
+                            el.undelegate(type, sel, fn, this)
+                        }
                     }
 
                     fn = null;

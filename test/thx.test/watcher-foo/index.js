@@ -6,18 +6,6 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 			data.text = firstName + '_' + lastName
 		},
 		bind: function() {
-			var self = this
-			var q = self.get('el').one('#q')
-			if (q) {
-				q.on('valuechange', function(e) {
-					//自己注册的方法，需要从ATTRS中获取data，并执行watcher的digest方法
-					var data = self.get('data')
-					data.text = e.currentTarget.value
-					data.image.src = 'http://a.tbcdn.cn/s/kissy/' + e.currentTarget.value + '.png'
-					self.digest()
-				})
-			}
-
 
 		}
 	}, {
@@ -41,6 +29,13 @@ KISSY.add("thx.test/watcher-foo/index", function(S, Brick) {
 					self.fire(WatcherFoo.FIRES.customEvent, {
 						fireName: 'myfire3'
 					})
+				}
+			},
+			'#q':{
+				valuechange:function(e){
+					var data = e.brixData
+					data.text = e.currentTarget.value
+					data.image.src = 'http://a.tbcdn.cn/s/kissy/' + e.currentTarget.value + '.png'
 				}
 			}
 		},

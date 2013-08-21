@@ -14,14 +14,14 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 			S.log('bind 3');
 			var self = this
 			this.dirtyCheck(this.myFn,'myFn');
-			var q = self.get('el').one('#q');
-			if(q){
-				q.on('valuechange',function(e){
-				var data = self.get('data')
-				data.text = e.currentTarget.value
-				self.digest()
-			})
-			}
+			// var q = self.get('el').one('#q');
+			// if(q){
+			// 	q.on('valuechange',function(e){
+			// 	var data = self.get('data')
+			// 	data.text = e.currentTarget.value
+			// 	self.digest()
+			// })
+			// }
 				
 
 
@@ -56,6 +56,12 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 					// 	text:'我改变了'+S.guid()
 					// });
 					self.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
+				}
+			},
+			'#q':{
+				valuechange:function(e){
+					var data = e.brixData
+					data.text = e.currentTarget.value
 				}
 			}
 		},

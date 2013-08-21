@@ -45,11 +45,20 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             // 局部刷新事件监听
             self.on('beforeRefreshTpl', function(e) {
 
+                //移除不冒泡的事件绑定
+                var node = e.node;
+                S.each(self.bxBubbleEvents, function(v, k) {
+                    var ns = node.all(k)
+                    S.each(v, function(o) {
+                        ns.detach(o.type, o.fn, self)
+                    })
+                })
+
                 needRenderCounter++
                 needActivateCounter++
 
                 if (e.renderType === 'html') {
-                    var children = self.bxDirectChildren(e.node)
+                    var children = self.bxDirectChildren(node)
 
                     for (var i = 0; i < children.length; i++) {
                         var brick = self.bxFind('#' + children[i].attr('id'))
@@ -59,8 +68,17 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             })
 
             self.on('afterRefreshTpl', function(e) {
+                //不冒泡的事件绑定
+                var node = e.node;
+                S.each(self.bxBubbleEvents, function(v, k) {
+                    var ns = node.all(k)
+                    S.each(v, function(o) {
+                        ns.on(o.type, o.fn, self)
+                    })
+                })
+
                 self.bxHandleName(
-                    e.node, function renderedCheck() {
+                    node, function renderedCheck() {
                         if (--needRenderCounter === 0) {
                             self.bxRendered = true
                             self.fire('rendered')
@@ -314,7 +332,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             var r = '<(input|img)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?/?>'
             var reg = new RegExp(r, "ig")
 
-            tpl = tpl.replace(reg, function(all,tag,name,datakey){
+            tpl = tpl.replace(reg, function(all, tag, name, datakey) {
                 self.bxSubTpls.push({
                     name: name,
                     datakey: datakey,
@@ -484,8 +502,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         }
     }
 
-    exports.ATTRS = {
-    }
+    exports.ATTRS = {}
 
     return exports
 })
