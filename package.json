@@ -1,7 +1,7 @@
 {
   "name": "brix-core",
   "description": "Brix Core",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "author": "THX <thx@alibaba-inc.com>",
   "private": true,
   "contributors": [
@@ -39,7 +39,8 @@
     "grunt-mocha": "~0.3.4",
     "grunt-contrib-uglify": "~0.2.2",
     "q": "~0.9.6",
-    "semver": "~2.1.0"
+    "semver": "~2.1.0",
+    "clean-css": "~1.0.12"
   },
   "scripts": {
     "start": "grunt connect:server:keepalive",
