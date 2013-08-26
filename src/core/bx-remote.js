@@ -16,8 +16,10 @@ KISSY.add('brix/core/bx-remote', function(S, appConfig, IO, Uri) {
             else if (/^\.\//.test(remote)) {
                 var name = self.bxName
                 var mod = name.replace(/\/?$/, '') + remote.substr(1)
+                var family = mod.split('/')[0]
+                var packages = S.config('packages')[family]
 
-                if (appConfig.config('debug')) {
+                if (packages.debug) {
                     self.bxXhrRemote(mod, callback)
                 }
                 else {

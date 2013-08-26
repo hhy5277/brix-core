@@ -10,11 +10,6 @@ describe('brix/base', function() {
       app = _app
       Brick = _Brick
 
-      app.config({
-        components: 'thx.test',
-        base: '../'
-      })
-
       done()
     })
   })
@@ -38,7 +33,7 @@ describe('brix/base', function() {
     }
 
     it('via kissy module in prod', function(done) {
-      app.config('debug', false)
+      KISSY.config('packages')['thx.test'].debug = false
       app.prepare('#fixture3').then(function(brick) {
         expect(brick.get('data').players).to.eql(['Kobe Bryant', 'Tracy McGrady'])
         done()

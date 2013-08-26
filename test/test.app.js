@@ -57,11 +57,11 @@ describe('brix/app', function() {
       expect(promise).to.be.a(Promise)
     })
 
-    it('resolved when ready', function() {
+    it('resolved when ready', function(done) {
       promise.then(function(brick) {
         expect(brick).to.be.a(Brick)
-        expect(brick.get('rendered')).to.be(true)
-        expect(brick.get('activated')).to.be(true)
+        expect(brick.bxRendered).to.be(true)
+        expect(brick.bxActivated).to.be(true)
         done()
       })
     })
@@ -105,13 +105,13 @@ describe('brix/app', function() {
   describe('misplaced #prepare', function() {
     it('shall be children of app regardless of the DOM structure', function() {
       app.config('components', 'thx.test')
-      app.prepare('#fixture2').then(function() {
-        this.get('el').html('<div id="fixture2-vframe"></div>')
+      app.prepare('#fixture2').then(function(brick) {
+        brick.get('el').html('<div id="fixture2-vframe"></div>')
         app.prepare({
           el: '#fixture2-vframe',
           tpl: '<div bx-name="thx.test/app-foo"></div>'
-        }).then(function() {
-          expect(this.bxChildren.length).to.be(1)
+        }).then(function(brick) {
+          expect(brick.bxChildren.length).to.be(1)
 
           var children = app.bxChildren
           var ids = ['fixture1', 'fixture2', 'fixture3', 'fixture2-vframe']
@@ -138,7 +138,7 @@ describe('brix/app', function() {
   //
   // brix/app solves this problem by returning an promise via app.bootAsync call.
   //
-  //     app.bootAsync('#page1').then(function(page) {
+  //     app.boot('#page1').then(function(page) {
   //         // now you've got the page, which is an instance of class thx.test/app-boot-async
   //     })
   //
@@ -155,6 +155,7 @@ describe('brix/app', function() {
 
     it('shall prepare the constructor of the brick before booting', function(done) {
       expect(brick.bxName).to.equal('thx.test/app-boot-async')
+
       brick.on('ready', function() {
         expect(this.bxId).to.equal('fixture3')
         expect(this.get('foo')).to.equal(1)

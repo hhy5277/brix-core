@@ -51,8 +51,9 @@ describe('brix/base', function() {
     }
 
     it('from module', function(done) {
+      KISSY.config('packages')['thx.test'].debug =  false
+
       app
-        .config('debug', false)
         .prepare('#fixture4')
         .then(function(brick) {
           expect(brick.get('tpl')).to.equal('<div class="ham"></div>')

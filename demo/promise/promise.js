@@ -4,6 +4,10 @@ KISSY.config({
         brix: {
             ignorePackageNameInUri: true,
             base: '../../src'
+        },
+        'thx.demo': {
+            base: '../',
+            debug: true
         }
     }
 })
@@ -12,7 +16,6 @@ KISSY.config({
 KISSY.use('brix/app,brix/base', function(S, app) {
 
     app.config({
-        base: '../',
         components: {
             'thx.demo': ['pagination', 'dropdown']
         }

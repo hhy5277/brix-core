@@ -56,8 +56,11 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
         },
 
         bxRemoteTpl: function(mod, callback) {
+            var family = mod.split('/')[0]
+            var packages = S.config('packages')[family]
+
             // The mod value shall be something like `mosaics/dropdown/tpl'
-            if (appConfig.config('debug')) {
+            if (packages.debug) {
                 // In debug mode, we use XHR to get the template file.
                 this.bxXhrTpl(mod, callback)
             }
