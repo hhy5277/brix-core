@@ -222,7 +222,8 @@ KISSY.add('brix/app/config', function(S) {
             var components = this.config('components')
 
             family = this.config('family')
-            components = components[family]
+
+            if (components) components = components[family]
 
             if (S.isPlainObject(components)) {
                 checkStyle(family, components)
