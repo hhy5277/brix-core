@@ -230,11 +230,19 @@ KISSY.add('brix/app/shadow', function(S) {
             var importsBase = this.config('importsBase')
 
             var ignoreNs = S.config('ignorePackageNameInUri')
+            var packagesWas = S.config('packages')
             var packages = {}
 
             for (var p in imports) {
-                packages[p] = {
-                    base: importsBase + (ignoreNs ? '/' + p : '')
+                if (!packagesWas[p]) {
+                    // if not configured before.
+                    // more info about group configuration:
+                    // http://docs.kissyui.com/docs/html/tutorials/kissy/seed/loader/group.html#loader-group-tutorial
+                    packages[p] = {
+                        base: importsBase + (ignoreNs ? '/' + p : ''),
+                        group: 'bx-imports',
+                        combine: true
+                    }
                 }
             }
 
