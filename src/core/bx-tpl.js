@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
+KISSY.add('brix/core/bx-tpl', function(S, IO) {
 
     var exports = {
         bxHandleTpl: function(callback) {
@@ -90,7 +90,6 @@ KISSY.add('brix/core/bx-tpl', function(S, appConfig, IO) {
     return exports
 }, {
     requires: [
-        'brix/app/config',
         'ajax'
     ]
 })

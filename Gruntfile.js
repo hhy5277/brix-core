@@ -94,6 +94,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify')
   grunt.loadNpmTasks('grunt-mocha')
 
-  grunt.registerTask('test', ['jshint', 'connect', 'mocha'])
+  grunt.registerTask('kswitch', 'Switch KISSY versions', function(ver) {
+    grunt.log.write('switching kissy version to ' + ver + ' ...')
+    grunt.file.expand('test/**/test.*.html').forEach(function(file) {
+      var markup = grunt.file.read(file).replace(/kissy\/k\/1\.3\.\d+/, 'kissy/k/' + ver)
+
+      grunt.file.write(file, markup)
+    })
+    grunt.log.writeln(' done.')
+  })
+
+  // default to 1.3.1
+  // use kswitch task if testing multiple kissy versions is needed.
+  grunt.registerTask('test', ['jshint', 'connect', 'mocha'])  // , 'kswitch:1.3.0', 'mocha', 'kswitch:1.3.1'
   grunt.registerTask('build', ['jshint', 'concat', 'uglify'])
 }

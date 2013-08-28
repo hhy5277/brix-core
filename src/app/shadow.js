@@ -1,4 +1,8 @@
-KISSY.add('brix/app/config', function(S) {
+// The module serve as the shadow of brix/app
+// brix/app requires modules like brix/core/bx-util, which in return might
+// require functionalities of brix/app. For trespassing circular dependencies,
+// here's this shadow module.
+KISSY.add('brix/app/shadow', function(S) {
 
     // A simple Class for brick declaration processing.
     //

@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-remote', function(S, appConfig, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
 
     var exports = {
 
@@ -69,7 +69,6 @@ KISSY.add('brix/core/bx-remote', function(S, appConfig, IO, Uri) {
     return exports
 }, {
     requires: [
-        'brix/app/config',
         'ajax',
         'uri'
     ]

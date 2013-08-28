@@ -1,4 +1,4 @@
-KISSY.add('brix/interface/index', function(S, app, IZuomo, IYicai) {
+KISSY.add('brix/interface/index', function(S, IZuomo, IYicai) {
 
     var INTERFACE_MAP = {
         zuomo: IZuomo,
@@ -10,7 +10,6 @@ KISSY.add('brix/interface/index', function(S, app, IZuomo, IYicai) {
 
 }, {
     requires: [
-        'brix/app/config',
         'brix/interface/if-zuomo',
         'brix/interface/if-yicai'
     ]
