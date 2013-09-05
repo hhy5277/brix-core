@@ -39,10 +39,27 @@ describe('brix/app', function() {
     it('set configuration in batch', function() {
       app.config({ foo: 4338, bar: 'egg' })
 
-      expect(app.config('foo')).to.equal(4338)
-      expect(app.config('bar')).to.equal('egg')
+      // .be and .equal are the same
+      // https://github.com/LearnBoost/expect.js/#api
+      expect(app.config('foo')).to.be(4338)
+      expect(app.config('bar')).to.be('egg')
     })
 
+  })
+
+  describe('#get', function() {
+    it('get configuration via getter', function() {
+      expect(app.get('foo')).to.be(4338)
+      expect(app.get('bar')).to.be('egg')
+    })
+  })
+
+  describe('#set', function() {
+    it('set configuration via setter', function() {
+      app.set('egg', { type: 'chicken' })
+
+      expect(app.get('egg')).to.eql({ type: 'chicken' })
+    })
   })
 
   describe('#prepare', function() {
