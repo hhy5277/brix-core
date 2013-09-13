@@ -120,7 +120,7 @@ KISSY.add("brix/base",
              * 编译模板
              */
             bxBuildTpl: function() {
-                if (this.bxIBuildTpl) return this.bxIBuildTpl()
+                if (this.bxIBuildTpl) this.bxIBuildTpl()
             },
 
             bxGetData: function() {
@@ -162,7 +162,8 @@ KISSY.add("brix/base",
              * @param  {Objcet} data 数据
              */
             bxBuildData: function() {
-                return true
+
+                if (this.bxIBuildData) this.bxIBuildData()
             },
 
             /**

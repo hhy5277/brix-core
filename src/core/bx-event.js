@@ -21,36 +21,36 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
 
             var self = this
             var el = this.get('el')
-            var fnc
-            var fn;
+            var fn
             self.bxUnBubbleEvents = {}
 
-            function wrapFn(fnc) {
-                return function() {
-                    var obj = self.bxGetAncestorWithData()
-                    var ancestor
-                    if (obj.data) {
-                        //增加brixData，方便外部直接获取
-                        arguments[0].brixData = obj.data
-                        ancestor = obj.ancestor
-                    } else {
-                        ancestor = self;
-                    }
-                    var ret = fnc.apply(this, arguments)
-                    if (ret !== false) {
-                        ancestor.digest()
-                    }
+            // function wrapFn(fnc) {
+            //     return function() {
+            //         var obj = self.bxGetAncestorWithData()
+            //         var ancestor
+            //         if (obj.data) {
+            //             //增加brixData，方便外部直接获取
+            //             ancestor = obj.ancestor
+            //             arguments[0].brixData = ancestor.bxData
+                        
+            //         } else {
+            //             ancestor = self;
+            //         }
+            //         var ret = fnc.apply(this, arguments)
+            //         if (ret !== false) {
+            //             ancestor.digest()
+            //         }
 
-                }
-            }
+            //     }
+            // }
 
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 for (var type in events) {
-                    fnc = events[type]
-                    fnc.handle = wrapFn(fnc)
+                    fn = events[type]
+                    // fnc.handle = wrapFn(fnc)
 
-                    fn = fnc.handle
+                    // fn = fnc.handle
 
                     if (sel === 'self') {
                         el.on(type, fn, this)
@@ -100,7 +100,7 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 for (var type in events) {
-                    fn = events[type].handle
+                    fn = events[type]
 
                     if (sel === 'self') {
                         el.detach(type, fn, this)
@@ -118,8 +118,8 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                         }
                     }
 
-                    fn = null;
-                    delete events[type].handle
+                    //fn = null;
+                    //delete events[type].handle
                 }
             }
         }

@@ -7,6 +7,8 @@ KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 			},
 			data:{
 				value:{
+					a:1,
+					c:2,
 					g:1234
 				}
 			}
@@ -15,12 +17,10 @@ KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 			'#input21': {
 				click: function(e) {
 					var self = this
-					self.setChunkData({
-						a: 'aaaa' + S.guid(),
-						c: 'ccc' + S.guid()
-					})
-					// e.brixData.a =  'aaaa' + S.guid();
-					// e.brixData.c =  'cccc' + S.guid();
+					this.bxRefresh = false
+					this.bxData.a = 'aaaa' + S.guid()
+					this.bxData.c = 'cccc' + S.guid()
+
 					self.fire(DelegateFoo.FIRES.customEvent)
 					return true
 				}

@@ -46,7 +46,8 @@ describe('brix/base', function() {
               expect(showEl.html()).to.equal('logo')
 
               //dirtyCheck
-              child.dirtyCheck("dirtyCheckFoo", 'my', 'test')
+              //child.dirtyCheck("dirtyCheckFoo", 'my', 'test')
+              child.dirtyCheckFoo('my','test')
               S.later(function() {
                 expect(showEl.html()).to.equal('my_test')
 

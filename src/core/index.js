@@ -1,23 +1,6 @@
-KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRemote, bxWatcher, bxThird) {
+KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRemote, bxThird) {
     var BRICKBASE = 'brix/base'
     var exports = {
-        /**
-         * 运行fn后增加数据dirty checking
-         * @param  {Function|String} fn 需要执行的方法
-         */
-        dirtyCheck: function(fn) {
-            var self = this
-
-            if (typeof fn !== 'function') {
-                fn = self[fn];
-            }
-            if (fn) {
-                fn.apply(self, Array.prototype.slice.call(arguments, 1))
-                self.digest()
-            } else {
-                throw new Error('没有找到对应的函数')
-            }
-        },
         on: function() {
             var Brick = S.require(BRICKBASE)
             Brick.superclass.on.apply(this, arguments)
@@ -78,10 +61,9 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
     S.mix(exports, bxEvent)
     S.mix(exports, bxDelegate)
     S.mix(exports, bxRemote)
-    S.mix(exports, bxWatcher)
     S.mix(exports, bxThird)
 
     return exports
 }, {
-    requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-watcher', 'brix/core/bx-third']
+    requires: ['brix/core/bx-api', 'brix/core/bx-tpl', 'brix/core/bx-event', 'brix/core/bx-delegate', 'brix/core/bx-remote', 'brix/core/bx-third']
 })

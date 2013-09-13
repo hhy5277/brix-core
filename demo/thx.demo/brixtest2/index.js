@@ -33,71 +33,25 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 		EVENTS: {
 			'#input21': {
 				click: function(e) {
-					var self = this;
-					self.setChunkData({
-						a: 'aaaa' + S.guid(),
-						c: 'ccc' + S.guid()
-					});
-					self.fire(BrixTest2.FIRES.myfire);
-					return false;
+					this.bxRefresh = false
+					this.bxData.a = 'aaaa' + S.guid()
+					this.bxData.c = 'ccc' + S.guid()
+					this.fire(BrixTest2.FIRES.myfire);
 				}
 			},
 			'#input22': {
 				click: function(e) {
-					var self = this;
-					self.setChunkData('b', 'bbb' + S.guid(), {
-						renderType: 'prepend'
-					});
-					return false
-				}
-			},
-			'#input23': {
-				click: function(e) {
-					var self = this;
-					self.setChunkData('c', 'ccc' + S.guid(), {
-						renderType: 'append'
-					});
-					return false
-				}
-			},
-			'#input24': {
-				click: function(e) {
-					var self = this;
-					self.setChunkData('d', [{
-							d1: S.guid()
-						}, {
-							d1: S.guid()
-						}, {
-							d1: S.guid()
-						}
-					]);
-				}
-			},
-			'#input25': {
-				click: function(e) {
-					var self = this;
-					self.setChunkData('e', !self.pagelet.get('data').e);
-				}
-			},
-			'#input26': {
-				click: function(e) {
-					this.pagelet.destroy();
-				}
-			},
-			'#input27': {
-				click: function(e) {
-					var self = this;
-					//这个有问题啊。bx-tmpl应该唯一键值。可以考虑加上组件名称前缀
-					self.pagelet.setChunkData('startDay', 'startDay' + S.guid());
+					this.bxRenderType = 'prepend'
+					this.bxData.b = 'bbb' + S.guid()
 				}
 			},
 			'#input28': {
 				click: function(e) {
 					var self = this;
-					var data = self.get('data');
-					data.a = 'xxx'+S.guid();
+					//var data = self.get('data');
+					this.bxData.a = 'xxx'+S.guid();
 				}
-			},
+			}
 		},
 		FIRES: {
 			myfire: 'myfire'

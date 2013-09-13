@@ -1,12 +1,91 @@
 KISSY.add('brix/interface/if-zuomo', function(S) {
+    /*jshint -W030 */
+    var defineProperty = Object.defineProperty
+    var defineProperties = Object.defineProperties
+    try {
+        defineProperty({}, '_', {
+            value: 'zuomo'
+        })
+    } catch (e) {
+        if ('__defineGetter__' in {}) {
+            defineProperty = function(obj, prop, desc) {
+                if ('get' in desc) {
+                    obj.__defineGetter__(prop, desc.get)
+                }
+                if ('set' in desc) {
+                    obj.__defineSetter__(prop, desc.set)
+                }
+            }
+            defineProperties = function(obj, props) {
+                for (var prop in props) {
+                    defineProperty(obj, prop, props[prop])
+                }
+                return obj
+            }
+        }
+        else if (!defineProperties && window.VBArray) {
+            /*jshint -W061 */
+            window.execScript([
+                'Function vb_global_eval(code)',
+                    'ExecuteGlobal(code)',
+                'End Function'
+            ].join('\n'), 'VBScript')
 
+            defineProperties = function(obj, props) {
+                var t = setTimeout(function(){})
+                var className = 'VBClass' + t
+                var owner = {}
+                var buffer = []
+                buffer.push(
+                        'Class ' + className,
+                        '\tPrivate [__data__], [__proxy__]',
+                        '\tPublic Default Function [__const__](d, p)',
+                        '\t\tSet [__data__] = d: set [__proxy__] = p',
+                        '\t\tSet [__const__] = Me',
+                        '\tEnd Function')
+                for (var name in props) {
+                    owner[name] = true
+                    buffer.push(
+                            '\tPublic Property Let [' + name + '](val)',
+                            '\t\tCall [__proxy__]([__data__], "' + name + '", val)',
+                            '\tEnd Property',
+                            '\tPublic Property Set [' + name + '](val)',
+                            '\t\tCall [__proxy__]([__data__], "' + name + '", val)',
+                            '\tEnd Property',
+                            '\tPublic Property Get [' + name + ']',
+                            '\tOn Error Resume Next', 
+                            '\t\tSet[' + name + '] = [__proxy__]([__data__],"' + name + '")',
+                            '\tIf Err.Number <> 0 Then',
+                            '\t\t[' + name + '] = [__proxy__]([__data__],"' + name + '")',
+                            '\tEnd If',
+                            '\tOn Error Goto 0',
+                            '\tEnd Property')
+                }
+                buffer.push('End Class')
+                buffer.push(
+                        'Function ' + className + 'Factory(a, b)',
+                        '\tDim o',
+                        '\tSet o = (New ' + className + ')(a, b)',
+                        '\tSet ' + className + 'Factory = o',
+                        'End Function')
+                window.vb_global_eval(buffer.join('\r\n'))
+
+                return window[className + 'Factory'](props, function(props,name,value){
+                    var fn = props[name]
+                    if (arguments.length === 3) {
+                        fn.set(value)
+                    } else {
+                        return fn.get()
+                    }
+                })
+            }
+        }
+    }
     var exports = {}
 
     exports.METHODS = {
         bxIBuildTpl: function() {
             var self = this
-            //存储监听的数据key
-            self.bxWatcherKeys = {}
             //延迟刷新存储的key
             self.bxRefreshKeys = []
             //子模板数组
@@ -14,7 +93,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             self.bxBrickTpls = {}
 
             self.bxStoreTpls = {}
-
             var tpl = self.get('tpl')
             var tempTpl
 
@@ -185,25 +263,6 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             }
             return tpl
         },
-        // bxIBuildBrickTpls: function(tpl, level) {
-        //     var self = this
-        //     var r = '(<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)(</\\2>)'
-        //     while (level--) {
-        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-        //     }
-        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-        //     var reg = new RegExp(r, "ig")
-        //     tpl = tpl.replace(reg, function(all, start, tag, name, bx, middle, end) {
-        //         self.bxBrickTpls[bx] = {
-        //             start: start,
-        //             middle: middle,
-        //             end: end
-        //         }
-        //         //占位符
-        //         return '@brix@' + bx + '@brix@'
-        //     })
-        //     return tpl
-        // },
         /**
          * 获取属性模板
          * @param  {String} str 模板
@@ -220,42 +279,76 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             str.replace(/([^\s]+)?=["']([^'"]+)["']/ig, storeAttr)
             return attrs;
         },
+        bxIBuildData:function(){
+            var self = this
+            var data = self.get('data')
+            var props = {}
+            var fn = function(k){
+                props[k] = {
+                    get:function(){
+                        return data[k]
+                    },
+                    set:function(v){
+                        data[k] = v
+                        if (!S.inArray(k, self.bxRefreshKeys)) {
+                            self.bxRefreshKeys.push(k)
+                        }
+                        if(self.bxRefresh){
+                            self.bxIRefreshTpl(self.get('el'), self.bxSubTpls, self.bxRefreshKeys, data, self.bxRenderType)
+                            self.bxRefreshKeys = []
+                        }
+                        self.bxRefresh = true
+                        self.bxRenderType = 'html'
+                        
+                    }
+                }
+            }
+            if(data){
+                self.bxRefresh = true //数否刷新
+                self.bxRenderType = 'html' //刷新方式
+                for(var prop in data){
+                    fn(prop)
+                }
+                //全新的数据对象，对齐操作，会
+                self.bxData = defineProperties({},props)
+            }
+        },
         /**
          * 添加数据监听
          * @param  {String} datakey 监听的key字符串"key1,key2"
          * @private
          */
-        bxIAddWatch: function(datakey) {
-            var self = this
-            var obj = self.bxGetAncestorWithData()
-            var data = obj.data
-            var ancestor = obj.ancestor
-            if (data) {
-                var watch = function(key) {
-                    ancestor.watch(data, key, function() {
-                        if (!S.inArray(key, ancestor.bxRefreshKeys)) {
-                            ancestor.bxRefreshKeys.push(key)
-                        }
-                        if (ancestor.bxLaterTimer) {
-                            ancestor.bxLaterTimer.cancel();
-                            delete ancestor.bxLaterTimer
-                        }
-                        ancestor.bxLaterTimer = S.later(function() {
-                            ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, ancestor.bxRefreshKeys, data, 'html')
-                            ancestor.bxRefreshKeys = [];
-                        }, 100)
-                    })
-                }
-                var temparr = datakey.split(',')
-                for (var i = 0; i < temparr.length; i++) {
-                    var key = temparr[i]
-                    if (!ancestor.bxWatcherKeys[key]) {
-                        ancestor.bxWatcherKeys[key] = true;
-                        watch(key);
-                    }
-                }
-            }
-        },
+        // bxIAddWatch: function(datakey) {
+        //     var self = this
+        //     var obj = self.bxGetAncestorWithData()
+        //     var data = obj.data
+        //     var ancestor = obj.ancestor
+        //     if (data) {
+        //         var watch = function(key) {
+        //             ancestor.watch(data, key, function() {
+        //                 if (!S.inArray(key, ancestor.bxRefreshKeys)) {
+        //                     ancestor.bxRefreshKeys.push(key)
+        //                 }
+        //                 if (ancestor.bxLaterTimer) {
+        //                     ancestor.bxLaterTimer.cancel();
+        //                     delete ancestor.bxLaterTimer
+        //                 }
+        //                 ancestor.bxLaterTimer = S.later(function() {
+        //                     ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, ancestor.bxRefreshKeys, data, 'html')
+        //                     ancestor.bxRefreshKeys = [];
+        //                 }, 100)
+        //             })
+        //         }
+        //         var temparr = datakey.split(',')
+        //         for (var i = 0; i < temparr.length; i++) {
+        //             var key = temparr[i]
+        //             if (!ancestor.bxWatcherKeys[key]) {
+        //                 ancestor.bxWatcherKeys[key] = true;
+        //                 watch(key);
+        //             }
+        //         }
+        //     }
+        // },
 
         /**
          * 对节点中的bx-datakey解析，构建模板和数据配置
@@ -286,43 +379,13 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     subTpls: []
                 }
                 subTpls.push(subTpl)
-                self.bxIAddWatch(datakey)
+                //self.bxIAddWatch(datakey)
                 //递归编译子模板的子模板
                 self.bxIBuildSubTpls(obj.html, subTpl.subTpls)
                 //递归编译子模板
                 self.bxIBuildSubTpls(tpl.substring(0, reg.lastIndex - offset) + tpl.substr(obj.e_pos), subTpls)
             }
         },
-        // bxIBuildSubTpls: function(tpl, subTpls, level) {
-        //     var self = this
-        //     var l = level
-        //     var r = '(<([\\w]+)\\s+[^>]*?bx-subtpl=["\']([^"\']+)["\']\\s+bx-datakey=["\']([^"\']+)["\']\\s*[^>]*?>)(@brix@)</\\2>'
-        //     while (l--) {
-        //         r = r.replace('@brix@', '(?:<\\2[^>]*>@brix@</\\2>|[\\s\\S])*?')
-        //     }
-        //     r = r.replace('@brix@', '(?:[\\s\\S]*?)')
-
-        //     var reg = new RegExp(r, "ig")
-        //     var m
-        //     var replacer = function(all, bx) {
-        //         var o = self.bxBrickTpls[bx]
-        //         return o.start + o.middle + o.end
-        //     }
-        //     while ((m = reg.exec(tpl)) !== null) {
-        //         var datakey = m[4]
-        //         var obj = {
-        //             name: m[3],
-        //             datakey: datakey,
-        //             tpl: m[5].replace(/@brix@(brix_tag_\d+)@brix@/ig, replacer),
-        //             attrs: self.bxIStoreAttrs(m[1]),
-        //             subTpls: []
-        //         }
-        //         subTpls.push(obj)
-        //         self.bxIAddWatch(datakey)
-        //         //递归编译子模板
-        //         self.bxIBuildSubTpls(m[5], obj.subTpls, level)
-        //     }
-        // },
         /**
          * 子闭合标间的处理
          * @param  {String} tpl 模板
@@ -338,7 +401,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                     datakey: datakey,
                     attrs: self.bxIStoreAttrs(all)
                 })
-                self.bxIAddWatch(datakey)
+                //self.bxIAddWatch(datakey)
                 return ''
             })
             return tpl
@@ -417,14 +480,14 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
                         S.each(o.attrs, function(v, k) {
                             var val = S.trim(self.bxRenderTpl(v, data))
-                            if (node[0].tagName.toUpperCase == 'INPUT' && k == "value") {
+                            if (node[0].tagName.toUpperCase() == 'INPUT' && k == "value") {
                                 node.val(val)
                             } else {
                                 node.attr(k, val)
                             }
                         })
                     })
-                } else if (o.subTpls.length > 0) {
+                } else if (o.subTpls && o.subTpls.length > 0) {
                     //刷新子模板的子模板
                     self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
                 }
@@ -457,7 +520,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
 
             var children = self.bxChildren
             loop(children)
-        },
+        }
 
         /**
          * 设置数据，并刷新模板数据
@@ -468,38 +531,38 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @param {Function} [opts.error] 验证失败的回调，包括失败原因
          * @param {String} [opts.renderType] 渲染方式，目前支持html，append，prepend
          */
-        setChunkData: function(datakey, data, opts) {
-            var self = this
-            var obj = self.bxGetAncestorWithData()
-            var newData = obj.data || {}
-            var ancestor = obj.ancestor
-            var keys = []
-            if (S.isObject(datakey)) {
-                for (var key in datakey) {
-                    newData[key] = datakey[key]
-                    keys.push(key)
-                }
-                opts = data
-            } else {
-                keys = [datakey]
-                newData[datakey] = data
-            }
+        // setChunkData: function(datakey, data, opts) {
+        //     var self = this
+        //     var obj = self.bxGetAncestorWithData()
+            
+        //     var ancestor = obj.ancestor
 
-            //根据传入的opts,设置renderType
-            var renderType = 'html'
-            if (opts) {
-                if (opts.renderType) {
-                    renderType = opts.renderType;
-                    delete opts.renderType
-                }
-            }
-            ancestor.set('data', newData, opts)
+        //     var newData = ancestor.bxData;
+        //     var keys = []
+        //     if (S.isObject(datakey)) {
+        //         for (var key in datakey) {
+        //             ancestor.bxRefresh = false
+        //             newData[key] = datakey[key]
+        //             keys.push(key)
+        //         }
+        //         opts = data
+        //     } else {
+        //         keys = [datakey]
+        //         ancestor.bxRefresh = false
+        //         newData[datakey] = data
+        //     }
 
-            if (!opts || !opts.silent) {
-                ancestor.digest(true)
-                ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, newData, renderType)
-            }
-        }
+        //     //根据传入的opts,设置renderType
+        //     var renderType = 'html'
+        //     if (opts) {
+        //         if (opts.renderType) {
+        //             renderType = opts.renderType;
+        //             delete opts.renderType
+        //         }
+        //     }
+        //     ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, ancestor.get('data'), renderType)
+        //     ancestor.bxRefreshKeys = [];
+        // }
     }
 
     exports.ATTRS = {}

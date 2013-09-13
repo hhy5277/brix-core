@@ -80,7 +80,6 @@ describe('brix/base', function() {
         })
         .then(function(brick) {
           var firedCount = 0
-
           brick.delegate('thx.test/delegate-foo', 'fooEvent', function(){
             firedCount++
           })

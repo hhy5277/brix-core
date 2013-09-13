@@ -12,25 +12,13 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		bind: function() {
 			//和老版本的initialize作用相同
 			S.log('bind 3');
+			debugger
 			var self = this
-			this.dirtyCheck(this.myFn,'myFn');
-			// var q = self.get('el').one('#q');
-			// if(q){
-			// 	q.on('valuechange',function(e){
-			// 	var data = self.get('data')
-			// 	data.text = e.currentTarget.value
-			// 	self.digest()
-			// })
-			// }
-				
-
-
-
+			this.myFn('bind value');
 		},
 
 		myFn :function(name){
-			var data = this.get('data')
-			data.text = name
+			this.bxData.text = name
 		},
 		destructor: function() {
 			S.log('destructor3');
@@ -49,19 +37,13 @@ KISSY.add("thx.demo/brixtest3/index", function(S, Brick) {
 		EVENTS: {
 			'.input31': {
 				click: function(e) {
-					var self = this;
-					var data = self.get('data')
-					data.text = '我改变了'+S.guid()
-					// self.setChunkData({
-					// 	text:'我改变了'+S.guid()
-					// });
-					self.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
+					this.bxData.text = '我改变了'+S.guid()
+					this.fire(BrixTest3.FIRES.myfire,{fireName:'myfire3'});
 				}
 			},
 			'#q':{
 				valuechange:function(e){
-					var data = e.brixData
-					data.text = e.currentTarget.value
+					this.bxData.text = e.currentTarget.value
 				}
 			}
 		},

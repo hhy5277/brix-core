@@ -80,8 +80,8 @@ KISSY.use('brix/app,brix/base', function(S, app) {
                 }, 500)
             })
             .once('ready', function() {
-                this.setChunkData({a: 'aaaa' + S.guid()})
-
+                //this.setChunkData({a: 'aaaa' + S.guid()})
+                this.bxData.a = 'aaaa' + S.guid()
                 window.brick = this
 
                 this.delegate('#brixtest', 'myfire', function(){
