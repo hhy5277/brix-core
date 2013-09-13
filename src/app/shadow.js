@@ -1,4 +1,8 @@
-KISSY.add('brix/app/config', function(S) {
+// The module serve as the shadow of brix/app
+// brix/app requires modules like brix/core/bx-util, which in return might
+// require functionalities of brix/app. For trespassing circular dependencies,
+// here's this shadow module.
+KISSY.add('brix/app/shadow', function(S) {
 
     // A simple Class for brick declaration processing.
     //
@@ -38,19 +42,15 @@ KISSY.add('brix/app/config', function(S) {
 
     var exports = {
         configData: {
-            debug: true,
-
-            base: '.',
-
             imports: {},
 
             importsBase: 'http://g.tbcdn.cn/thx/m',
 
             components: null,
 
-            namespace: null,
+            family: '',
 
-            timestamp: null
+            base: '.'
         },
 
         config: function(prop, data) {
@@ -85,7 +85,7 @@ KISSY.add('brix/app/config', function(S) {
         bxResolveComponents: function() {
             // Resolve simplified components settings into verbose format.
             var components = this.config('components')
-            var namespace
+            var family
 
             // components 可能的值：
             //
@@ -93,7 +93,7 @@ KISSY.add('brix/app/config', function(S) {
             // - {} ，用于配置详细组件信息（用于版本处理，组件样式加载等）
             //
             if (S.isString(components)) {
-                namespace = components
+                family = components
             }
             else {
                 // components 以对象形式定义，用于支持两种场景：
@@ -115,8 +115,8 @@ KISSY.add('brix/app/config', function(S) {
                 //     }
                 //
                 // 此处的 for 循环用于将 'thx.demo' 从 components 对象中取出
-                for (namespace in components) {}
-                var bricks = components[namespace]
+                for (family in components) {}
+                var bricks = components[family]
 
                 if (S.isPlainObject(bricks)) {
                     for (var name in bricks) {
@@ -125,17 +125,34 @@ KISSY.add('brix/app/config', function(S) {
                 }
             }
 
-            this.config('namespace', namespace)
+            this.config('family', family)
 
             this.bxPackageComponents()
             this.bxMapComponents()
         },
 
+        bxPackageComponents: function() {
+            var family = this.config('family')
+
+            // 如果已经定义过了，就不要覆盖
+            if (S.config('packages')[family]) return
+
+            var base = this.config('base')
+            var ignoreNs = S.config('ignorePackageNameInUri')
+            var obj = {}
+
+            obj[family] = {
+                base: base + (ignoreNs ? '/' + family : '')
+            }
+
+            S.config('packages', obj)
+        },
+
         bxResolveImports: function() {
             var imports = this.config('imports')
 
-            for (var ns in imports) {
-                var bricks = imports[ns]
+            for (var family in imports) {
+                var bricks = imports[family]
 
                 for (var name in bricks) {
                     bricks[name] = new Declaration(bricks[name])
@@ -151,34 +168,23 @@ KISSY.add('brix/app/config', function(S) {
         },
 
         bxMapComponents: function() {
-            var tag = this.config('timestamp')
-            var ns = this.config('namespace')
             var components = this.config('components')
 
-            if (tag && ns) {
-                var injectTag = function(m, name, file) {
-                    return [ns, tag, name, file].join('/')
-                }
-
-                S.config('map', [
-                    [new RegExp(ns + '\\/([^\\/]+)\\/([^\\/]+)$'), injectTag]
-                ])
-            }
-            else if (S.isPlainObject(components)) {
+            if (S.isPlainObject(components)) {
                 this.bxMapModules(components)
             }
         },
 
         bxMapModules: function(lock) {
-            function makeReplacer(ns) {
+            function makeReplacer(family) {
                 return function(match, name, file) {
-                    return [ns, name, lock[ns][name], file].join('/')
+                    return [family, name, lock[family][name], file].join('/')
                 }
             }
             var maps = []
 
-            for (var ns in lock) {
-                maps.push([new RegExp(ns + '\\/([^\\/]+)\\/([^\\/]+)$'), makeReplacer(ns)])
+            for (var family in lock) {
+                maps.push([new RegExp(family + '\\/([^\\/]+)\\/([^\\/]+)$'), makeReplacer(family)])
             }
 
             S.config('map', maps)
@@ -190,62 +196,53 @@ KISSY.add('brix/app/config', function(S) {
             var importsBase = this.config('importsBase')
 
             var ignoreNs = S.config('ignorePackageNameInUri')
+            var packagesWas = S.config('packages')
             var packages = {}
 
             for (var p in imports) {
-                packages[p] = {
-                    base: importsBase + (ignoreNs ? '/' + p : '')
+                if (!packagesWas[p]) {
+                    // if not configured before.
+                    // more info about group configuration:
+                    // http://docs.kissyui.com/docs/html/tutorials/kissy/seed/loader/group.html#loader-group-tutorial
+                    packages[p] = {
+                        base: importsBase + (ignoreNs ? '/' + p : ''),
+                        group: 'bx-imports',
+                        combine: true
+                    }
                 }
             }
 
             S.config('packages', packages)
         },
 
-        bxPackageComponents: function() {
-            var ns = this.config('namespace')
-
-            // 如果已经定义过了，就不要覆盖
-            if (S.config('packages')[ns]) {
-                return
-            }
-            var base = this.config('base')
-            var ignoreNs = S.config('ignorePackageNameInUri')
-            var obj = {}
-
-            obj[ns] = {
-                base: base + (ignoreNs ? '/' + ns : '')
-            }
-
-            S.config('packages', obj)
-        },
-
         bxComboStyle: function() {
             var imports = this.config('imports') || {}
             var styles = []
 
-            var checkStyle = function(ns, bricks) {
+            var checkStyle = function(family, bricks) {
                 for (var name in bricks) {
                     if (bricks[name].requires('css')) {
-                        styles.push([ns, name, 'index.css'].join('/'))
+                        styles.push([family, name, 'index.css'].join('/'))
                     }
                 }
             }
-            var ns
+            var family
 
-            for (ns in imports) {
-                checkStyle(ns, imports[ns])
+            for (family in imports) {
+                checkStyle(family, imports[family])
             }
             var components = this.config('components')
 
-            ns = this.config('namespace')
-            components = components[ns]
+            family = this.config('family')
+
+            if (components) components = components[family]
 
             if (S.isPlainObject(components)) {
-                checkStyle(ns, components)
+                checkStyle(family, components)
             }
             else if (S.isArray(components)) {
                 for (var i = 0; i < components.length; i++) {
-                    styles.push([ns, components[i], 'index.css'].join('/'))
+                    styles.push([family, components[i], 'index.css'].join('/'))
                 }
             }
 

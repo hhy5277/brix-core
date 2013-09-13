@@ -4,6 +4,10 @@ KISSY.config({
     brix: {
       ignorePackageNameInUri: true,
       base: '../../src'
+    },
+    'thx.test': {
+      base: '../',
+      debug: true
     }
   }
 })

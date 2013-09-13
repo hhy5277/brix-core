@@ -1,5 +1,4 @@
-Brix Core
-=========
+# Brix Core [![Build Status](https://travis-ci.org/thx/brix-core.png?branch=master)](https://travis-ci.org/thx/brix-core)
 
 ## 演示
 

@@ -1,18 +1,26 @@
-KISSY.add('brix/app', function(S, appConfig, bxApi, bxThird) {
-    var BxApp = {
+KISSY.add('brix/app', function(S, appShadow, bxApi, bxThird) {
+
+    var app = {
         bootStyle: function(fn) {
-            S.use(this.bxComboStyle().join(','), fn)
+            var styles = this.bxComboStyle().join(',')
+
+            if (S.importStyle)
+                S.importStyle(styles, fn)
+            else
+                S.use(styles, fn)
         },
+
         bxChildren: []
     }
-    S.mix(BxApp, appConfig)
-    S.mix(BxApp, bxApi)
-    S.mix(BxApp, bxThird)
 
-    return BxApp
+    S.mix(app, appShadow)
+    S.mix(app, bxApi)
+    S.mix(app, bxThird)
+
+    return app
 }, {
     requires: [
-        'brix/app/config',
+        'brix/app/shadow',
         'brix/core/bx-api',
         'brix/core/bx-third',
         'brix/third/index',//这里的两个依赖必须存在

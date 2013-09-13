@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-util', function(S, appConfig) {
+KISSY.add('brix/core/bx-util', function(S, app) {
     var BRICKBASE = 'brix/base'
 
     return {
@@ -61,8 +61,8 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
             var file = parts.shift()
             var base = S.config('packages')[ns].base
 
-            var components = appConfig.config('components')
-            var imports = appConfig.config('imports')
+            var components = app.config('components')
+            var imports = app.config('imports')
 
             var pkgs = S.config('packages')
             var pkgsIgnore = pkgs[ns] && pkgs[ns].ignorePackageNameInUri
@@ -140,5 +140,5 @@ KISSY.add('brix/core/bx-util', function(S, appConfig) {
         }
     }
 }, {
-    requires: ['brix/app/config']
+    requires: ['brix/app/shadow']
 })

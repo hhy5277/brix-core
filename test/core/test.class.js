@@ -11,10 +11,6 @@ describe('brix/class', function() {
       app = _app
       Brick = _Brick
 
-      app.config({
-        components: 'thx.test',
-        base: '../'
-      })
       done()
     })
   })
