@@ -59,3 +59,31 @@ KISSY.config('packages', {
 
 比通过 app.config 封装来得直观。
 
+
+## 3.3.0
+
+2013-09-22
+
+增加了兼容ie6+的Object的getter，setter，数据更新统一在数据对象bxData上操作，移除了watcher类和setChunkData方法，现在更新数据采用如下：
+
+```html
+    <div id="xx_yy" bx-name="xx/yy">
+        <span bx-datakey="xx">{{xx}}</span>
+        <span bx-datakey="yy">{{yy}}</span>
+    </div>
+
+```
+
+```js
+//新的数据
+var data = {xx:'1',yy:2} 
+app.prepare('xx_yy',data).then(function(brick){
+    //自动触发setter，刷新bx-datakey="xx"子模板
+    brick.bxData['xx'] = 3;
+    brick.bxData['yy'] = 4;   
+})
+
+```
+
+
+
