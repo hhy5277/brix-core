@@ -24,28 +24,25 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 		EVENTS: {
 			'#input1': {
 				click: function(e) {
-					this.bxRefresh = false
-					this.bxData.a = 'aaaa' + S.guid()
-					//this.bxRefresh = false
-					this.bxData.c = 'ccc' + S.guid()
+					this.bxParent.bxRefresh = false
+					this.bxParent.bxData.a = 'aaaa' + S.guid()
+					this.bxParent.bxData.c = 'ccc' + S.guid()
 					this.fire(BrixTest.FIRES.myfire);
 				}
 			},
 			'#input2': {
 				click: function(e) {
-					this.bxRenderType = 'prepend'
-					this.bxData.b = 'bbb' + S.guid()
+					this.bxParent.bxData.b = 'bbb' + S.guid()
 				}
 			},
 			'#input3': {
 				click: function(e) {
-					this.bxRenderType = 'append'
-					this.bxData.c = 'ccc' + S.guid()
+					this.bxParent.bxData.c = 'ccc' + S.guid()
 				}
 			},
 			'#input4': {
 				click: function(e) {
-					this.bxData.d = [{
+					this.bxParent.bxData.d = [{
 						d1: S.guid()
 					}, {
 						d1: S.guid()
@@ -56,7 +53,7 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			},
 			'#input5': {
 				click: function(e) {
-					this.bxData.e = Math.random()>0.5?true:false
+					this.bxParent.bxData.e = Math.random()>0.5?true:false
 				}
 			},
 			'#input6': {
@@ -69,7 +66,7 @@ KISSY.add("thx.demo/brixtest/index", function(S, Brick) {
 			'#input7': {
 				click: function(e) {
 					
-					this.bxData.startDay = 'startDay' + S.guid()
+					this.bxParent.bxData.startDay = 'startDay' + S.guid()
 				}
 			},
 			'#input8':{

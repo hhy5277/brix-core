@@ -41,14 +41,12 @@ KISSY.add("thx.demo/brixtest2/index", function(S, Brick) {
 			},
 			'#input22': {
 				click: function(e) {
-					this.bxRenderType = 'prepend'
 					this.bxData.b = 'bbb' + S.guid()
 				}
 			},
 			'#input28': {
 				click: function(e) {
 					var self = this;
-					//var data = self.get('data');
 					this.bxData.a = 'xxx'+S.guid();
 				}
 			}
