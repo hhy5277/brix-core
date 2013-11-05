@@ -97,8 +97,9 @@ module.exports = function(grunt) {
   grunt.registerTask('kswitch', 'Switch KISSY versions', function(ver) {
     grunt.log.write('switching kissy version to ' + ver + ' ...')
     grunt.file.expand('test/**/test.*.html').forEach(function(file) {
-      var markup = grunt.file.read(file).replace(/kissy\/k\/1\.3\.\d+/, 'kissy/k/' + ver)
+      var markup = grunt.file.read(file).replace(/kissy\/k\/1\.\d\.\d+/, 'kissy/k/' + ver)
 
+      // 1.4.0 没有提供打包好的 kissy.js，只有 seed.js
       grunt.file.write(file, markup)
     })
     grunt.log.writeln(' done.')
@@ -108,4 +109,5 @@ module.exports = function(grunt) {
   // use kswitch task if testing multiple kissy versions is needed.
   grunt.registerTask('test', ['jshint', 'connect', 'mocha'])  // , 'kswitch:1.3.0', 'mocha', 'kswitch:1.3.1'
   grunt.registerTask('build', ['jshint', 'concat', 'uglify'])
+  grunt.registerTask('serve', ['connect:server:keepalive'])
 }
