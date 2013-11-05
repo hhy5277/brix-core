@@ -1160,7 +1160,7 @@ KISSY.add('brix/core/bx-delegate', function() {
     return exports
 });
 KISSY.add('brix/core/bx-event', function(S, Event) {
-    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
+    var unSupportBubbleEvents = ['change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -1185,33 +1185,10 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
             var fn
             self.bxUnBubbleEvents = {}
 
-            // function wrapFn(fnc) {
-            //     return function() {
-            //         var obj = self.bxGetAncestorWithData()
-            //         var ancestor
-            //         if (obj.data) {
-            //             //增加brixData，方便外部直接获取
-            //             ancestor = obj.ancestor
-            //             arguments[0].brixData = ancestor.bxData
-                        
-            //         } else {
-            //             ancestor = self;
-            //         }
-            //         var ret = fnc.apply(this, arguments)
-            //         if (ret !== false) {
-            //             ancestor.digest()
-            //         }
-
-            //     }
-            // }
-
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 for (var type in events) {
                     fn = events[type]
-                    // fnc.handle = wrapFn(fnc)
-
-                    // fn = fnc.handle
 
                     if (sel === 'self') {
                         el.on(type, fn, this)
@@ -1278,9 +1255,6 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                             el.undelegate(type, sel, fn, this)
                         }
                     }
-
-                    //fn = null;
-                    //delete events[type].handle
                 }
             }
         }
