@@ -1,13 +1,13 @@
 <input id="input21" type="button" class="btn btn-red btn-size25" value="局部刷新a,c">
 <input id="input22" type="button" class="btn btn-red btn-size25" value="局部刷新b-prepend">
 <input id="input28" type="button" class="btn btn-red btn-size25" value="局部刷新a">
-<div id="xx" bx-subtpl="subtpl_a" class="hahah" bx-datakey="a,c" name="xx">
+<div id="xx" class="hahah" bx-datakey="a,c" name="xx">
   <span>{{a}}-{{c}}</span>
   <div id="brixtest3" bx-name="thx.demo/brixtest3" bx-tpl="./tpl">
   </div>
 </div>
 
-<div bx-subtpl="subtpl_b" bx-datakey="b">
+<div bx-datakey="b" bx-rendertype="prepend">
   <span>{{b}}</span>
   <div bx-name="thx.demo/pagination" class="pagination"></div>
 </div>
