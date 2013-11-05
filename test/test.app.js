@@ -7,6 +7,8 @@ var S = KISSY
 
 describe('brix/app', function() {
 
+  this.timeout(5000)
+
   // 本来可以把整个都放进 KISSY.use 的回调里面，但是这样的话，何时触发 mocha.run 又成了问题。
   //
   // 在 grunt-mocha 里，提供了自动调用 mocha.run 的方式，但不支持人肉在某个自定义的回调中调用。

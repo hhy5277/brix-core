@@ -7,6 +7,8 @@ var S = KISSY
 
 describe('brix/base', function() {
 
+  this.timeout(5000)
+
   before(function(done) {
     KISSY.use('brix/app,brix/base,promise', function(S, _app, _Brick, _Promise) {
       app = _app

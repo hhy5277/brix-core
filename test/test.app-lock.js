@@ -3,6 +3,8 @@ var Brick
 
 describe('brix/app locked', function() {
 
+  this.timeout(5000)
+
   before(function(done) {
     KISSY.use('brix/app,brix/base', function(S, _app, _Brick) {
       app = _app
