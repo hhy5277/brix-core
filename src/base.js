@@ -1,10 +1,11 @@
 KISSY.add("brix/base",
-    function(S, Interface, Core, Promise, RichBase, XTemplate, DOM) {
+    function(S, Interface, Core, Promise, Base, XTemplate, DOM) {
         var noop = S.noop
+        var __getHook = Base.prototype.__getHook
 
         var DESTROY_ACTIONS = ['remove', 'empty']
 
-        var Brick = RichBase.extend({
+        var Brick = Base.extend({
             initializer: function() {
                 var self = this
                 var d = new Promise.Defer()
@@ -311,9 +312,11 @@ KISSY.add("brix/base",
                  */
                 self.fire('beforeBind')
 
-                self.constructor.superclass.bindInternal.call(self)
+                Brick.superclass.bindInternal.call(self)
+                //debugger
+                self.bind();
 
-                self.callMethodByHierarchy("bind", "__bind")
+                // self.callMethodByHierarchy("bind", "__bind")
 
                 /**
                  * @event afterBind
@@ -335,7 +338,8 @@ KISSY.add("brix/base",
 
                 Brick.superclass.syncInternal.call(self)
 
-                self.callMethodByHierarchy("sync", "__sync")
+                self.sync();
+                //self.callMethodByHierarchy("sync", "__sync")
 
                 /**
                  * @event afterSync
@@ -392,6 +396,11 @@ KISSY.add("brix/base",
                 }
             }
         }, {
+            __hooks__: {
+                bind: __getHook('__bind'),
+                sync: __getHook('__sync')
+            },
+            name:'Brick',
             ATTRS: S.mix({
                 /**
                  * 模板
@@ -498,7 +507,7 @@ KISSY.add("brix/base",
 
                 }
             }, Interface.ATTRS)
-        }, 'Brick')
+        })
 
         S.augment(Brick, Core, Interface.METHODS)
 
@@ -508,7 +517,7 @@ KISSY.add("brix/base",
             'brix/interface/index',
             'brix/core/index',
             'promise',
-            'rich-base',
+            'base',
             'xtemplate',
             'dom',
             'node',

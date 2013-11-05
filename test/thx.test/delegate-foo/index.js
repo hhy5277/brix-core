@@ -1,6 +1,7 @@
 KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 
 	var DelegateFoo = Brick.extend({}, {
+		name:'DelegateTest2',
 		ATTRS: {
 			b: {
 				value: 4
@@ -29,7 +30,7 @@ KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 		FIRES: {
 			customEvent: 'fooEvent'
 		}
-	}, 'DelegateTest2')
+	})
 
 	return DelegateFoo
 }, {

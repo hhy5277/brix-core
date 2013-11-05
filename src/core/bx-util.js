@@ -129,14 +129,14 @@ KISSY.add('brix/core/bx-util', function(S, app) {
          */
         bxIsExtendBrickClass: function(c) {
             var Brick = S.require(BRICKBASE)
-            if (c == Brick) {
-                return true
+            var t = c
+            while(t){
+               if (t == Brick) {
+                    return true
+                } 
+                t = t.superclass && t.superclass.constructor
             }
-            if (c.superclass) {
-                return c.superclass instanceof Brick
-            } else {
-                return false;
-            }
+            return false
         }
     }
 }, {

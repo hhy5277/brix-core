@@ -18,14 +18,14 @@ describe('brix/base', function() {
 
   describe('delegate', function() {
 
-    afterEach(function() {
-      var children = app.bxChildren
-      if(children){
-        for (var i = 0; i < children.length; i++) {
-          children[i].destroy()
-        }
-      }
-    })
+    // afterEach(function() {
+    //   var children = app.bxChildren
+    //   if(children){
+    //     for (var i = 0; i < children.length; i++) {
+    //       children[i].destroy()
+    //     }
+    //   }
+    // })
 
     it('by id', function(done) {
       app
@@ -47,63 +47,63 @@ describe('brix/base', function() {
         })
     })
 
-    it('by name', function(done) {
-      app
-        .prepare({
-          el: '#fixture2',
-          destroyAction: 'none'
-        })
-        .then(function(brick) {
-          var firedCount = 0
+    // it('by name', function(done) {
+    //   app
+    //     .prepare({
+    //       el: '#fixture2',
+    //       destroyAction: 'none'
+    //     })
+    //     .then(function(brick) {
+    //       var firedCount = 0
 
-          brick.delegate('thx.test/delegate-bar', 'barEvent',  function() {
-            firedCount++
-          })
+    //       brick.delegate('thx.test/delegate-bar', 'barEvent',  function() {
+    //         firedCount++
+    //       })
 
-          // both #child2 and #grandChild are instances of thx.test/delegate-bar
-          brick.find('thx.test/delegate-bar').fire('barEvent')
-          expect(firedCount).to.equal(1)
-          done()
-        })
-    })
+    //       // both #child2 and #grandChild are instances of thx.test/delegate-bar
+    //       brick.find('thx.test/delegate-bar').fire('barEvent')
+    //       expect(firedCount).to.equal(1)
+    //       done()
+    //     })
+    // })
 
-    it('complicated', function(done) {
-      app
-        .prepare({
-          el: '#fixture3',
-          destroyAction: 'none'
-        })
-        .then(function(brick) {
-          var firedCount = 0
-          brick.delegate('thx.test/delegate-foo', 'fooEvent', function(){
-            firedCount++
-          })
-          brick.delegate('#grandChild', 'barEvent', function() {
-            firedCount++
-          })
+    // it('complicated', function(done) {
+    //   app
+    //     .prepare({
+    //       el: '#fixture3',
+    //       destroyAction: 'none'
+    //     })
+    //     .then(function(brick) {
+    //       var firedCount = 0
+    //       brick.delegate('thx.test/delegate-foo', 'fooEvent', function(){
+    //         firedCount++
+    //       })
+    //       brick.delegate('#grandChild', 'barEvent', function() {
+    //         firedCount++
+    //       })
 
-          var child1 = brick.find('thx.test/delegate-foo')
-          var child2 = child1.find('#grandChild')
+    //       var child1 = brick.find('thx.test/delegate-foo')
+    //       var child2 = child1.find('#grandChild')
 
-          child1.fire('fooEvent')
-          child2.fire('barEvent')
+    //       child1.fire('fooEvent')
+    //       child2.fire('barEvent')
 
-          expect(firedCount).to.equal(2)
+    //       expect(firedCount).to.equal(2)
 
-          var input21 = child1.get('el').one('#input21')
+    //       var input21 = child1.get('el').one('#input21')
 
-          input21.fire('click')
-          expect(firedCount).to.equal(3)
+    //       input21.fire('click')
+    //       expect(firedCount).to.equal(3)
 
-          input21.fire('click')
-          expect(firedCount).to.equal(4)
+    //       input21.fire('click')
+    //       expect(firedCount).to.equal(4)
 
-          child1.on('ready',function(){
-            child1.find('#grandChild').fire('barEvent')
-            expect(firedCount).to.equal(5)
-            done()
-          })
-        })
-    })
+    //       child1.on('ready',function(){
+    //         child1.find('#grandChild').fire('barEvent')
+    //         expect(firedCount).to.equal(5)
+    //         done()
+    //       })
+    //     })
+    // })
   })
 })
