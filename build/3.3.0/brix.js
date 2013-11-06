@@ -530,17 +530,17 @@ KISSY.add("brix/base",
              */
             bxRenderTpl: function(tpl, data) {
                 var self = this
-                var TplEngine = self.get('TplEngine')
+                var tplEngine = self.get('tplEngine')
 
                 // 根据模板引擎，选择渲染方式
-                if (typeof TplEngine === 'function') {
+                if (typeof tplEngine === 'function') {
                     var commands = self.get('commands')
 
-                    return new TplEngine(tpl, {
+                    return new tplEngine(tpl, {
                         commands: commands || {}
                     }).render(data)
                 } else {
-                    return TplEngine.render(tpl, data)
+                    return tplEngine.render(tpl, data)
                 }
             },
 
@@ -775,7 +775,7 @@ KISSY.add("brix/base",
                  * 模板引擎,默认xTemplate
                  * @cfg {Object}
                  */
-                TplEngine: {
+                tplEngine: {
                     value: XTemplate
                 },
 
@@ -1150,7 +1150,7 @@ KISSY.add('brix/core/bx-delegate', function() {
     return exports
 });
 KISSY.add('brix/core/bx-event', function(S, Event) {
-    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
+    var unSupportBubbleEvents = ['change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -1175,33 +1175,10 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
             var fn
             self.bxUnBubbleEvents = {}
 
-            // function wrapFn(fnc) {
-            //     return function() {
-            //         var obj = self.bxGetAncestorWithData()
-            //         var ancestor
-            //         if (obj.data) {
-            //             //增加brixData，方便外部直接获取
-            //             ancestor = obj.ancestor
-            //             arguments[0].brixData = ancestor.bxData
-                        
-            //         } else {
-            //             ancestor = self;
-            //         }
-            //         var ret = fnc.apply(this, arguments)
-            //         if (ret !== false) {
-            //             ancestor.digest()
-            //         }
-
-            //     }
-            // }
-
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 for (var type in events) {
                     fn = events[type]
-                    // fnc.handle = wrapFn(fnc)
-
-                    // fn = fnc.handle
 
                     if (sel === 'self') {
                         el.on(type, fn, this)
@@ -1268,9 +1245,6 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                             el.undelegate(type, sel, fn, this)
                         }
                     }
-
-                    //fn = null;
-                    //delete events[type].handle
                 }
             }
         }
@@ -2137,14 +2111,11 @@ KISSY.add('brix/interface/index', function(S) {
                             self.bxRefreshKeys = []
                         }
                         self.bxRefresh = true
-                        self.bxRenderType = 'html'
-                        
                     }
                 }
             }
             if(data){
                 self.bxRefresh = true //数否刷新
-                self.bxRenderType = 'html' //刷新方式
                 for(var prop in data){
                     fn(prop)
                 }
@@ -2152,42 +2123,6 @@ KISSY.add('brix/interface/index', function(S) {
                 self.bxData = defineProperties({},props)
             }
         },
-        /**
-         * 添加数据监听
-         * @param  {String} datakey 监听的key字符串"key1,key2"
-         * @private
-         */
-        // bxIAddWatch: function(datakey) {
-        //     var self = this
-        //     var obj = self.bxGetAncestorWithData()
-        //     var data = obj.data
-        //     var ancestor = obj.ancestor
-        //     if (data) {
-        //         var watch = function(key) {
-        //             ancestor.watch(data, key, function() {
-        //                 if (!S.inArray(key, ancestor.bxRefreshKeys)) {
-        //                     ancestor.bxRefreshKeys.push(key)
-        //                 }
-        //                 if (ancestor.bxLaterTimer) {
-        //                     ancestor.bxLaterTimer.cancel();
-        //                     delete ancestor.bxLaterTimer
-        //                 }
-        //                 ancestor.bxLaterTimer = S.later(function() {
-        //                     ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, ancestor.bxRefreshKeys, data, 'html')
-        //                     ancestor.bxRefreshKeys = [];
-        //                 }, 100)
-        //             })
-        //         }
-        //         var temparr = datakey.split(',')
-        //         for (var i = 0; i < temparr.length; i++) {
-        //             var key = temparr[i]
-        //             if (!ancestor.bxWatcherKeys[key]) {
-        //                 ancestor.bxWatcherKeys[key] = true;
-        //                 watch(key);
-        //             }
-        //         }
-        //     }
-        // },
 
         /**
          * 对节点中的bx-datakey解析，构建模板和数据配置
@@ -2240,29 +2175,20 @@ KISSY.add('brix/interface/index', function(S) {
                     datakey: datakey,
                     attrs: self.bxIStoreAttrs(all)
                 })
-                //self.bxIAddWatch(datakey)
                 return ''
             })
             return tpl
-            // while ((m = reg.exec(tpl)) !== null) {
-            //     var datakey = m[4]
-            //     self.subTpls.push({
-            //         name: m[3],
-            //         datakey: datakey,
-            //         attrs: self.bxIStoreAttrs(m[1])
-            //     })
-            //     self.bxIAddWatch(datakey)
-            // }
         },
 
         /**
          * 局部刷新
-         * @param  {String} subTplName 子模板名称或id，这个待定
-         * @param  {Object} data 数据
-         * @param  {String} renderType 渲染方式，目前支持html，append，prepend
+         * @param {Node} el 模板根节点
+         * @param {Array} subTpls 子模板集合
+         * @param {Array} keys 更新的key
+         * @param {Object} data 数据 
          * @private
          */
-        bxIRefreshTpl: function(el, subTpls, keys, data, renderType) {
+        bxIRefreshTpl: function(el, subTpls, keys, data) {
             var self = this
 
             if (!self.bxRendered) {
@@ -2294,6 +2220,8 @@ KISSY.add('brix/interface/index', function(S) {
 
                     nodes.each(function(node) {
                         if (o.tpl) {
+                            //渲染方式，目前支持html，append，prepend
+                            var renderType = node.attr('bx-rendertype') || 'html'
                             self.fire('beforeRefreshTpl', {
                                 node: node,
                                 renderType: renderType
@@ -2304,6 +2232,7 @@ KISSY.add('brix/interface/index', function(S) {
                             if (renderType == 'html') {
                                 node.empty();
                             }
+                            //TODO  这里遇到自定义标签貌似会有问题。等以后再说吧
                             node[renderType](S.trim(self.bxRenderTpl(o.tpl, data)))
 
                             /**
@@ -2328,7 +2257,7 @@ KISSY.add('brix/interface/index', function(S) {
                     })
                 } else if (o.subTpls && o.subTpls.length > 0) {
                     //刷新子模板的子模板
-                    self.bxIRefreshTpl(el, o.subTpls, keys, data, renderType)
+                    self.bxIRefreshTpl(el, o.subTpls, keys, data)
                 }
             })
 
@@ -2338,70 +2267,28 @@ KISSY.add('brix/interface/index', function(S) {
                 // 因为 bxIRefreshTpl 有可能会更改 children 数组的长度
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i]
-                    if (!child.bxRefresh) {
-                        child.bxRefresh = true
+                    if (!child.bxRefreshFlg) {
+                        child.bxRefreshFlg = true
                         if (!child.bxIsBrickInstance()) {
                             loop(child.bxChildren)
                         } else if (!child.get('data')) {
                             //data = child.get('data') || data //数据有可能是父亲的父亲来的
                             el = child.get('el')
                             subTpls = child.bxSubTpls || []
-                            child.bxIRefreshTpl(el, subTpls, keys, data, renderType)
+                            child.bxIRefreshTpl(el, subTpls, keys, data)
                             i = 0
                         }
                     }
                 }
-                // 移除 bxRefresh
+                // 移除 bxRefreshFlg
                 S.each(children, function(child) {
-                    delete child.bxRefresh
+                    delete child.bxRefreshFlg
                 })
             }
 
             var children = self.bxChildren
             loop(children)
         }
-
-        /**
-         * 设置数据，并刷新模板数据
-         * @param {String} datakey 需要更新的数据对象key
-         * @param {Object} data    数据对象
-         * @param {Object} [opts]    控制对象，包括以下控制选项
-         * @param {Boolean} [opts.silent] 是否触发change事件
-         * @param {Function} [opts.error] 验证失败的回调，包括失败原因
-         * @param {String} [opts.renderType] 渲染方式，目前支持html，append，prepend
-         */
-        // setChunkData: function(datakey, data, opts) {
-        //     var self = this
-        //     var obj = self.bxGetAncestorWithData()
-            
-        //     var ancestor = obj.ancestor
-
-        //     var newData = ancestor.bxData;
-        //     var keys = []
-        //     if (S.isObject(datakey)) {
-        //         for (var key in datakey) {
-        //             ancestor.bxRefresh = false
-        //             newData[key] = datakey[key]
-        //             keys.push(key)
-        //         }
-        //         opts = data
-        //     } else {
-        //         keys = [datakey]
-        //         ancestor.bxRefresh = false
-        //         newData[datakey] = data
-        //     }
-
-        //     //根据传入的opts,设置renderType
-        //     var renderType = 'html'
-        //     if (opts) {
-        //         if (opts.renderType) {
-        //             renderType = opts.renderType;
-        //             delete opts.renderType
-        //         }
-        //     }
-        //     ancestor.bxIRefreshTpl(ancestor.get('el'), ancestor.bxSubTpls, keys, ancestor.get('data'), renderType)
-        //     ancestor.bxRefreshKeys = [];
-        // }
     }
 
     exports.ATTRS = {}
