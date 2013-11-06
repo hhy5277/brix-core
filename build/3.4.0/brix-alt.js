@@ -531,17 +531,17 @@ KISSY.add("brix/base",
              */
             bxRenderTpl: function(tpl, data) {
                 var self = this
-                var TplEngine = self.get('TplEngine')
+                var tplEngine = self.get('tplEngine')
 
                 // 根据模板引擎，选择渲染方式
-                if (typeof TplEngine === 'function') {
+                if (typeof tplEngine === 'function') {
                     var commands = self.get('commands')
 
-                    return new TplEngine(tpl, {
+                    return new tplEngine(tpl, {
                         commands: commands || {}
                     }).render(data)
                 } else {
-                    return TplEngine.render(tpl, data)
+                    return tplEngine.render(tpl, data)
                 }
             },
 
@@ -784,7 +784,7 @@ KISSY.add("brix/base",
                  * 模板引擎,默认xTemplate
                  * @cfg {Object}
                  */
-                TplEngine: {
+                tplEngine: {
                     value: XTemplate
                 },
 
@@ -824,9 +824,7 @@ KISSY.add("brix/base",
             'base',
             'xtemplate',
             'dom',
-            'node',
-            // 1.4 版本开始不再有 sizzle，自动 shim 低版本浏览器中复杂选择器的支持
-            parseFloat(KISSY.version.split('.').slice(0, 2).join('.')) < 1.4 ? 'sizzle' : ''
+            'node'
         ]
     });
 KISSY.add('brix/core/bx-api', function() {

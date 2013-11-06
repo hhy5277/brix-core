@@ -520,8 +520,6 @@ KISSY.add("brix/base",
             'base',
             'xtemplate',
             'dom',
-            'node',
-            // 1.4 版本开始不再有 sizzle，自动 shim 低版本浏览器中复杂选择器的支持
-            parseFloat(KISSY.version.split('.').slice(0, 2).join('.')) < 1.4 ? 'sizzle' : ''
+            'node'
         ]
     })
