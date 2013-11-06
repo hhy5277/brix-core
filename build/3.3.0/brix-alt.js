@@ -530,17 +530,17 @@ KISSY.add("brix/base",
              */
             bxRenderTpl: function(tpl, data) {
                 var self = this
-                var TplEngine = self.get('TplEngine')
+                var tplEngine = self.get('tplEngine')
 
                 // 根据模板引擎，选择渲染方式
-                if (typeof TplEngine === 'function') {
+                if (typeof tplEngine === 'function') {
                     var commands = self.get('commands')
 
-                    return new TplEngine(tpl, {
+                    return new tplEngine(tpl, {
                         commands: commands || {}
                     }).render(data)
                 } else {
-                    return TplEngine.render(tpl, data)
+                    return tplEngine.render(tpl, data)
                 }
             },
 
@@ -775,7 +775,7 @@ KISSY.add("brix/base",
                  * 模板引擎,默认xTemplate
                  * @cfg {Object}
                  */
-                TplEngine: {
+                tplEngine: {
                     value: XTemplate
                 },
 
@@ -1150,7 +1150,7 @@ KISSY.add('brix/core/bx-delegate', function() {
     return exports
 });
 KISSY.add('brix/core/bx-event', function(S, Event) {
-    var unSupportBubbleEvents = ['submit', 'change', 'valuechange']
+    var unSupportBubbleEvents = ['change', 'valuechange']
     var exports = {
 
         bxDelegate: function() {
@@ -1175,33 +1175,10 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
             var fn
             self.bxUnBubbleEvents = {}
 
-            // function wrapFn(fnc) {
-            //     return function() {
-            //         var obj = self.bxGetAncestorWithData()
-            //         var ancestor
-            //         if (obj.data) {
-            //             //增加brixData，方便外部直接获取
-            //             ancestor = obj.ancestor
-            //             arguments[0].brixData = ancestor.bxData
-                        
-            //         } else {
-            //             ancestor = self;
-            //         }
-            //         var ret = fnc.apply(this, arguments)
-            //         if (ret !== false) {
-            //             ancestor.digest()
-            //         }
-
-            //     }
-            // }
-
             for (var sel in eventsMap) {
                 var events = eventsMap[sel]
                 for (var type in events) {
                     fn = events[type]
-                    // fnc.handle = wrapFn(fnc)
-
-                    // fn = fnc.handle
 
                     if (sel === 'self') {
                         el.on(type, fn, this)
@@ -1268,9 +1245,6 @@ KISSY.add('brix/core/bx-event', function(S, Event) {
                             el.undelegate(type, sel, fn, this)
                         }
                     }
-
-                    //fn = null;
-                    //delete events[type].handle
                 }
             }
         }
