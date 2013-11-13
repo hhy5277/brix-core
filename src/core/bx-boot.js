@@ -31,8 +31,8 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                     overrides = ancestor.get('config')
 
                     if (overrides) {
+                        self.bxMixArgument(config, overrides[el.attr('bx-name')])
                         self.bxMixArgument(config, overrides[el.attr('id')])
-                        self.bxMixArgument(config, overrides[el.attr('name')])
                     }
 
                     ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
@@ -44,8 +44,9 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                     overrides = ancestor.get('config')
 
                     if (overrides) {
+                        S.mix(options, overrides[el.attr('bx-name')])
                         S.mix(options, overrides[el.attr('id')])
-                        S.mix(options, overrides[el.attr('name')])
+                        
                     }
 
                     ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()

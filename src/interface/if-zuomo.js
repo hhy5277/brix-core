@@ -84,6 +84,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
     var exports = {}
 
     exports.METHODS = {
+        /**
+         * 编译模板
+         * @private
+         */
         bxIBuildTpl: function() {
             var self = this
             //延迟刷新存储的key
@@ -114,7 +118,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 self.bxIBuildSubTpls(tempTpl, self.bxSubTpls)
             }
         },
-
+        /**
+         * 激活组件
+         * @private
+         */
         bxIActivate: function() {
             var self = this
             var needRenderCounter = 0
@@ -173,7 +180,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         /**
          * 构建{{#bx-store-tpl-id}}……{{/bx-store-tpl}}的存储
          * @param  {String} tpl 需要解析的模板
-         * @return {String}      解析后的模板
+         * @return {String}      替换后的模板
+         * @private
          */
         bxIBuildStoreTpls: function(tpl) {
             var self = this
@@ -188,7 +196,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         /**
          * 为模板中的组件打上tag标识
          * @param  {String} tpl 模板
-         * @return {String}      替换后的模板
+         * @return {String}     替换后的模板
+         * @private
          */
         bxITag: function(tpl) {
             return tpl.replace(/(bx-tag=["'][^"']+["'])/ig, '')
@@ -199,7 +208,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         /**
          * 为bx-datakey自动生成bx-subtpl
          * @param  {String} tpl 模板
-         * @return {String}      替换后的模板
+         * @return {String}     替换后的模板
+         * @private
          */
         bxISubTpl: function(tpl) {
             return tpl.replace(/(bx-subtpl=["'][^"']+["'])/ig, '')
@@ -214,6 +224,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
          * @param  {Number} s_pos  开始查找的位置
          * @param  {Number} offset 偏移量
          * @return {Object}        {html:'',e_pos:12}
+         * @private
          */
         bxIInnerHTML: function(tpl, tag, s_pos, offset) {
             var s_tag = '<' + tag
@@ -243,6 +254,12 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 e_pos: e_pos + e_tag.length
             }
         },
+        /**
+         * 编译子组件模板
+         * @param  {String} tpl 模板
+         * @return {String}     替换后的模板
+         * @private
+         */
         bxIBuildBrickTpls: function(tpl) {
             var self = this
             var r = '<([\\w]+)\\s+[^>]*?bx-name=["\']([^"\']+)["\']\\s+bx-tag=["\']([^"\']+)["\']\\s*[^>]*?>'
@@ -265,20 +282,24 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         },
         /**
          * 获取属性模板
-         * @param  {String} str 模板
+         * @param  {String} tpl 模板
          * @return {Object}   存储对象
          * @private
          */
-        bxIStoreAttrs: function(str) {
+        bxIStoreAttrs: function(tpl) {
             var attrs = {}
-            var storeAttr = function(all, attr, tpl) {
-                if (tpl.indexOf('{{') > -1 && tpl.indexOf('}}') > 0) {
-                    attrs[attr] = tpl
+            var storeAttr = function(all, attr, str) {
+                if (str.indexOf('{{') > -1 && str.indexOf('}}') > 0) {
+                    attrs[attr] = str
                 }
             }
-            str.replace(/([^\s]+)?=["']([^'"]+)["']/ig, storeAttr)
+            tpl.replace(/([^\s]+)?=["']([^'"]+)["']/ig, storeAttr)
             return attrs;
         },
+        /**
+         * 编译数据，设置bxData对象
+         * @private
+         */
         bxIBuildData:function(){
             var self = this
             var data = self.get('data')
@@ -314,6 +335,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
         /**
          * 对节点中的bx-datakey解析，构建模板和数据配置
          * @param {String} tpl  需要解析的模板
+         * @param {Array} subTpls 子模板集合
          * @private
          */
         bxIBuildSubTpls: function(tpl, subTpls) {
@@ -348,8 +370,9 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             }
         },
         /**
-         * 子闭合标间的处理
+         * 自闭合标签处理
          * @param  {String} tpl 模板
+         * @private
          */
         bxISelfCloseTag: function(tpl) {
             var self = this
@@ -437,7 +460,10 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                             var val = S.trim(self.bxRenderTpl(v, data))
                             if (node[0].tagName.toUpperCase() == 'INPUT' && k == "value") {
                                 node.val(val)
-                            } else {
+                            } else if(k == 'class'){
+                                node[0].className = val
+                            } 
+                            else {
                                 node.attr(k, val)
                             }
                         })

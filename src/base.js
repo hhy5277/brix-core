@@ -6,6 +6,10 @@ KISSY.add("brix/base",
         var DESTROY_ACTIONS = ['remove', 'empty']
 
         var Brick = Base.extend({
+            /**
+             * 初始化函数
+             * @protected
+             */
             initializer: function() {
                 var self = this
                 var d = new Promise.Defer()
@@ -73,18 +77,21 @@ KISSY.add("brix/base",
 
                 return self
             },
-
+            /**
+             * 绑定用户界面
+             * @protected
+             */
             bind: noop,
 
             /**
              * 同步属性与用户界面
              * @protected
-             * @method
              */
             sync: noop,
 
             /**
              * 获取模板
+             * @private
              */
             bxGetTpl: function() {
                 var d = new Promise.Defer()
@@ -99,7 +106,10 @@ KISSY.add("brix/base",
 
                 return d.promise
             },
-
+            /**
+             * 获取模板后触发getTpl事件
+             * @private
+             */
             bxAfterGetTpl: function() {
                 var self = this
                 var d = new Promise.Defer()
@@ -119,11 +129,15 @@ KISSY.add("brix/base",
 
             /**
              * 编译模板
+             * @private
              */
             bxBuildTpl: function() {
                 if (this.bxIBuildTpl) this.bxIBuildTpl()
             },
-
+            /**
+             * 获取数据
+             * @private
+             */
             bxGetData: function() {
                 var d = new Promise.Defer()
                 var self = this
@@ -140,7 +154,8 @@ KISSY.add("brix/base",
             },
 
             /**
-             * 获取数据
+             * 获取数据后触发getData事件
+             * @private
              */
             bxAfterGetData: function() {
                 var d = new Promise.Defer()
@@ -160,7 +175,7 @@ KISSY.add("brix/base",
 
             /**
              * 编译数据
-             * @param  {Objcet} data 数据
+             * @private
              */
             bxBuildData: function() {
 
@@ -169,6 +184,7 @@ KISSY.add("brix/base",
 
             /**
              * 将模板渲染到页面
+             * @private
              */
             bxRender: function() {
                 var self = this
@@ -352,7 +368,7 @@ KISSY.add("brix/base",
 
             /**
              * 析构函数，销毁资源
-             * @return {[type]} [description]
+             * @protected
              */
             destructor: function() {
                 var self = this
@@ -400,7 +416,7 @@ KISSY.add("brix/base",
                 bind: __getHook('__bind'),
                 sync: __getHook('__sync')
             },
-            name:'Brick',
+            name: 'Brick',
             ATTRS: S.mix({
                 /**
                  * 模板
@@ -416,13 +432,6 @@ KISSY.add("brix/base",
                  */
                 data: {
                     value: null
-                },
-                /**
-                 * 是否已经添加行为
-                 * @type {Object}
-                 */
-                activated: {
-                    value: false
                 },
 
                 /**
