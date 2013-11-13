@@ -60,7 +60,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
 
         bxBootName: function(el) {
             var name = el.attr('bx-name')
-            var naked = el.hasAttr('bx-naked') && (el.attr('bx-naked') || 'all')
+
             // the name might be
             //
             // - mosaics/wangwang
@@ -68,7 +68,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             // - mosaics/dropdown/large
             // - mosaics/calendar/twin
             //
-            if (name && naked !== 'all' && naked !== 'js') {
+            if (name && !el.hasAttr('bx-naked')) {
                 name = name.split('/').length > 2 ? name : (name + '/index')
             } else {
                 name = 'brix/base'
