@@ -1,0 +1,14 @@
+
+/*
+ * Project styles
+ */
+
+#nav .logo {
+  display: block;
+  height: 32px;
+  width: 65px;
+  padding: 0;
+  margin-top: 14px;
+  margin-left: 20px;
+  background: url(img/brix.png) no-repeat;
+}

@@ -1,0 +1,15 @@
+baseurl: /brix-core
+markdown: redcarpet
+pygments: true
+safe: true
+lsi: false
+permalink: /:categories/:title
+excerpt_separator: "\n\n"
+exclude:
+  - Gruntfile.js
+  - brix-core.sublime-project
+  - package.json
+  - readme.md
+version: 3.4.0
+kissy:
+  version: 1.4.0
