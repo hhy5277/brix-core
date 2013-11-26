@@ -10,6 +10,7 @@ exclude:
   - brix-core.sublime-project
   - package.json
   - readme.md
+  - node_modules
 version: 3.4.0
 kissy:
   version: 1.4.0

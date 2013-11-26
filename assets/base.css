@@ -146,6 +146,7 @@ body {
 }
 #ceiling a:hover {
   border-bottom: none;
+  color: #313131;
 }
 #ceiling .portal {
   float: right;
