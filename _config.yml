@@ -5,6 +5,7 @@ safe: true
 lsi: false
 permalink: /:categories/:title
 excerpt_separator: "\n\n"
+encoding: utf-8
 exclude:
   - Gruntfile.js
   - brix-core.sublime-project
@@ -12,5 +13,6 @@ exclude:
   - readme.md
   - node_modules
 version: 3.4.0
+cdn: 'http://g.tbcdn.cn/thx/brix-core/'
 kissy:
   version: 1.4.0
