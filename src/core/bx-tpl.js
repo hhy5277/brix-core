@@ -1,5 +1,7 @@
 KISSY.add('brix/core/bx-tpl', function(S, IO) {
 
+    var TRAILING_SLASH = /\/?$/
+
     var exports = {
         bxHandleTpl: function(callback) {
             var self = this
@@ -18,7 +20,7 @@ KISSY.add('brix/core/bx-tpl', function(S, IO) {
             }
             else if (/^\.\//.test(source)) {
                 self.bxRemoteTpl(
-                    el.attr('bx-name').replace(/\/?$/, '') + source.substr(1),
+                    el.attr('bx-name').replace(TRAILING_SLASH, '') + source.substr(1),
                     callback
                 )
             }
@@ -58,7 +60,11 @@ KISSY.add('brix/core/bx-tpl', function(S, IO) {
         bxRemoteTpl: function(mod, callback) {
             var family = mod.split('/')[0]
             var packages = S.config('packages')[family]
+            var alias = S.Env.mods[this.bxName.replace(TRAILING_SLASH, '/index')].alias
 
+            if (alias && alias.length > 0) {
+                mod = alias[0].replace(TRAILING_SLASH, '/' + mod.split('/').pop())
+            }
             // The mod value shall be something like `mosaics/dropdown/tpl'
             if (packages.debug) {
                 // In debug mode, we use XHR to get the template file.

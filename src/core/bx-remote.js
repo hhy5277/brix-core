@@ -1,4 +1,6 @@
-KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
+
+    var TRAILING_SLASH = /\/?$/
 
     var exports = {
 
@@ -15,10 +17,14 @@ KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
             }
             else if (/^\.\//.test(remote)) {
                 var name = self.bxName
-                var mod = name.replace(/\/?$/, '') + remote.substr(1)
+                var mod = name.replace(TRAILING_SLASH, '') + remote.substr(1)
                 var family = mod.split('/')[0]
                 var packages = S.config('packages')[family]
+                var alias = S.Env.mods[self.bxName.replace(TRAILING_SLASH, '/index')].alias
 
+                if (alias && alias.length > 0) {
+                    mod = alias[0].replace(TRAILING_SLASH, '') + remote.substr(1)
+                }
                 if (packages.debug) {
                     self.bxXhrRemote(mod, callback)
                 }
@@ -69,6 +75,7 @@ KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
     return exports
 }, {
     requires: [
+        'brix/app/shadow',
         'ajax',
         'uri'
     ]
