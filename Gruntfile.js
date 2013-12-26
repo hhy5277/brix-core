@@ -2,8 +2,15 @@ module.exports = function(grunt) {
 
   var PORT = 5050
 
+  var buildTo = grunt.option('buildTo') || '.package'
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+
+    buildTo: buildTo,
+
+    clean: [ buildTo ],
+
     jshint: {
       Gruntfile: {
         src: ['Gruntfile.js'],
@@ -24,6 +31,7 @@ module.exports = function(grunt) {
         options: grunt.file.readJSON('test/.jshintrc')
       }
     },
+
     concat: {
       options: {
         separator: ';\n',
@@ -50,21 +58,18 @@ module.exports = function(grunt) {
       },
       main: {
         src: ['src/**/*.js', '!src/interface/if-yicai.js'],
-        dest: 'build/<%= pkg.version %>/brix.js'
-      },
-      alt: {
-        src: ['src/**/*.js', '!src/interface/if-zuomo.js'],
-        dest: 'build/<%= pkg.version %>/brix-alt.js'
+        dest: '<%= buildTo %>/brix.js'
       }
     },
+
     uglify: {
       dist: {
         files: [
-          { src: ['build/<%= pkg.version %>/brix.js'], dest: 'build/<%= pkg.version %>/brix-min.js' },
-          { src: ['build/<%= pkg.version %>/brix-alt.js'], dest: 'build/<%= pkg.version %>/brix-alt-min.js' }
+          { src: ['<%= buildTo %>/brix.js'], dest: '<%= buildTo %>/brix-min.js' },
         ]
       }
     },
+
     connect: {
       server: {
         options: {
@@ -74,6 +79,7 @@ module.exports = function(grunt) {
         }
       }
     },
+
     mocha: {
       all: {
         options: {
@@ -92,6 +98,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint')
   grunt.loadNpmTasks('grunt-contrib-concat')
   grunt.loadNpmTasks('grunt-contrib-uglify')
+  grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-mocha')
 
   grunt.registerTask('kswitch', 'Switch KISSY versions', function(ver) {
@@ -105,9 +112,11 @@ module.exports = function(grunt) {
     grunt.log.writeln(' done.')
   })
 
-  // default to 1.3.1
+  // default to 1.4.1
   // use kswitch task if testing multiple kissy versions is needed.
-  grunt.registerTask('test', ['jshint', 'connect', 'mocha'])  // , 'kswitch:1.3.0', 'mocha', 'kswitch:1.3.1'
+  grunt.registerTask('test', ['jshint', 'connect', 'mocha'])  // , 'kswitch:1.4.0', 'mocha', 'kswitch:1.4.1'
   grunt.registerTask('build', ['jshint', 'concat', 'uglify'])
   grunt.registerTask('serve', ['connect:server:keepalive'])
+
+  grunt.registerTask('default', ['clean', 'build'])
 }
