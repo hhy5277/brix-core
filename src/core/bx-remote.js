@@ -1,4 +1,4 @@
-KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
+KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
 
     var TRAILING_SLASH = /\/?$/
 
@@ -75,7 +75,6 @@ KISSY.add('brix/core/bx-remote', function(S, app, IO, Uri) {
     return exports
 }, {
     requires: [
-        'brix/app/shadow',
         'ajax',
         'uri'
     ]

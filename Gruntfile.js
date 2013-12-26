@@ -74,7 +74,7 @@ module.exports = function(grunt) {
       server: {
         options: {
           port: PORT,
-          base: ['.', 'test'],
+          base: ['.', 'test'],  // https://github.com/gruntjs/grunt-contrib-connect/pull/34
           hostname: '*'
         }
       }
