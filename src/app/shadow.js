@@ -200,10 +200,20 @@ KISSY.add('brix/app/shadow', function(S) {
             var packages = {}
 
             for (var p in imports) {
-                if (!packagesWas[p]) {
-                    // if not configured before.
-                    // more info about group configuration:
-                    // http://docs.kissyui.com/docs/html/tutorials/kissy/seed/loader/group.html#loader-group-tutorial
+                // if configured before, do not override.
+                if (packagesWas[p]) return
+
+                // more info about group configuration:
+                // http://docs.kissyui.com/1.4/docs/html/tutorials/kissy/loader/conditional-loader.html
+                if ('mosaics' == p) {
+                    packages[p] = {
+                        base: 'http://g.tbcdn.cn/a',
+                        group: 'bx-imports',
+                        combine: true,
+                        ignorePackageNameInUri: true
+                    }
+                }
+                else {
                     packages[p] = {
                         base: importsBase + (ignoreNs ? '/' + p : ''),
                         group: 'bx-imports',
