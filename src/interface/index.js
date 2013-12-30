@@ -1,16 +1,14 @@
-KISSY.add('brix/interface/index', function(S, IZuomo, IYicai) {
+KISSY.add('brix/interface/index', function(S, IZuomo) {
 
     var INTERFACE_MAP = {
-        zuomo: IZuomo,
-        yicai: IYicai
+        zuomo: IZuomo
     }
-    var name = 'zuomo'  // or yicai
+    var name = 'zuomo'  // or bisheng
 
     return INTERFACE_MAP[name]
 
 }, {
     requires: [
-        'brix/interface/if-zuomo',
-        'brix/interface/if-yicai'
+        'brix/interface/if-zuomo'
     ]
 })

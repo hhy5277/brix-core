@@ -443,9 +443,7 @@ KISSY.add("brix/base",
                         if (S.isString(s)) {
                             s = S.one(s)
                         }
-                        if (!s) {
-                            throw new Error('el is removed')
-                        }
+
                         return s
                     },
                     setter: function(el) {

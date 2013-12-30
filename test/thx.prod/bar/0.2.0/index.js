@@ -1,4 +1,4 @@
-KISSY.add('thx.prod/bar/index', function(S, Brick) {
+KISSY.add('thx.prod/bar/0.2.0/index', function(S, Brick) {
 
     return Brick.extend({}, {}, 'Bar')
 }, {
