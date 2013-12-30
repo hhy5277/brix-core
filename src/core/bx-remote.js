@@ -20,7 +20,8 @@ KISSY.add('brix/core/bx-remote', function(S, IO, Uri) {
                 var mod = name.replace(TRAILING_SLASH, '') + remote.substr(1)
                 var family = mod.split('/')[0]
                 var packages = S.config('packages')[family]
-                var alias = S.Env.mods[self.bxName.replace(TRAILING_SLASH, '/index')].alias
+                var module = S.Env.mods[self.bxName.replace(TRAILING_SLASH, '/index')]
+                var alias = module && module.alias
 
                 if (alias && alias.length > 0) {
                     mod = alias[0].replace(TRAILING_SLASH, '') + remote.substr(1)
