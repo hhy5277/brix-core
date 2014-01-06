@@ -1,8 +1,7 @@
 ---
 layout: post
+title: Brix Core
 ---
-
-
 
 ## 前言
 
@@ -52,18 +51,18 @@ KISSY.use('brick1path,brick2path，……，brickNpath',function(S,Brick1,Brick2
     ……
     var configN = {}//configN是BrickN组件需要的配置
     var brickN = new BrickN(configN)
-    
+
     //组件间的交互
-    
+
     brixck1.on('eventtype',function(){
         brick2.dosomething()
     })
     ……
-    
+
     brixck2.on('eventtype',function(){
         brickN.dosomething()
     })
-    
+
 })
 ```
 大家一定很习惯这样的用法，而且感觉结构也很清晰。
@@ -75,7 +74,7 @@ KISSY.use('brick1path,brick2path，……，brickNpath',function(S,Brick1,Brick2
 KISSY.use('brix/app',function(S,App){
     // 所有组件的配置
     var config = {
-        el:'#id'//提供一个容器节点    
+        el:'#id'//提供一个容器节点
     }
     App.boot(config).one('ready',function(brix){
         brix就是实例化出来的根组件，并有父子关系。
@@ -101,7 +100,7 @@ KISSY.use('brix/app',function(S,App){
 {% include release.html version='3.3.0' %}
 
 * KISSY 1.3.0 -> brix2.0
-    
+
 {% include old_release.html version='2.0' %}
 
 * KISSY 1.2.x -> brix1.0

@@ -20,13 +20,13 @@ Brix 项目的出发点之二，是处理好局部刷新与双向绑定，减少
 因此，Brix 项目涵盖如下方面：
 
 - 前端框架 [Brix Core](https://github.com/thx/brix-core)
-- 基础样式 [Brix Style](https://github.com/thx/brix-style)
-- [核心组件](/m/mosaics) [Mosaics](https://github.com/mosaics)
-- [组件共享平台](/) [Mosaic Daemon](http://gitlab.alibaba-inc.com/mo/mosaic-daemon/tree/master)
-- [组件开发工具](/posts/2013/07/22/mosaic) [Mosaic](http://gitlab.alibaba-inc.com/mo/mosaic/tree/master)
+- 基础样式 <del>[Brix Style](https://github.com/thx/brix-style)</del> [Cube](/cube)
+- [核心组件](http://brix.alibaba-inc.com/mosaics) [Mosaics](http://gitlab.alibaba-inc.com/groups/a)
+- [组件共享平台](http://brix.alibaba-inc.com) [Mosaic Daemon](http://gitlab.alibaba-inc.com/mo/mosaic-daemon/tree/master)
+- [组件开发工具]({{ site.baseurl }}/articles/mosaic) [Mosaic](http://gitlab.alibaba-inc.com/mo/mosaic/tree/master)
 
 一般情况下，你只会碰到前三者，当你需要查阅
-[核心组件文档](http://brix.alibaba-inc.com/m/mosaics) 时，也会接触到组件共享平台。
+[核心组件文档](http://brix.alibaba-inc.com/mosaics) 时，也会接触到组件共享平台。
 
 如果你需要开发核心组件，或者分享自己积累的业务组件，给其他人使用，则需要用到组件开发工具，以：
 
@@ -62,7 +62,7 @@ KISSY.use('brix/app', function(S, app) {
 
 将会以带 bx-app 属性的节点起始，逐层渲染该节点中的组件，渲染完毕后进行绑定事件、微调 DOM 等操作。
 
-详细的页面初始化过程请看 [初始化页面详解](/posts/2013/07/23/app-boot)。
+详细的页面初始化过程请看 [初始化页面详解]({{ site.baseurl }}/articles/app-boot)。
 
 ## Brix Style
 
