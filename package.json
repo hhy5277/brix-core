@@ -1,8 +1,8 @@
 {
   "name": "brix-core",
   "description": "Brix Core",
-  "version": "3.4.0",
-  "author": "THX <thx@alibaba-inc.com>",
+  "version": "3.4.5",
+  "author": "THX (http://thx.alibaba-inc.com)",
   "private": true,
   "contributors": [
     {
@@ -31,16 +31,15 @@
     "url": "https://github.com/thx/brix-core"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.7",
-    "grunt-contrib-connect": "~0.3.0",
-    "grunt-contrib-jshint": "~0.6.0",
     "grunt-contrib-concat": "~0.3.0",
-    "grunt-mocha": "~0.3.4",
     "grunt-contrib-uglify": "~0.2.2",
     "q": "~0.9.6",
     "semver": "~2.1.0",
-    "clean-css": "~1.0.12"
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.7.2",
+    "grunt-mocha": "~0.4.7",
+    "grunt-contrib-connect": "~0.5.0"
   },
   "scripts": {
     "start": "grunt connect:server:keepalive",

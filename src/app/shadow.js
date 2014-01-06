@@ -128,7 +128,7 @@ KISSY.add('brix/app/shadow', function(S) {
             this.config('family', family)
 
             this.bxPackageComponents()
-            this.bxMapComponents()
+            this.bxAliasComponents()
         },
 
         bxPackageComponents: function() {
@@ -160,34 +160,41 @@ KISSY.add('brix/app/shadow', function(S) {
             }
 
             this.bxPackageImports()
-            this.bxMapImports()
+            this.bxAliasImports()
         },
 
-        bxMapImports: function() {
-            this.bxMapModules(this.config('imports'))
+        bxAliasImports: function() {
+            this.bxAliasModules(this.config('imports'))
         },
 
-        bxMapComponents: function() {
+        bxAliasComponents: function() {
             var components = this.config('components')
 
             if (S.isPlainObject(components)) {
-                this.bxMapModules(components)
+                this.bxAliasModules(components)
             }
         },
 
-        bxMapModules: function(lock) {
-            function makeReplacer(family) {
-                return function(match, name, file) {
-                    return [family, name, lock[family][name], file].join('/')
-                }
-            }
-            var maps = []
+        bxAliasModules: function(lock) {
+            var aliases = {}
 
             for (var family in lock) {
-                maps.push([new RegExp(family + '\\/([^\\/]+)\\/([^\\/]+)$'), makeReplacer(family)])
+                for (var p in lock[family]) {
+                    var declare = lock[family][p]
+                    var mod = family + '/' + p + '/'
+
+                    aliases[mod] = {
+                        alias: [ mod + declare + '/']
+                    }
+                    if (declare.requires('css')) {
+                        aliases[mod + 'index.css'] = {
+                            alias: [ mod + declare + '/index.css']
+                        }
+                    }
+                }
             }
 
-            S.config('map', maps)
+            S.config('modules', aliases)
         },
 
         bxPackageImports: function() {
@@ -200,10 +207,20 @@ KISSY.add('brix/app/shadow', function(S) {
             var packages = {}
 
             for (var p in imports) {
-                if (!packagesWas[p]) {
-                    // if not configured before.
-                    // more info about group configuration:
-                    // http://docs.kissyui.com/docs/html/tutorials/kissy/seed/loader/group.html#loader-group-tutorial
+                // if configured before, do not override.
+                if (packagesWas[p]) return
+
+                // more info about group configuration:
+                // http://docs.kissyui.com/1.4/docs/html/tutorials/kissy/loader/conditional-loader.html
+                if ('mosaics' == p) {
+                    packages[p] = {
+                        base: 'http://g.tbcdn.cn/a',
+                        group: 'bx-imports',
+                        combine: true,
+                        ignorePackageNameInUri: true
+                    }
+                }
+                else {
                     packages[p] = {
                         base: importsBase + (ignoreNs ? '/' + p : ''),
                         group: 'bx-imports',

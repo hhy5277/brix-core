@@ -16,4 +16,7 @@ node_modules
 
 *.sublime-workspace
 
+
+.package
 _site
+
