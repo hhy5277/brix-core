@@ -9,7 +9,7 @@ authors:
 
 {% raw %}
 
-## 看代码学组件
+## 看代码学配置
 
 ``` javascript
 {
