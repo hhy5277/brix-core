@@ -296,6 +296,18 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
             tpl.replace(/([^\s]+)?=["']([^'"]+)["']/ig, storeAttr)
             return attrs;
         },
+        apply:function(fn){
+            var self = this
+            if(fn){
+                self.bxRefresh = false
+            }
+            fn&&fn.call(this)
+            if(self.bxRefresh){
+                self.bxIRefreshTpl(self.get('el'), self.bxSubTpls, self.bxRefreshKeys, self.get('data'));
+                self.bxRefreshKeys = [] 
+            }
+            self.bxRefresh = true
+        },
         /**
          * 编译数据，设置bxData对象
          * @private
@@ -314,11 +326,8 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                         if (!S.inArray(k, self.bxRefreshKeys)) {
                             self.bxRefreshKeys.push(k)
                         }
-                        if(self.bxRefresh){
-                            self.bxIRefreshTpl(self.get('el'), self.bxSubTpls, self.bxRefreshKeys, data, self.bxRenderType)
-                            self.bxRefreshKeys = []
-                        }
-                        self.bxRefresh = true
+                        //数据刷新
+                        self.apply()
                     }
                 }
             }

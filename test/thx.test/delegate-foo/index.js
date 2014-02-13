@@ -18,10 +18,11 @@ KISSY.add("thx.test/delegate-foo/index", function(S, Brick) {
 			'#input21': {
 				click: function(e) {
 					var self = this
-					this.bxRefresh = false
-					this.bxData.a = 'aaaa' + S.guid()
-					this.bxData.c = 'cccc' + S.guid()
-
+					self.apply(function(){
+						this.bxData.a = 'aaaa' + S.guid()
+						this.bxData.c = 'cccc' + S.guid()
+					})
+					
 					self.fire(DelegateFoo.FIRES.customEvent)
 					return true
 				}
