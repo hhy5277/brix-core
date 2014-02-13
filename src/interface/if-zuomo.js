@@ -302,7 +302,7 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                 self.bxRefresh = false
             }
             fn&&fn.call(this)
-            if(self.bxRefresh){
+            if(self.bxRefresh&&self.bxRefreshKeys.length>0){
                 self.bxIRefreshTpl(self.get('el'), self.bxSubTpls, self.bxRefreshKeys, self.get('data'));
                 self.bxRefreshKeys = [] 
             }
@@ -322,10 +322,16 @@ KISSY.add('brix/interface/if-zuomo', function(S) {
                         return data[k]
                     },
                     set:function(v){
-                        data[k] = v
-                        if (!S.inArray(k, self.bxRefreshKeys)) {
+                        var flg = false
+                        if(typeof v !== 'object'){//object 直接刷新
+                            if(data[k]==v){
+                               flg = true 
+                            }
+                        }
+                        if (!flg&&!S.inArray(k, self.bxRefreshKeys)) {
                             self.bxRefreshKeys.push(k)
                         }
+                        data[k] = v
                         //数据刷新
                         self.apply()
                     }
