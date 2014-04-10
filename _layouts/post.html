@@ -36,6 +36,11 @@ script: assets/post.js
         <i class="iconfont">&#433;</i> Brix<3
       </a>
     </li>
+    <li>
+        <a href="{{ site.baseurl }}/demos/" class="entry">
+          <i class="iconfont">&#227;</i> Demos
+        </a>
+      </li>
     {% for category in site.categories %}
       <li>
         <a href="{{ site.baseurl }}/{{ category[0] }}" class="entry">
@@ -44,11 +49,6 @@ script: assets/post.js
         </a>
       </li>
     {% endfor %}
-      <li>
-        <a href="{{ site.baseurl }}/demos/" class="entry">
-          <i class="iconfont">&#227;</i> Demos
-        </a>
-      </li>
       <li>
         <a href="{{ site.baseurl }}/faq/" class="entry">
           <i class="iconfont">&#228;</i> 常问常答
