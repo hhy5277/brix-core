@@ -93,11 +93,11 @@ KISSY.use('brix/app',function(S,App){
 
 > 不要被下面怎么多的版本吓到了，Brix的发展依赖KISSY的版本升级.
 
-> 在最早做Brix1.0的时候，KISSY还在1.2时代，那时候并没有![RichBase][6]，Brix自身实现了一整套组件生命周期管理。
+> 在最早做Brix1.0的时候，KISSY还在1.2时代，那时候并没有[RichBase][6]，Brix自身实现了一整套组件生命周期管理。
 
 > KISSY 1.3之后引入了RichBase,包含了Brix的生命周期管理，Brix直接用了RichBase。
 
-> KISSY 1.4将RichBase和Base模块做了合并，并对![map][7]等做了重大调整，Brix为了保持使用者不受影响，发布了3.4.0版本，并对原有2版本做了升级,发布2.1.0版本，兼容KISSY 1.4.x版本
+> KISSY 1.4将RichBase和Base模块做了合并，并对[map][7]等做了重大调整，Brix为了保持使用者不受影响，发布了3.4.0版本，并对原有2版本做了升级,发布2.1.0版本，兼容KISSY 1.4.x版本
 
 > 而Brix本身在升级过程中也引入了许多的特性，比如Brix 3 引入了promise（方便开发者对组件渲染流程的控制）、父子组件关系（bxParent，bxChildren）、自定义事件委托（类似dom事件的冒泡）。
 
