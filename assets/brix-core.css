@@ -6,3 +6,8 @@
 #nav .logo {
   display: block;
 }
+
+
+.btn-group{
+    display: inline-block;
+}

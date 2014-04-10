@@ -1,11 +1,11 @@
 ---
 layout: post
-title: Brix Core
+title: Brix
 ---
 
 ## 前言
 
-如果你熟悉Brix的发展历程，那么你一定关注过Brix的[官方网站][1]，那里有段话是这样描述的：
+如果你熟悉Brix的发展历程，那么你一定关注过Brix1.0和2.0的[官方网站][1]，那里有段话是这样描述的：
 
 > Brix 是基于 KISSY（PC端）和 Zepto、SeaJS 等（移动端）底层类库的应用层组件框架。 目标是打造面向前台展示型业务、后台管理型业务、移动高端版业务的通用且易用的一淘UX前端组件平台。
 
@@ -14,11 +14,10 @@ title: Brix Core
 
 2013-5-28 [Hackathon][2] 北京 确立了Brix 3.x的发展方向，以及要解决的问题。
 
-> 最新版本的[组件平台][3]
 
 ## 总体设计
 
-![目标][4]
+![目标][3]
 
 Brix完成了三个大的目标：
 
@@ -27,18 +26,14 @@ Brix完成了三个大的目标：
 * 组件、模块基于数据驱动的局部刷新
 
 
-![位置][5]
+![位置][4]
 
 Brix让行为和结构分离，无论是webapp类型的项目，还是传统的jsp php页面，组件的渲染形式和管理方式都是统一的。
 
 
-## 实现概述
+![pagelet][5]
 
-![pagelet][6]
-
-如上图结构的一个页面，会有很多的组件和区块。
-
-用传统开发和基于Brix开发会有什么不同呢？
+Brix 对组件和区块做了统一的初始化和销毁，使用者不再需要关心组件的实例化问题，我们来看看基于传统开发和基于Brix开发会有什么不同呢？
 
 ### 传统实现
 
@@ -76,8 +71,8 @@ KISSY.use('brix/app',function(S,App){
     var config = {
         el:'#id'//提供一个容器节点
     }
-    App.boot(config).one('ready',function(brix){
-        brix就是实例化出来的根组件，并有父子关系。
+    App.boot(config).once('ready',function(brix){
+        //brix就是实例化出来的根组件，并有父子关系。
         var brick1 = brix.one('brick1') //获取组件实例
     })
 })
@@ -86,14 +81,23 @@ KISSY.use('brix/app',function(S,App){
 
 > 如果组件是独立的，那么我们可以在不修改js逻辑的情况下，直接对dom结构修改来达到组件是否使用。
 
+##Brix概述
 
+- 前端框架 [Brix Core](https://github.com/thx/brix-core)
+- 基础样式 <del>[Brix Style](https://github.com/thx/brix-style)</del> [Cube](/cube)
+- [核心组件](http://brix.alibaba-inc.com/mosaics) [Mosaics](http://gitlab.alibaba-inc.com/groups/a)
+- [组件共享平台](http://brix.alibaba-inc.com) [Mosaic Daemon](http://gitlab.alibaba-inc.com/mo/mosaic-daemon/tree/master)
+- [组件开发工具]({{ site.baseurl }}/articles/mosaic) [Mosaic](http://gitlab.alibaba-inc.com/mo/mosaic/tree/master)
 
 ##版本推荐
-
 
 * KISSY 1.4.x -> brix3.4.0
 
 {% include release.html version='3.4.0' %}
+
+* KISSY 1.4.x -> brix2.1.0
+
+{% include old_release.html version='2.1.0' %}
 
 * KISSY 1.3.x -> brix3.3.0
 
@@ -112,8 +116,7 @@ KISSY.use('brix/app',function(S,App){
 
   [1]: http://etaoux.github.io/brix/
   [2]: https://github.com/thx/brix-core/issues/7
-  [3]: http://brix.alibaba-inc.com/
-  [4]: http://gtms01.alicdn.com/tps/i1/T17QDxFc4cXXbkAoMp-499-242.png
-  [5]: http://gtms01.alicdn.com/tps/i1/T1R0jtFgtcXXa2vpZP-864-616.png
-  [6]: http://gtms01.alicdn.com/tps/i1/T1Z9QOFXNeXXatUhzp-886-607.jpg
+  [3]: http://gtms01.alicdn.com/tps/i1/T17QDxFc4cXXbkAoMp-499-242.png
+  [4]: http://gtms01.alicdn.com/tps/i1/T1R0jtFgtcXXa2vpZP-864-616.png
+  [5]: http://gtms01.alicdn.com/tps/i1/T1Z9QOFXNeXXatUhzp-886-607.jpg
 
