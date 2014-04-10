@@ -37,8 +37,18 @@ script: assets/post.js
       </a>
     </li>
     <li>
+        <a href="{{ site.baseurl }}/faq/" class="entry">
+          <i class="iconfont">&#228;</i> 常问常答
+        </a>
+      </li>
+    <li>
         <a href="{{ site.baseurl }}/demos/" class="entry">
           <i class="iconfont">&#227;</i> Demos
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/thx/brix-core" class="entry">
+          <i class="iconfont">&#61464;</i> Github
         </a>
       </li>
     {% for category in site.categories %}
@@ -49,11 +59,7 @@ script: assets/post.js
         </a>
       </li>
     {% endfor %}
-      <li>
-        <a href="{{ site.baseurl }}/faq/" class="entry">
-          <i class="iconfont">&#228;</i> 常问常答
-        </a>
-      </li>
+      
     </ul>
   </div>
 </div>
