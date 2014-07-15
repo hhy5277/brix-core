@@ -117,7 +117,6 @@ KISSY.add('brix/app/shadow', function(S) {
                 // 此处的 for 循环用于将 'thx.demo' 从 components 对象中取出
                 for (family in components) {}
                 var bricks = components[family]
-
                 if (S.isPlainObject(bricks)) {
                     for (var name in bricks) {
                         bricks[name] = new Declaration(bricks[name])
@@ -179,16 +178,18 @@ KISSY.add('brix/app/shadow', function(S) {
             var aliases = {}
 
             for (var family in lock) {
-                for (var p in lock[family]) {
-                    var declare = lock[family][p]
-                    var mod = family + '/' + p + '/'
+                if (S.isPlainObject(lock[family])) {
+                    for (var p in lock[family]) {
+                        var declare = lock[family][p]
+                        var mod = family + '/' + p + '/'
 
-                    aliases[mod] = {
-                        alias: [ mod + declare + '/']
-                    }
-                    if (declare.requires('css')) {
-                        aliases[mod + 'index.css'] = {
-                            alias: [ mod + declare + '/index.css']
+                        aliases[mod] = {
+                            alias: [ mod + declare + '/']
+                        }
+                        if (declare.requires('css')) {
+                            aliases[mod + 'index.css'] = {
+                                alias: [ mod + declare + '/index.css']
+                            }
                         }
                     }
                 }
