@@ -21,12 +21,11 @@ Brix 项目的出发点之二，是处理好局部刷新与双向绑定，减少
 
 - 前端框架 [Brix Core](https://github.com/thx/brix-core)
 - 基础样式 <del>[Brix Style](https://github.com/thx/brix-style)</del> [Cube](/cube)
-- [核心组件](http://brix.alibaba-inc.com/mosaics) [Mosaics](http://gitlab.alibaba-inc.com/groups/a)
-- [组件共享平台](http://brix.alibaba-inc.com) [Mosaic Daemon](http://gitlab.alibaba-inc.com/mo/mosaic-daemon/tree/master)
-- [组件开发工具]({{ site.baseurl }}/articles/mosaic) [Mosaic](http://gitlab.alibaba-inc.com/mo/mosaic/tree/master)
+- 核心组件
+- 组件共享平台
+- 组件开发工具
 
-一般情况下，你只会碰到前三者，当你需要查阅
-[核心组件文档](http://brix.alibaba-inc.com/mosaics) 时，也会接触到组件共享平台。
+一般情况下，你只会碰到前三者，当你需要查阅核心组件文档 时，也会接触到组件共享平台。
 
 如果你需要开发核心组件，或者分享自己积累的业务组件，给其他人使用，则需要用到组件开发工具，以：
 

@@ -85,9 +85,9 @@ KISSY.use('brix/app',function(S,App){
 
 - 前端框架 [Brix Core](https://github.com/thx/brix-core)
 - 基础样式 <del>[Brix Style](https://github.com/thx/brix-style)</del> [Cube](/cube)
-- [核心组件](http://brix.alibaba-inc.com/mosaics) [Mosaics](http://gitlab.alibaba-inc.com/groups/a)
-- [组件共享平台](http://brix.alibaba-inc.com) [Mosaic Daemon](http://gitlab.alibaba-inc.com/mo/mosaic-daemon/tree/master)
-- [组件开发工具]({{ site.baseurl }}/articles/mosaic) [Mosaic](http://gitlab.alibaba-inc.com/mo/mosaic/tree/master)
+- 核心组件
+- 组件共享平台
+- 组件开发工具
 
 ##版本推荐
 
