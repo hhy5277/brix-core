@@ -40,8 +40,8 @@ KISSY.add('brix/core/bx-name', function(S) {
                 if (++renderedCounter === total) renderedFn()
             }
             var activatedCheck = activatedFn && function() {
-                    if (++activatedCounter === total) activatedFn()
-                }
+                if (++activatedCounter === total) activatedFn()
+            }
 
             for (var i = 0; i < total; i++) {
                 var node = nodes[i]
@@ -51,7 +51,7 @@ KISSY.add('brix/core/bx-name', function(S) {
             this.bxBootUse(klasses, function(Klasses) {
                 for (var i = 0; i < Klasses.length; i++) {
                     var el = nodes[i]
-                    // passive:开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
+                        // passive:开启被动模式，即渲染完毕之后不再自动 bxActivate ，而是等父组件来管理这一过程
                     var opts = self.bxBootOptions({
                         el: el,
                         passive: !activatedCheck
@@ -82,19 +82,19 @@ KISSY.add('brix/core/bx-name', function(S) {
         bxDirectChildren: function(root, selector) {
             var arr = []
 
-                function walk(node) {
-                    var children = node.children()
+            function walk(node) {
+                var children = node.children()
 
-                    for (var i = 0; i < children.length; i++) {
-                        var child = children.item(i)
+                for (var i = 0; i < children.length; i++) {
+                    var child = children.item(i)
 
-                        if (child.test(selector)) {
-                            arr.push(child)
-                        } else {
-                            walk(child)
-                        }
+                    if (child.test(selector)) {
+                        arr.push(child)
+                    } else {
+                        walk(child)
                     }
                 }
+            }
 
             selector = selector || '[bx-name]'
             walk(root)

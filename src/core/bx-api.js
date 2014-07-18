@@ -1,5 +1,12 @@
 KISSY.add('brix/core/bx-api', function() {
     var exports = {
+        /*            
+            * app.boot(el)
+            * app.boot(el, data)
+            * app.boot(config)
+
+            开始加载组件。
+        */
         boot: function(el, data) {
             return this.bxBoot(el, data)
         },

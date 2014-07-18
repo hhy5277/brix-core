@@ -59,15 +59,13 @@ KISSY.add('brix/app/shadow', function(S) {
             if (S.isPlainObject(prop)) {
                 data = prop
                 prop = null
-            }
-            else if (S.isString(prop)) {
+            } else if (S.isString(prop)) {
                 if (typeof data !== 'undefined') {
                     var newData = {}
 
                     newData[prop] = data
                     data = newData
-                }
-                else {
+                } else {
                     return _data[prop]
                 }
             }
@@ -94,8 +92,7 @@ KISSY.add('brix/app/shadow', function(S) {
             //
             if (S.isString(components)) {
                 family = components
-            }
-            else {
+            } else {
                 // components 以对象形式定义，用于支持两种场景：
                 //
                 // 1. 声明需要 app.bootStyle 中加载的组件样式
@@ -184,11 +181,11 @@ KISSY.add('brix/app/shadow', function(S) {
                         var mod = family + '/' + p + '/'
 
                         aliases[mod] = {
-                            alias: [ mod + declare + '/']
+                            alias: [mod + declare + '/']
                         }
                         if (declare.requires('css')) {
                             aliases[mod + 'index.css'] = {
-                                alias: [ mod + declare + '/index.css']
+                                alias: [mod + declare + '/index.css']
                             }
                         }
                     }
@@ -220,8 +217,7 @@ KISSY.add('brix/app/shadow', function(S) {
                         combine: true,
                         ignorePackageNameInUri: true
                     }
-                }
-                else {
+                } else {
                     packages[p] = {
                         base: importsBase + (ignoreNs ? '/' + p : ''),
                         group: 'bx-imports',
@@ -257,8 +253,7 @@ KISSY.add('brix/app/shadow', function(S) {
 
             if (S.isPlainObject(components)) {
                 checkStyle(family, components)
-            }
-            else if (S.isArray(components)) {
+            } else if (S.isArray(components)) {
                 for (var i = 0; i < components.length; i++) {
                     styles.push([family, components[i], 'index.css'].join('/'))
                 }

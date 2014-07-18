@@ -39,6 +39,8 @@ KISSY.add('brix/app', function(S, appShadow, bxApi, bxThird) {
         'brix/app/shadow',
         'brix/core/bx-api',
         'brix/core/bx-third',
+        // [疑问] 为什么要加这两个依赖？（循环依赖？）
+        // core/index.js 和 base.js 相互依赖
         'brix/third/index',//这里的两个依赖必须存在
         'brix/base'
     ]

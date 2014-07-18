@@ -3,6 +3,7 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
     var exports = {
         on: function() {
             var Brick = S.require(BRICKBASE)
+            // [疑问] 格式为 selector_eventType？
             Brick.superclass.on.apply(this, arguments)
             return this;
         },
@@ -17,7 +18,7 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
             var ret = Brick.superclass.fire.apply(this, arguments)
 
             //触发父组件的事件
-            var parent = this.bxParent&&this.bxParent.bxGetBrickAncestor()
+            var parent = this.bxParent && this.bxParent.bxGetBrickAncestor()
 
             if (parent) {
                 context = context || this;
@@ -25,7 +26,9 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
                     var eventTypeId = '#' + context.bxId + '_' + eventType
                     var eventTypeName = context.bxName + '_' + eventType
 
+                    // [疑问] 好怪异的格式！自定义事件！
                     parent.fire(eventTypeId, eventData, context)
+                    // [疑问] 好怪异的格式！自定义事件！
                     parent.fire(eventTypeName, eventData, context)
                 } else {
                     parent.fire(eventType, eventData, context)
@@ -52,6 +55,8 @@ KISSY.add('brix/core/index', function(S, bxApi, bxTpl, bxEvent, bxDelegate, bxRe
 
             return self
         },
+        // [疑问] 把 destroy 再次包装为 bxXXX 是出于什么考虑？因为 bxXXX 已经是内部方法了。
+        // 统一为 bxDestroy
         bxDestroy: function() {
             this.destroy()
         }

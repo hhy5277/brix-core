@@ -46,7 +46,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                     if (overrides) {
                         S.mix(options, overrides[el.attr('bx-name')])
                         S.mix(options, overrides[el.attr('id')])
-                        
+
                     }
 
                     ancestor = ancestor.bxParent && ancestor.bxParent.bxGetBrickAncestor()
@@ -58,6 +58,9 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             return options
         },
 
+        /*
+            
+        */
         bxBootName: function(el) {
             var name = el.attr('bx-name')
 
@@ -76,27 +79,34 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
 
             return name
         },
+        /*
+
+        */
         bxIBoot: function(el, options, Klass, renderedFn, activatedFn) {
             var self = this
+            // 给 el 节点设置唯一的 id
             self.bxUniqueId(el)
             // We are booting this brick. There's no reason that it remains deferred.
+            // bx-defer 是什么意思？行为是什么？
             el.removeAttr('bx-defer')
             var bothFn = function() {
                 if (renderedFn) renderedFn()
                 if (activatedFn) activatedFn()
             }
 
+            // [疑问] el 不在 document 中？（boot 时 el 可能已经被删掉了）
             if (!(el && DOM.contains(document, el[0]))) {
                 return bothFn()
             }
             var inst
-            //是否从Brick继承
-            var isExtendBrick = false
+            var isExtendBrick = false // 是否从 Brick 继承
+            // [疑问] 为什么命名为 Third？
             var Third = S.require(THIRDBASE)
 
+            // [疑问] 不是函数，不是简单对象，什么逻辑？已经是一个实例！
             if (!S.isFunction(Klass)) {
                 if (!S.isPlainObject(Klass)) {
-                    //保留原始值bxKlass
+                    // 保留原始值 bxKlass
                     Klass = {
                         bxKlass: Klass
                     }
@@ -134,7 +144,7 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
                 // 只检查一次，增加计数器之后即将 check 剥离 rendered 事件监听函数列表。
                 if (renderedFn) inst.once('rendered', renderedFn)
                 if (activatedFn) inst.once('ready', activatedFn)
-                // 如果组件在实例化过程中被销毁了
+                    // 如果组件在实例化过程中被销毁了
                 inst.once('destroy', bothFn)
             } else {
                 //将el节点持有
@@ -163,15 +173,17 @@ KISSY.add('brix/core/bx-boot', function(S, Promise, DOM) {
             el = opts.el
 
             var brick = this.bxFind('#' + el.attr('id'))
+            // el 不是 Brix 组件
             if (brick) {
                 S.later(function() {
                     d.resolve(brick)
                 })
             } else {
+                // el 是 Brix 组件
                 var name = this.bxBootName(el)
                 self.bxBootUse([name], function(Klasses) {
                     var brick = self.bxIBoot(el, opts, Klasses[0])
-                    //brick有可能为空
+                        //brick有可能为空
                     d.resolve(brick)
                 })
             }

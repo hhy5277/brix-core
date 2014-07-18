@@ -1,7 +1,7 @@
 KISSY.add('brix/core/bx-find', function() {
 
     var exports = {
-        bxOne:function(selector){
+        bxOne: function(selector) {
             return this.bxIOne(selector, this.bxChildren || [], true)
         },
         bxIOne: function(selector, children, isRecursive) {
@@ -21,7 +21,7 @@ KISSY.add('brix/core/bx-find', function() {
                 }
             }
         },
-        bxAll:function(selector){
+        bxAll: function(selector) {
             var result = []
             this.bxIAll(selector, this.bxChildren || [], result, true)
             return result;
@@ -42,10 +42,10 @@ KISSY.add('brix/core/bx-find', function() {
                 }
             }
         },
-        bxFind:function(selector){
-             return this.bxIOne(selector, this.bxChildren || [])
+        bxFind: function(selector) {
+            return this.bxIOne(selector, this.bxChildren || [])
         },
-        bxWhere:function(selector){
+        bxWhere: function(selector) {
             var result = []
             this.bxIAll(selector, this.bxChildren || [], result)
             return result;

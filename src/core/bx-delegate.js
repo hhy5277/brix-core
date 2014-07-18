@@ -9,6 +9,7 @@ KISSY.add('brix/core/bx-delegate', function() {
          * @param {Object} context  回调函数的this值，如果不指定默认为绑定事件的当前元素
          */
         delegate: function(selector, eventType, fn, context) {
+            // [疑问] 加下划线是什么意思？自定义的事件！
             this.on(selector + '_' + eventType, fn, context)
         },
 
