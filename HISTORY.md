@@ -33,7 +33,7 @@ app.boot('#dropdown').then(function(brick) {
 此外，增加 app.prepare，boot 与 prepare 的区别是，prepare 是 boot 的一层包装，两者都返回 promise，
 prepare 等到组件状态为 ready 时才 resolve，而 boot 则是实例化完成之后立即 resolve。
 
-详见 [app-boot 介绍](http://brix.alibaba-inc.com/posts/2013/07/23/app-boot)。
+详见 [app-boot 介绍](http://thx.github.io/brix-core/tutorial/app-boot/)。
 
 ## 3.1.0
 
@@ -77,11 +77,11 @@ KISSY.config('packages', {
 
 ```js
 //新的数据
-var data = {xx:'1',yy:2} 
+var data = {xx:'1',yy:2}
 app.prepare('#xx_yy',data).then(function(brick){
     //自动触发setter，刷新bx-datakey="xx"子模板
     brick.bxData['xx'] = 3;
-    brick.bxData['yy'] = 4;   
+    brick.bxData['yy'] = 4;
 })
 
 ```

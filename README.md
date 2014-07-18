@@ -13,6 +13,4 @@ $ npm start
 
 ## 使用手册
 
-用过 Brix 早期版本的同学，请看这篇 [diff](http://brix.alibaba-inc.com/posts/2013/07/17/brix-2-3-diff)。
-
-其余，请看 <http://brix.alibaba-inc.com>。
+请看 <http://thx.github.io/brix-core>。
