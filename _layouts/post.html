@@ -1,6 +1,5 @@
 ---
 layout: page
-script: assets/post.js
 ---
 
 <div id="page">
@@ -24,33 +23,16 @@ script: assets/post.js
       {% include footer.html %}
     </div>
   </div>
-  <div id="nav" class="clearfix">
+  <div id="nav">
     <a href="javascript:void(0)" class="toggler" id="J_toggler">
-      <i class="iconfont">&#271;</i>
+      <i class="iconfont">&#xe60b;</i>
       <span class="label">导航</span>
     </a>
-    <a href="{{ site.baseurl }}/" class="logo dib-box"><i class="iconlogo mi-brix dib"></i><span class="logo-text dib">Brix</span></a>
-    <ul class="menu">
-    <li>
-      <a href="http://etaoux.github.io/brix/" target="_blank" class="entry">
-        <i class="iconfont">&#433;</i> Brix<3
-      </a>
-    </li>
-    <li>
-        <a href="{{ site.baseurl }}/faq/" class="entry">
-          <i class="iconfont">&#228;</i> 常问常答
-        </a>
-      </li>
-    <li>
-        <a href="{{ site.baseurl }}/demos/" class="entry">
-          <i class="iconfont">&#227;</i> Demos
-        </a>
-      </li>
-      <li>
-        <a href="https://github.com/thx/brix-core" class="entry">
-          <i class="iconfont">&#61464;</i> Github
-        </a>
-      </li>
+    <a href="{{ site.baseurl }}" class="logo dib-box">
+      <i class="iconlogo dib mi-{{ site.title | downcase }}"></i>
+      <span class="logo-text dib">{{ site.title }}</span>
+    </a>
+    <ul class="categories menu">
     {% for category in site.categories %}
       <li>
         <a href="{{ site.baseurl }}/{{ category[0] }}" class="entry">
@@ -59,7 +41,7 @@ script: assets/post.js
         </a>
       </li>
     {% endfor %}
-      
+      {% include extra-nav.html %}
     </ul>
   </div>
 </div>
