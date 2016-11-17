@@ -15,3 +15,7 @@ kissy:
 
 title: Brix
 url: https://thx.github.io/brix-core
+
+gems:
+  - jekyll-feed
+  - jekyll-sitemap
